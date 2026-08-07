@@ -1,5 +1,9 @@
 # KeySwitch
 
+<p align="center">
+  <img src="docs/brand/keyswitch-logo.svg" alt="KeySwitch logo" width="128">
+</p>
+
 [![CI](https://github.com/Mohit-Patil/keyswitch/actions/workflows/ci.yml/badge.svg)](https://github.com/Mohit-Patil/keyswitch/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black.svg)](https://support.apple.com/macos)
