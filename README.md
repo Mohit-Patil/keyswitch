@@ -51,10 +51,13 @@ See the interactive showcase at
 
 ## Install
 
-Download the signed and Apple-notarized
-[latest universal release](https://github.com/Mohit-Patil/keyswitch/releases/latest/download/KeySwitch-v0.1.0-macOS-universal.zip),
-unzip it, and move `KeySwitch.app` to Applications. The same download runs on
-Apple Silicon and Intel Macs.
+Download the
+[latest universal installer](https://github.com/Mohit-Patil/keyswitch/releases/latest/download/KeySwitch-v0.1.0-macOS-universal.dmg),
+open it, and drag the signed and Apple-notarized `KeySwitch.app` onto the
+Applications shortcut. The same installer runs on Apple Silicon and Intel
+Macs. A
+[ZIP archive](https://github.com/Mohit-Patil/keyswitch/releases/latest/download/KeySwitch-v0.1.0-macOS-universal.zip)
+is also available for managed or command-line installation.
 
 On first launch, KeySwitch guides you through Input Monitoring, Accessibility,
 and the optional Codex connection. Release checksums and notes are available on
