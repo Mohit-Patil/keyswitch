@@ -1,11 +1,29 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- sparkle-sign-warning:
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- sparkle-sign-warning:
 IMPORTANT: This file was signed by Sparkle. Any modifications to this file requires re-signing this file with generate_appcast or sign_update! The signed signature will be embedded at the end of this file.
---><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+-->
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
         <title>KeySwitch</title>
         <link>https://mohit-patil.github.io/keyswitch/appcast.xml</link>
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
+        <item>
+            <title>0.2.1</title>
+            <pubDate>Fri, 07 Aug 2026 22:26:16 +0530</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.2.1</sparkle:fullReleaseNotesLink>
+            <sparkle:version>4</sparkle:version>
+            <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.2.1</h2>
+<h3>Changed</h3>
+<ul>
+<li>Complete the first signed Sparkle delivery from the 0.2.0 bootstrap build and document the repeatable Xcode cloud-signing and notarization workflow.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.1/KeySwitch-v0.2.1-macOS-universal.zip" length="3202787" type="application/octet-stream" sparkle:edSignature="oV00otW6KLCpLm6Y6s8Dxao12QXjl8nm6CdTsHEBd7KCFoN1rWo44vmrMvcQI2FNQhxxyoCURhu8nfAiY4K6Cw=="/>
+        </item>
         <item>
             <title>0.2.0</title>
             <pubDate>Fri, 07 Aug 2026 22:11:40 +0530</pubDate>
@@ -30,10 +48,11 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
 <li>Point the website download buttons at the current notarized 0.1.1 DMG.</li>
 </ul>
 ]]></description>
-            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.0/KeySwitch-v0.2.0-macOS-universal.zip" length="3202796" type="application/octet-stream" sparkle:edSignature="GQec4ZjzXbwoGparvf0aG7bA9O73HbuqdQHYMLaf85fRBehrZX3f8zq/9jOCSYt6l4LvXY+QJGojXTCrV8KRAg=="></enclosure>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.0/KeySwitch-v0.2.0-macOS-universal.zip" length="3202796" type="application/octet-stream" sparkle:edSignature="GQec4ZjzXbwoGparvf0aG7bA9O73HbuqdQHYMLaf85fRBehrZX3f8zq/9jOCSYt6l4LvXY+QJGojXTCrV8KRAg=="/>
         </item>
     </channel>
-</rss><!-- sparkle-signatures:
-edSignature: L748LaQ1I+NvRsMXbKQ/i2e0fChO0caopE5RxoWPsF2DWN53SP9rft1UbL9kSt8DSBJdMfhmL8++opLYRHjNAQ==
-length: 2267
+</rss>
+<!-- sparkle-signatures:
+edSignature: xdKwPLCCKIu7aPm/sDswO4QmovG3aE/BDjgESRGTtf2ntATMlvmbPGb33UmsnURhRO8CWyMRmxh/eIc2C3ILCg==
+length: 3345
 -->
