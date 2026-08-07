@@ -11,6 +11,7 @@
 		01704449A7EEB90553314C1D /* MappingSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B413A383EBA6E1ECFCD9D1 /* MappingSettingsView.swift */; };
 		044B314017D9CB28CACE6EE8 /* KeycapEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA5CB5F254EB7666C2CBF75 /* KeycapEditorSheet.swift */; };
 		097F4ABC6207BAF9BAC79385 /* KeySwitchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9BAA0598BB97A5E77D40AE /* KeySwitchApp.swift */; };
+		2B17B121B2EB4A5574D0DF65 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A8D5770DAF1EF2DC022A85A /* Assets.xcassets */; };
 		33FF2E76C16A837FB53923D3 /* MicroHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2694F4E845EEE7302130B66F /* MicroHUDView.swift */; };
 		344DE57B5AA72F59D5A5F6B0 /* ConnectionSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99139A7067ACE29F9DE576A3 /* ConnectionSettingsView.swift */; };
 		396750BB3B4DFD09017077BD /* FirstRunSetupWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B905AF5581C8360950449A /* FirstRunSetupWindowController.swift */; };
@@ -61,6 +62,7 @@
 		241918E22C09554A31DF2691 /* FirstRunSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunSetupView.swift; sourceTree = "<group>"; };
 		2694F4E845EEE7302130B66F /* MicroHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroHUDView.swift; sourceTree = "<group>"; };
 		3D62F6D53A375D0138C74488 /* MenuBarStatusIconTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarStatusIconTests.swift; sourceTree = "<group>"; };
+		4A8D5770DAF1EF2DC022A85A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4B9C0F2913209C5A47DBCB71 /* MenuBarContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarContentView.swift; sourceTree = "<group>"; };
 		4C9F126EBB2313996340C774 /* PhysicalKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalKey.swift; sourceTree = "<group>"; };
 		4D9BAA0598BB97A5E77D40AE /* KeySwitchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeySwitchApp.swift; sourceTree = "<group>"; };
@@ -96,6 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				E1D35B9BB844BA4E6AE430FC /* AppModel.swift */,
+				4A8D5770DAF1EF2DC022A85A /* Assets.xcassets */,
 				6A47D275070ED963F629F9F1 /* Info.plist */,
 				4D9BAA0598BB97A5E77D40AE /* KeySwitchApp.swift */,
 				BB6F69A2217026BEE3F825F3 /* PrivacyInfo.xcprivacy */,
@@ -263,6 +266,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B17B121B2EB4A5574D0DF65 /* Assets.xcassets in Resources */,
 				89CEA1C682480B4227BC6F1F /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
