@@ -8,8 +8,8 @@ be committed to the repository.
 The `Release` GitHub Actions workflow is the production publishing path. It
 supports three entry points:
 
-- a push to `main` releases the version in `project.yml` only when its `v*`
-  tag does not exist yet;
+- a successful `CI` completion for a `push` to `main` releases the exact tested
+  commit only when the version in `project.yml` has no existing `v*` tag;
 - pushing a new `vMAJOR.MINOR.PATCH` tag releases that tagged source unless it
   is already present in the signed update feed;
 - the manual workflow input resumes an existing, not-yet-published tag after a
@@ -21,16 +21,19 @@ accidentally publishing a release. To release from a merge, update both
 versions in `project.yml`, regenerate the Xcode project, finalize the matching
 `CHANGELOG.md` section, and merge those changes to `main`. The workflow then:
 
-1. runs the full app test suite before any signing credential is imported;
-2. imports the Developer ID identity into an ephemeral runner keychain;
-3. creates a universal Developer ID archive;
-4. notarizes and staples the app and signed DMG;
-5. uploads versioned artifacts, checksums, and stable latest-download aliases;
-6. creates the version tag when the run came from `main`;
-7. creates or updates the GitHub Release;
-8. signs the Sparkle appcast, opens a dedicated feed PR, runs the required CI
+1. waits for the complete `CI` workflow to pass on the exact `main` commit;
+2. verifies that the privileged trigger came from this repository's `main`
+   push and checks out the CI-tested SHA;
+3. reruns the app test suite before any signing credential is imported;
+4. imports the Developer ID identity into an ephemeral runner keychain;
+5. creates a universal Developer ID archive;
+6. notarizes and staples the app and signed DMG;
+7. uploads versioned artifacts, checksums, and stable latest-download aliases;
+8. creates the version tag when the run came from tested `main`;
+9. creates or updates the GitHub Release;
+10. signs the Sparkle appcast, opens a dedicated feed PR, runs the required CI
    check, and squash-merges that PR; and
-9. dispatches the GitHub Pages deployment.
+11. dispatches the GitHub Pages deployment.
 
 Configure these encrypted repository secrets before the first automated
 release:
@@ -57,6 +60,11 @@ The feed PR allows `main` to remain protected from direct pushes, including
 pushes made by the release workflow itself.
 GitHub environments or organization-level secrets can replace repository
 secrets later without changing the workflow.
+
+The privileged `workflow_run` path never checks out pull-request code or
+consumes artifacts or caches from the preceding workflow. It accepts only a
+successful `push` CI run for `main`, verifies the originating repository and
+head SHA, and checks out that exact commit before release secrets are exposed.
 
 ## Main branch protection
 

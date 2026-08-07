@@ -7,6 +7,8 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-08
+
 ### Added
 
 - An automated GitHub Actions release pipeline that signs, notarizes, staples,
@@ -16,6 +18,26 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
   the protected `main` branch.
 - Administrator-enforced pull-request protection for `main`, with strict CI,
   resolved-conversation, linear-history, force-push, and deletion safeguards.
+
+### Changed
+
+- Start a `main` release only after the complete CI workflow succeeds, then
+  build and publish the exact commit that CI tested.
+
+### Fixed
+
+- Keep selected and unselected menu-bar agent statuses visually consistent by
+  rendering every active status as the same filled circular indicator.
+
+### Security
+
+- Scan the complete Git history for credentials during CI, restrict Actions to
+  immutable GitHub-owned revisions, and minimize signing-key lifetime on the
+  release runner.
+- Restrict the privileged post-CI release trigger to successful `push` runs
+  from this repository's `main` branch and verify its tested commit before any
+  release credentials are used.
+- Bind the undocumented local Codex debugging bridge explicitly to loopback.
 
 ## [0.2.1] - 2026-08-07
 
@@ -96,7 +118,8 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 - Local release artifacts, profiling traces, signing identities, and private
   design-review captures are excluded from the repository.
 
-[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Mohit-Patil/keyswitch/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/Mohit-Patil/keyswitch/compare/v0.1.0...v0.1.1

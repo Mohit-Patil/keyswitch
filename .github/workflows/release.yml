@@ -1,9 +1,12 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches:
       - main
+  push:
     tags:
       - "v*"
   workflow_dispatch:
@@ -29,6 +32,7 @@ env:
 jobs:
   resolve:
     name: Resolve release
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -44,7 +48,24 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (github.event_name == 'workflow_dispatch' && inputs.tag || github.ref) }}
+
+      - name: Verify successful main CI source
+        if: github.event_name == 'workflow_run'
+        env:
+          TESTED_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          TESTED_EVENT: ${{ github.event.workflow_run.event }}
+          TESTED_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          test "$TESTED_EVENT" = "push"
+          test "$TESTED_BRANCH" = "main"
+          test "$TESTED_REPOSITORY" = "$GITHUB_REPOSITORY"
+          test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+          git fetch origin main
+          git merge-base --is-ancestor "$TESTED_SHA" origin/main
 
       - name: Validate release metadata
         id: metadata
@@ -68,7 +89,7 @@ jobs:
             --appcast "$RUNNER_TEMP/current-appcast.xml" \
             --github-output "$GITHUB_OUTPUT"
 
-      - name: Decide whether this push creates a release
+      - name: Decide whether this tested commit creates a release
         id: resolve
         env:
           ALREADY_PUBLISHED: ${{ steps.metadata.outputs.already_published }}
@@ -78,11 +99,12 @@ jobs:
 
           source_sha="$(git rev-parse HEAD)"
           should_release=true
-          if [[ "$GITHUB_EVENT_NAME" == "push" && \
-                "$GITHUB_REF_TYPE" == "branch" ]] && \
-             git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
-            should_release=false
-            echo "$RELEASE_TAG already exists; this main push is not a new release."
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_run" ]]; then
+            if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG" || \
+               [[ "$ALREADY_PUBLISHED" == "true" ]]; then
+              should_release=false
+              echo "$RELEASE_TAG already exists; this tested main commit is not a new release."
+            fi
           elif [[ "$GITHUB_EVENT_NAME" == "push" && \
                   "$GITHUB_REF_TYPE" == "tag" && \
                   "$ALREADY_PUBLISHED" == "true" ]]; then
