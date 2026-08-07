@@ -1,0 +1,57 @@
+name: Feature request
+description: Propose a focused improvement to KeySwitch
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explain the user problem before proposing an implementation. Larger ideas may be moved to Discussions for design work.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is difficult or impossible today, and who is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the desired experience rather than only the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include workarounds or simpler approaches.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Activation or keyboard capture
+        - Key mapping
+        - HUD or agent lighting
+        - Codex bridge
+        - Setup or permissions
+        - Settings
+        - Developer experience or documentation
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety, privacy, and compatibility
+      description: Note any effect on global input, permissions, stored data, app control, or undocumented Codex behavior.
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and Discussions for this idea.
+          required: true
+        - label: I understand that Codex bridge features may depend on undocumented behavior.
+          required: true

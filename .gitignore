@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Xcode and SwiftPM
+.build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.dSYM
+*.dSYM.zip
+*.xcresult
+.swiftpm/
+
+# IDEs
+.idea/
+.vscode/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+
+# Local release, profiling, and design-review artifacts
+/Release/
+/Profiles/
+/.codex-audit/
+/design-qa*
+*.trace
+*.log

@@ -1,0 +1,84 @@
+name: Bug report
+description: Report a reproducible KeySwitch defect
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Search existing issues first and remove private Codex task content from logs and screenshots.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the behavior and its impact.
+      placeholder: KeySwitch did…
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest reliable sequence.
+      placeholder: |
+        1. Configure…
+        2. Activate the layer…
+        3. Press…
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: macOS 15.6
+    validations:
+      required: true
+  - type: input
+    id: keyswitch
+    attributes:
+      label: KeySwitch version or commit
+      placeholder: v0.1.0 or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: codex
+    attributes:
+      label: Codex desktop version
+      description: Required only for bridge, lighting, keycap, or action issues.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Activation or keyboard capture
+        - Key mapping
+        - HUD or agent lighting
+        - Codex bridge
+        - Setup or permissions
+        - Settings
+        - Build or documentation
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Additional diagnostics
+      description: Add sanitized logs, screenshots, or observations. Never include tokens or private task content.
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues for this problem.
+          required: true
+        - label: I removed credentials and private Codex content from attachments.
+          required: true
+        - label: This is not a security vulnerability; security reports follow SECURITY.md.
+          required: true

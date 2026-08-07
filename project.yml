@@ -1,0 +1,61 @@
+name: KeySwitch
+
+options:
+  bundleIdPrefix: com.mohitpatil
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  KeySwitch:
+    type: application
+    platform: macOS
+    sources:
+      - path: KeySwitchApp
+    info:
+      path: KeySwitchApp/Info.plist
+      properties:
+        LSUIElement: true
+        NSInputMonitoringUsageDescription: >-
+          KeySwitch needs Input Monitoring to turn the keyboard into your
+          editable accessibility control layer while its shortcut is active.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mohitpatil.keyswitch
+        PRODUCT_NAME: KeySwitch
+        INFOPLIST_FILE: KeySwitchApp/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_STYLE: Automatic
+  KeySwitchTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: KeySwitchTests
+    dependencies:
+      - target: KeySwitch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mohitpatil.keyswitch.tests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
+
+schemes:
+  KeySwitch:
+    build:
+      targets:
+        KeySwitch: all
+        KeySwitchTests: [test]
+    run:
+      config: Debug
+    test:
+      targets:
+        - KeySwitchTests

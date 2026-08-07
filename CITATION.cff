@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If KeySwitch supports your work, please cite the project using this metadata."
+title: KeySwitch
+type: software
+authors:
+  - family-names: Patil
+    given-names: Mohit
+repository-code: "https://github.com/Mohit-Patil/keyswitch"
+url: "https://github.com/Mohit-Patil/keyswitch"
+license: MIT

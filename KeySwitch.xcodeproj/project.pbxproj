@@ -1,0 +1,523 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00FFE771FCD0E3634A67D54E /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C76D0E21D21981A83667FA4 /* GeneralSettingsView.swift */; };
+		01704449A7EEB90553314C1D /* MappingSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B413A383EBA6E1ECFCD9D1 /* MappingSettingsView.swift */; };
+		044B314017D9CB28CACE6EE8 /* KeycapEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA5CB5F254EB7666C2CBF75 /* KeycapEditorSheet.swift */; };
+		097F4ABC6207BAF9BAC79385 /* KeySwitchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9BAA0598BB97A5E77D40AE /* KeySwitchApp.swift */; };
+		33FF2E76C16A837FB53923D3 /* MicroHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2694F4E845EEE7302130B66F /* MicroHUDView.swift */; };
+		344DE57B5AA72F59D5A5F6B0 /* ConnectionSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99139A7067ACE29F9DE576A3 /* ConnectionSettingsView.swift */; };
+		396750BB3B4DFD09017077BD /* FirstRunSetupWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B905AF5581C8360950449A /* FirstRunSetupWindowController.swift */; };
+		3AF3FE0D4D9B6F7B9335B315 /* PermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F701D876CB85D8E87447385A /* PermissionService.swift */; };
+		3C7D5B29B8A6F6A5F9285D77 /* CodexMicroPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55E393EF61E1F9FD3FAFA7A0 /* CodexMicroPreferences.swift */; };
+		4D26A4E2DFC7DFB72DB95180 /* KeyRecorderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE76D89480F9A9DDE7F71BFB /* KeyRecorderSheet.swift */; };
+		521C8142007117D6E90BF4B4 /* KeyboardEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DB2CBB2AF26B56BF190F1DF /* KeyboardEngineTests.swift */; };
+		694B49031F6029A7C0D36AC9 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D35B9BB844BA4E6AE430FC /* AppModel.swift */; };
+		746AC73F5D9D2E0F573243A4 /* CodexMicroBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4DE453197555629BD783B6A /* CodexMicroBridge.swift */; };
+		90B9756EB0DC0C89D1E32732 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 539EF4B0F13BA3F0B4AFF442 /* SettingsRootView.swift */; };
+		9BE824DAC8F0354A1B945B8A /* PhysicalKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C9F126EBB2313996340C774 /* PhysicalKey.swift */; };
+		9DB9DEF1BACE69BAF9F7747F /* HUDWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2F035BE167BFD1638037162 /* HUDWindowController.swift */; };
+		B33DBC523E3E4F15E0D445B4 /* AgentLighting.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF23CB95C13929E4515B26CD /* AgentLighting.swift */; };
+		BBCBDC03D783E42EA705A20E /* KeyboardEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96D1DA3DEB737ED9CB4034A2 /* KeyboardEngine.swift */; };
+		BD77BDF4443BE29D6480538B /* ActivationMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98E2173603733E136B87D7F /* ActivationMode.swift */; };
+		C162CD651C4CC7B472A3CC60 /* ActivationShortcut.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04815AAC231F78F2198AFEA6 /* ActivationShortcut.swift */; };
+		C58CEB08922259778728EDD5 /* ActivationShortcutEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A830F0FEB93A8F3ACB665E77 /* ActivationShortcutEditor.swift */; };
+		CF42D7F063486131F5A542AA /* MenuBarContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9C0F2913209C5A47DBCB71 /* MenuBarContentView.swift */; };
+		D41D2D31B855E6C19259EC50 /* KeyBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = A975FE13B0DE3110D6E2A6B0 /* KeyBinding.swift */; };
+		EE97894EB340352D4840E1BC /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFFBFE40DD8CEF5763D6ADD5 /* AppConfiguration.swift */; };
+		FDFDCBB73321D6BA222452EF /* FirstRunSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 241918E22C09554A31DF2691 /* FirstRunSetupView.swift */; };
+		FFD05CEEE8F7EBDB6E25D5E1 /* MicroControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65BCEEB637CAB6AFE41DCCE4 /* MicroControl.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		ADF4A44DD0E286DD9E05C18B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BB2BD38A77C269D402F1E5FF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E94D3922FB01B9415A1FECD1;
+			remoteInfo = KeySwitch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		01B905AF5581C8360950449A /* FirstRunSetupWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunSetupWindowController.swift; sourceTree = "<group>"; };
+		04815AAC231F78F2198AFEA6 /* ActivationShortcut.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationShortcut.swift; sourceTree = "<group>"; };
+		04DA3A1927F55168EAF7BB7F /* KeySwitch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KeySwitch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		199C1E8FF998696E448DDE25 /* KeySwitchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KeySwitchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		241918E22C09554A31DF2691 /* FirstRunSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunSetupView.swift; sourceTree = "<group>"; };
+		2694F4E845EEE7302130B66F /* MicroHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroHUDView.swift; sourceTree = "<group>"; };
+		4B9C0F2913209C5A47DBCB71 /* MenuBarContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarContentView.swift; sourceTree = "<group>"; };
+		4C9F126EBB2313996340C774 /* PhysicalKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalKey.swift; sourceTree = "<group>"; };
+		4D9BAA0598BB97A5E77D40AE /* KeySwitchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeySwitchApp.swift; sourceTree = "<group>"; };
+		539EF4B0F13BA3F0B4AFF442 /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
+		55E393EF61E1F9FD3FAFA7A0 /* CodexMicroPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMicroPreferences.swift; sourceTree = "<group>"; };
+		5DB2CBB2AF26B56BF190F1DF /* KeyboardEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardEngineTests.swift; sourceTree = "<group>"; };
+		65BCEEB637CAB6AFE41DCCE4 /* MicroControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroControl.swift; sourceTree = "<group>"; };
+		6A47D275070ED963F629F9F1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6C76D0E21D21981A83667FA4 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
+		96D1DA3DEB737ED9CB4034A2 /* KeyboardEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardEngine.swift; sourceTree = "<group>"; };
+		99139A7067ACE29F9DE576A3 /* ConnectionSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionSettingsView.swift; sourceTree = "<group>"; };
+		A4DE453197555629BD783B6A /* CodexMicroBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMicroBridge.swift; sourceTree = "<group>"; };
+		A830F0FEB93A8F3ACB665E77 /* ActivationShortcutEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationShortcutEditor.swift; sourceTree = "<group>"; };
+		A975FE13B0DE3110D6E2A6B0 /* KeyBinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyBinding.swift; sourceTree = "<group>"; };
+		A98E2173603733E136B87D7F /* ActivationMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationMode.swift; sourceTree = "<group>"; };
+		AAA5CB5F254EB7666C2CBF75 /* KeycapEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeycapEditorSheet.swift; sourceTree = "<group>"; };
+		AFFBFE40DD8CEF5763D6ADD5 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		CF23CB95C13929E4515B26CD /* AgentLighting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentLighting.swift; sourceTree = "<group>"; };
+		E1D35B9BB844BA4E6AE430FC /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		EE76D89480F9A9DDE7F71BFB /* KeyRecorderSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyRecorderSheet.swift; sourceTree = "<group>"; };
+		F2B413A383EBA6E1ECFCD9D1 /* MappingSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MappingSettingsView.swift; sourceTree = "<group>"; };
+		F2F035BE167BFD1638037162 /* HUDWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDWindowController.swift; sourceTree = "<group>"; };
+		F701D876CB85D8E87447385A /* PermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		3AC6FFDB36A5182894FD5753 /* KeySwitchApp */ = {
+			isa = PBXGroup;
+			children = (
+				E1D35B9BB844BA4E6AE430FC /* AppModel.swift */,
+				6A47D275070ED963F629F9F1 /* Info.plist */,
+				4D9BAA0598BB97A5E77D40AE /* KeySwitchApp.swift */,
+				676BB9045CFAFE6C7B7F9A04 /* Models */,
+				3F949241B548F18EE9369541 /* Services */,
+				A16E7CDF4520185CEB2E0C0E /* Views */,
+			);
+			path = KeySwitchApp;
+			sourceTree = "<group>";
+		};
+		3F949241B548F18EE9369541 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A4DE453197555629BD783B6A /* CodexMicroBridge.swift */,
+				01B905AF5581C8360950449A /* FirstRunSetupWindowController.swift */,
+				F2F035BE167BFD1638037162 /* HUDWindowController.swift */,
+				96D1DA3DEB737ED9CB4034A2 /* KeyboardEngine.swift */,
+				F701D876CB85D8E87447385A /* PermissionService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		61656BC599B7989B60920A87 /* KeySwitchTests */ = {
+			isa = PBXGroup;
+			children = (
+				5DB2CBB2AF26B56BF190F1DF /* KeyboardEngineTests.swift */,
+			);
+			path = KeySwitchTests;
+			sourceTree = "<group>";
+		};
+		676BB9045CFAFE6C7B7F9A04 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A98E2173603733E136B87D7F /* ActivationMode.swift */,
+				04815AAC231F78F2198AFEA6 /* ActivationShortcut.swift */,
+				CF23CB95C13929E4515B26CD /* AgentLighting.swift */,
+				AFFBFE40DD8CEF5763D6ADD5 /* AppConfiguration.swift */,
+				55E393EF61E1F9FD3FAFA7A0 /* CodexMicroPreferences.swift */,
+				A975FE13B0DE3110D6E2A6B0 /* KeyBinding.swift */,
+				65BCEEB637CAB6AFE41DCCE4 /* MicroControl.swift */,
+				4C9F126EBB2313996340C774 /* PhysicalKey.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		98A9A364CCC3979B7C9762F9 = {
+			isa = PBXGroup;
+			children = (
+				3AC6FFDB36A5182894FD5753 /* KeySwitchApp */,
+				61656BC599B7989B60920A87 /* KeySwitchTests */,
+				E20971360E4FB48ADED54663 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A16E7CDF4520185CEB2E0C0E /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A830F0FEB93A8F3ACB665E77 /* ActivationShortcutEditor.swift */,
+				99139A7067ACE29F9DE576A3 /* ConnectionSettingsView.swift */,
+				241918E22C09554A31DF2691 /* FirstRunSetupView.swift */,
+				6C76D0E21D21981A83667FA4 /* GeneralSettingsView.swift */,
+				AAA5CB5F254EB7666C2CBF75 /* KeycapEditorSheet.swift */,
+				EE76D89480F9A9DDE7F71BFB /* KeyRecorderSheet.swift */,
+				F2B413A383EBA6E1ECFCD9D1 /* MappingSettingsView.swift */,
+				4B9C0F2913209C5A47DBCB71 /* MenuBarContentView.swift */,
+				2694F4E845EEE7302130B66F /* MicroHUDView.swift */,
+				539EF4B0F13BA3F0B4AFF442 /* SettingsRootView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E20971360E4FB48ADED54663 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				04DA3A1927F55168EAF7BB7F /* KeySwitch.app */,
+				199C1E8FF998696E448DDE25 /* KeySwitchTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		7D63DAF2942D8839DE1DA490 /* KeySwitchTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2294D0AAC36B1B2DF9E06185 /* Build configuration list for PBXNativeTarget "KeySwitchTests" */;
+			buildPhases = (
+				54E8DCF4FA75F3E9EC47C7B6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				084D467C89C2FD33F9404E13 /* PBXTargetDependency */,
+			);
+			name = KeySwitchTests;
+			packageProductDependencies = (
+			);
+			productName = KeySwitchTests;
+			productReference = 199C1E8FF998696E448DDE25 /* KeySwitchTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E94D3922FB01B9415A1FECD1 /* KeySwitch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5A4910CF9ACDDBA302909A05 /* Build configuration list for PBXNativeTarget "KeySwitch" */;
+			buildPhases = (
+				61361844318904331ABA6080 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KeySwitch;
+			packageProductDependencies = (
+			);
+			productName = KeySwitch;
+			productReference = 04DA3A1927F55168EAF7BB7F /* KeySwitch.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BB2BD38A77C269D402F1E5FF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					7D63DAF2942D8839DE1DA490 = {
+						ProvisioningStyle = Automatic;
+					};
+					E94D3922FB01B9415A1FECD1 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 1D3E4A7BC72BC823C4082FC6 /* Build configuration list for PBXProject "KeySwitch" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 98A9A364CCC3979B7C9762F9;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E20971360E4FB48ADED54663 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E94D3922FB01B9415A1FECD1 /* KeySwitch */,
+				7D63DAF2942D8839DE1DA490 /* KeySwitchTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		54E8DCF4FA75F3E9EC47C7B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				521C8142007117D6E90BF4B4 /* KeyboardEngineTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		61361844318904331ABA6080 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BD77BDF4443BE29D6480538B /* ActivationMode.swift in Sources */,
+				C162CD651C4CC7B472A3CC60 /* ActivationShortcut.swift in Sources */,
+				C58CEB08922259778728EDD5 /* ActivationShortcutEditor.swift in Sources */,
+				B33DBC523E3E4F15E0D445B4 /* AgentLighting.swift in Sources */,
+				EE97894EB340352D4840E1BC /* AppConfiguration.swift in Sources */,
+				694B49031F6029A7C0D36AC9 /* AppModel.swift in Sources */,
+				746AC73F5D9D2E0F573243A4 /* CodexMicroBridge.swift in Sources */,
+				3C7D5B29B8A6F6A5F9285D77 /* CodexMicroPreferences.swift in Sources */,
+				344DE57B5AA72F59D5A5F6B0 /* ConnectionSettingsView.swift in Sources */,
+				FDFDCBB73321D6BA222452EF /* FirstRunSetupView.swift in Sources */,
+				396750BB3B4DFD09017077BD /* FirstRunSetupWindowController.swift in Sources */,
+				00FFE771FCD0E3634A67D54E /* GeneralSettingsView.swift in Sources */,
+				9DB9DEF1BACE69BAF9F7747F /* HUDWindowController.swift in Sources */,
+				D41D2D31B855E6C19259EC50 /* KeyBinding.swift in Sources */,
+				4D26A4E2DFC7DFB72DB95180 /* KeyRecorderSheet.swift in Sources */,
+				097F4ABC6207BAF9BAC79385 /* KeySwitchApp.swift in Sources */,
+				BBCBDC03D783E42EA705A20E /* KeyboardEngine.swift in Sources */,
+				044B314017D9CB28CACE6EE8 /* KeycapEditorSheet.swift in Sources */,
+				01704449A7EEB90553314C1D /* MappingSettingsView.swift in Sources */,
+				CF42D7F063486131F5A542AA /* MenuBarContentView.swift in Sources */,
+				FFD05CEEE8F7EBDB6E25D5E1 /* MicroControl.swift in Sources */,
+				33FF2E76C16A837FB53923D3 /* MicroHUDView.swift in Sources */,
+				3AF3FE0D4D9B6F7B9335B315 /* PermissionService.swift in Sources */,
+				9BE824DAC8F0354A1B945B8A /* PhysicalKey.swift in Sources */,
+				90B9756EB0DC0C89D1E32732 /* SettingsRootView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		084D467C89C2FD33F9404E13 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E94D3922FB01B9415A1FECD1 /* KeySwitch */;
+			targetProxy = ADF4A44DD0E286DD9E05C18B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0D2B44690BA3B9069CE97DC0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9563FEF270518447E6B2FC2E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KeySwitchApp/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mohitpatil.keyswitch;
+				PRODUCT_NAME = KeySwitch;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		A96FD6EB6C3F5595572A8573 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mohitpatil.keyswitch.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KeySwitch.app/Contents/MacOS/KeySwitch";
+			};
+			name = Release;
+		};
+		BD5DFD0C41BDDCAC5E4DF7C0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mohitpatil.keyswitch.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KeySwitch.app/Contents/MacOS/KeySwitch";
+			};
+			name = Debug;
+		};
+		CF124CF41D9F1E70BA023BD3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KeySwitchApp/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mohitpatil.keyswitch;
+				PRODUCT_NAME = KeySwitch;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		E77E6C30FE0606A0B4C63CE7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1D3E4A7BC72BC823C4082FC6 /* Build configuration list for PBXProject "KeySwitch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E77E6C30FE0606A0B4C63CE7 /* Debug */,
+				0D2B44690BA3B9069CE97DC0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2294D0AAC36B1B2DF9E06185 /* Build configuration list for PBXNativeTarget "KeySwitchTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BD5DFD0C41BDDCAC5E4DF7C0 /* Debug */,
+				A96FD6EB6C3F5595572A8573 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5A4910CF9ACDDBA302909A05 /* Build configuration list for PBXNativeTarget "KeySwitch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9563FEF270518447E6B2FC2E /* Debug */,
+				CF124CF41D9F1E70BA023BD3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BB2BD38A77C269D402F1E5FF /* Project object */;
+}
