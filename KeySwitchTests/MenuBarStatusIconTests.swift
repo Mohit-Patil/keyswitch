@@ -65,6 +65,51 @@ final class MenuBarStatusIconTests: XCTestCase {
         }
     }
 
+    func testSelectionDoesNotChangeMenuBarIndicatorPixels() throws {
+        for size in MenuBarIndicatorSize.allCases {
+            for status in AgentLightStatus.allCases {
+                var unselectedLights = AgentLightState.offSlots
+                unselectedLights[0] = AgentLightState(
+                    id: 0,
+                    title: "Test agent",
+                    threadKey: "test:0",
+                    status: status,
+                    selected: false
+                )
+
+                var selectedLights = unselectedLights
+                selectedLights[0] = AgentLightState(
+                    id: 0,
+                    title: "Test agent",
+                    threadKey: "test:0",
+                    status: status,
+                    selected: true
+                )
+
+                let unselectedImage = MenuBarStatusIconRenderer.image(
+                    layerIsActive: false,
+                    showsAgentStatus: true,
+                    indicatorSize: size,
+                    lights: unselectedLights,
+                    colorScheme: .dark
+                )
+                let selectedImage = MenuBarStatusIconRenderer.image(
+                    layerIsActive: false,
+                    showsAgentStatus: true,
+                    indicatorSize: size,
+                    lights: selectedLights,
+                    colorScheme: .dark
+                )
+
+                XCTAssertEqual(
+                    try pngData(of: selectedImage),
+                    try pngData(of: unselectedImage),
+                    "Selection changed the \(size.title) \(status.title) indicator"
+                )
+            }
+        }
+    }
+
     func testSelectedCompleteGreenNeverBleedsIntoAnotherSlot() throws {
         let scale = 4
 
@@ -150,5 +195,10 @@ final class MenuBarStatusIconTests: XCTestCase {
         NSGraphicsContext.restoreGraphicsState()
 
         return bitmap
+    }
+
+    private func pngData(of image: NSImage) throws -> Data {
+        let bitmap = try bitmapRepresentation(of: image, scale: 4)
+        return try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
     }
 }
