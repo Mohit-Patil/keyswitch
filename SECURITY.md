@@ -36,7 +36,8 @@ contracts. Reports involving permission misuse, event interception, renderer
 evaluation, local-port exposure, unintended app control, or persistence are
 especially important.
 
-KeySwitch connects to `127.0.0.1` by default. Renderer discovery accepts only
+KeySwitch launches Codex with an explicit `127.0.0.1` debugging address and
+connects only to that loopback interface. Renderer discovery accepts only
 numeric loopback WebSocket endpoints on the configured port and rejects
 redirects, credentials, query strings, fragments, malformed page paths, and
 discovery responses larger than 1 MiB. These checks do not authenticate a

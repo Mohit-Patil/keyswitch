@@ -64,8 +64,8 @@ can disable Codex actions, but it must not leave the keyboard layer stuck.
 
 `FirstRunSetupWindowController` presents a guided setup window. The permission
 service checks Input Monitoring and Accessibility independently. The setup flow
-can restart the original Codex app with a debugging-port argument, then asks
-the bridge to reconnect.
+can restart the original Codex app with an explicit `127.0.0.1` debugging
+address and debugging-port arguments, then asks the bridge to reconnect.
 
 `LaunchAtLoginService` wraps `SMAppService.mainApp`. Registration is always a
 user-controlled preference; macOS can require separate approval in Login Items,
