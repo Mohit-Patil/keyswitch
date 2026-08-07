@@ -49,10 +49,6 @@ struct MenuBarStatusLabel: View {
 enum MenuBarStatusIndicatorSymbol: Equatable {
     case hollowCircle
     case circle
-    case diamond
-    case square
-    case triangleUp
-    case triangleDown
     case error
 }
 
@@ -67,7 +63,7 @@ enum MenuBarStatusIconRenderer {
         lights: [AgentLightState],
         colorScheme: ColorScheme
     ) -> NSImage {
-        let metrics = IndicatorMetrics(size: indicatorSize)
+        let metrics = MenuBarStatusIndicatorMetrics(size: indicatorSize)
         let width = showsAgentStatus ? metrics.imageWidth : keyboardWidth
         let image = NSImage(size: NSSize(width: width, height: imageHeight), flipped: false) { rect in
             drawKeyboard(
@@ -122,16 +118,23 @@ enum MenuBarStatusIconRenderer {
     private static func drawIndicators(
         _ lights: [AgentLightState],
         colorScheme: ColorScheme,
-        metrics: IndicatorMetrics,
+        metrics: MenuBarStatusIndicatorMetrics,
         in rect: NSRect
     ) {
         for slot in 0..<6 {
             let state = lights.first(where: { $0.id == slot }) ?? AgentLightState.offSlots[slot]
             let color = indicatorColor(for: state.status, colorScheme: colorScheme)
+            let cellRect = metrics.cellRect(for: slot, in: rect)
             let center = NSPoint(
-                x: metrics.startX + CGFloat(slot) * metrics.cellWidth + metrics.cellWidth / 2,
-                y: rect.midY
+                x: cellRect.midX,
+                y: cellRect.midY
             )
+
+            // A status must never paint into its neighbour. This is especially
+            // noticeable for the high-luminance Complete green on Retina menu
+            // bars, where even a sub-point overlap reads as a merged light.
+            NSGraphicsContext.saveGraphicsState()
+            NSBezierPath(rect: cellRect).addClip()
 
             if state.selected, state.status != .off {
                 color.withAlphaComponent(0.72).setStroke()
@@ -161,6 +164,7 @@ enum MenuBarStatusIconRenderer {
                 metrics: metrics,
                 in: dotRect
             )
+            NSGraphicsContext.restoreGraphicsState()
         }
     }
 
@@ -169,11 +173,7 @@ enum MenuBarStatusIconRenderer {
     ) -> MenuBarStatusIndicatorSymbol {
         switch status {
         case .off: .hollowCircle
-        case .idle: .circle
-        case .working: .diamond
-        case .unread: .square
-        case .awaitingApproval: .triangleUp
-        case .awaitingResponse: .triangleDown
+        case .idle, .working, .unread, .awaitingApproval, .awaitingResponse: .circle
         case .error: .error
         }
     }
@@ -181,7 +181,7 @@ enum MenuBarStatusIconRenderer {
     private static func drawIndicator(
         symbol: MenuBarStatusIndicatorSymbol,
         color: NSColor,
-        metrics: IndicatorMetrics,
+        metrics: MenuBarStatusIndicatorMetrics,
         in rect: NSRect
     ) {
         if symbol == .hollowCircle {
@@ -220,41 +220,6 @@ enum MenuBarStatusIconRenderer {
         switch symbol {
         case .hollowCircle, .circle, .error:
             return NSBezierPath(ovalIn: rect)
-        case .diamond:
-            let path = NSBezierPath()
-            path.move(to: NSPoint(x: rect.midX, y: rect.maxY))
-            path.line(to: NSPoint(x: rect.maxX, y: rect.midY))
-            path.line(to: NSPoint(x: rect.midX, y: rect.minY))
-            path.line(to: NSPoint(x: rect.minX, y: rect.midY))
-            path.close()
-            return path
-        case .square:
-            return NSBezierPath(
-                roundedRect: rect,
-                xRadius: max(0.7, rect.width * 0.18),
-                yRadius: max(0.7, rect.height * 0.18)
-            )
-        case .triangleUp, .triangleDown:
-            let points: [NSPoint]
-            if symbol == .triangleUp {
-                points = [
-                    NSPoint(x: rect.midX, y: rect.maxY),
-                    NSPoint(x: rect.maxX, y: rect.minY),
-                    NSPoint(x: rect.minX, y: rect.minY),
-                ]
-            } else {
-                points = [
-                    NSPoint(x: rect.minX, y: rect.maxY),
-                    NSPoint(x: rect.maxX, y: rect.maxY),
-                    NSPoint(x: rect.midX, y: rect.minY),
-                ]
-            }
-            let path = NSBezierPath()
-            path.move(to: points[0])
-            path.line(to: points[1])
-            path.line(to: points[2])
-            path.close()
-            return path
         }
     }
 
@@ -277,7 +242,7 @@ enum MenuBarStatusIconRenderer {
     }
 }
 
-private struct IndicatorMetrics {
+struct MenuBarStatusIndicatorMetrics {
     let imageWidth: CGFloat
     let startX: CGFloat
     let cellWidth: CGFloat
@@ -287,43 +252,62 @@ private struct IndicatorMetrics {
     let ringLineWidth: CGFloat
     let outlineLineWidth: CGFloat
 
+    var maximumPaintDiameter: CGFloat {
+        max(
+            dotDiameter + outlineLineWidth,
+            max(
+                selectedDotDiameter + outlineLineWidth,
+                ringDiameter + ringLineWidth
+            )
+        )
+    }
+
+    func cellRect(for slot: Int, in imageRect: NSRect) -> NSRect {
+        NSRect(
+            x: imageRect.minX + startX + CGFloat(slot) * cellWidth,
+            y: imageRect.minY,
+            width: cellWidth,
+            height: imageRect.height
+        )
+    }
+
     init(size: MenuBarIndicatorSize) {
         switch size {
         case .compact:
-            imageWidth = 47
+            imageWidth = 48
             startX = 18
             cellWidth = 5
             dotDiameter = 3.75
-            selectedDotDiameter = 4.5
-            ringDiameter = 5.5
-            ringLineWidth = 0.65
+            selectedDotDiameter = 2.9
+            ringDiameter = 4.1
+            ringLineWidth = 0.6
             outlineLineWidth = 0.4
         case .standard:
             imageWidth = 57
             startX = 17.5
             cellWidth = 6.5
             dotDiameter = 5
-            selectedDotDiameter = 5.75
-            ringDiameter = 7
-            ringLineWidth = 0.75
+            selectedDotDiameter = 4
+            ringDiameter = 5.5
+            ringLineWidth = 0.7
             outlineLineWidth = 0.45
         case .large:
             imageWidth = 65
             startX = 17.5
             cellWidth = 7.75
             dotDiameter = 6.25
-            selectedDotDiameter = 7
-            ringDiameter = 8.5
-            ringLineWidth = 0.85
+            selectedDotDiameter = 5
+            ringDiameter = 6.75
+            ringLineWidth = 0.8
             outlineLineWidth = 0.5
         case .extraLarge:
             imageWidth = 73
             startX = 17.5
             cellWidth = 9
             dotDiameter = 7.5
-            selectedDotDiameter = 8.25
-            ringDiameter = 10
-            ringLineWidth = 1
+            selectedDotDiameter = 6
+            ringDiameter = 7.75
+            ringLineWidth = 0.9
             outlineLineWidth = 0.55
         }
     }
