@@ -8,6 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black.svg)](https://support.apple.com/macos)
 [![Swift 5](https://img.shields.io/badge/Swift-5-F05138.svg?logo=swift&logoColor=white)](https://www.swift.org/)
+[![Latest release](https://img.shields.io/github/v/release/Mohit-Patil/keyswitch?label=download)](https://github.com/Mohit-Patil/keyswitch/releases/latest)
 [![Website](https://img.shields.io/badge/website-KeySwitch-6f8cff.svg)](https://mohit-patil.github.io/keyswitch/)
 
 <p align="center">
@@ -47,6 +48,17 @@ See the interactive showcase at
 - Static textured agent lighting by default, with continuous orbit and pulse
   animation available as an opt-in setting.
 - Local settings only: no account system, analytics, or telemetry.
+
+## Install
+
+Download the signed and Apple-notarized
+[latest universal release](https://github.com/Mohit-Patil/keyswitch/releases/latest/download/KeySwitch-v0.1.0-macOS-universal.zip),
+unzip it, and move `KeySwitch.app` to Applications. The same download runs on
+Apple Silicon and Intel Macs.
+
+On first launch, KeySwitch guides you through Input Monitoring, Accessibility,
+and the optional Codex connection. Release checksums and notes are available on
+the [GitHub Releases page](https://github.com/Mohit-Patil/keyswitch/releases/latest).
 
 ## Requirements
 
