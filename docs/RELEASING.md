@@ -3,6 +3,55 @@
 This checklist is for maintainers. Release credentials and artifacts must not
 be committed to the repository.
 
+## Automated release pipeline
+
+The `Release` GitHub Actions workflow is the production publishing path. It
+supports three entry points:
+
+- a push to `main` releases the version in `project.yml` only when its `v*`
+  tag does not exist yet;
+- pushing a new `vMAJOR.MINOR.PATCH` tag releases that tagged source unless it
+  is already present in the signed update feed;
+- the manual workflow input resumes an existing, not-yet-published tag after a
+  partial failure.
+
+An ordinary merge does not create another binary when the current version is
+already tagged. This keeps documentation and housekeeping changes from
+accidentally publishing a release. To release from a merge, update both
+versions in `project.yml`, regenerate the Xcode project, finalize the matching
+`CHANGELOG.md` section, and merge those changes to `main`. The workflow then:
+
+1. runs the full app test suite before any signing credential is imported;
+2. imports the Developer ID identity into an ephemeral runner keychain;
+3. creates a universal Developer ID archive;
+4. notarizes and staples the app and signed DMG;
+5. uploads versioned artifacts, checksums, and stable latest-download aliases;
+6. creates the version tag when the run came from `main`;
+7. creates or updates the GitHub Release;
+8. signs and commits the Sparkle appcast; and
+9. dispatches the GitHub Pages deployment.
+
+Configure these encrypted repository secrets before the first automated
+release:
+
+| Secret | Contents |
+| --- | --- |
+| `DEVELOPER_ID_P12_BASE64` | Base64 of the encrypted Developer ID `.p12` |
+| `DEVELOPER_ID_P12_PASSWORD` | Password used to encrypt that `.p12` |
+| `APP_STORE_CONNECT_KEY_ID` | App Store Connect API key ID |
+| `APP_STORE_CONNECT_ISSUER_ID` | App Store Connect API issuer ID |
+| `APP_STORE_CONNECT_PRIVATE_KEY` | Complete `AuthKey_*.p8` contents |
+| `SPARKLE_PRIVATE_KEY` | Private key exported by Sparkle `generate_keys -x` |
+
+The workflow checks the imported certificate and Sparkle public key before it
+builds, and deletes its temporary keychain and private-key files even after a
+failed run. It refuses to replace ZIP bytes for a version already published in
+the appcast, because that would invalidate the embedded Sparkle signature.
+Release tags must point to commits contained in `main`, and both Sparkle and
+the DMG packager are fetched at checksum-pinned versions.
+GitHub environments or organization-level secrets can replace repository
+secrets later without changing the workflow.
+
 ## Prepare
 
 1. Confirm `main` is green and the worktree is clean.
@@ -185,7 +234,12 @@ sparkle_tools="$(Scripts/fetch_sparkle_tools.sh)"
 The first updater-enabled release requires one normal drag-to-Applications
 installation. Releases installed after that can update in place.
 
-## Publish
+## Manual publishing fallback
+
+Use this only when GitHub Actions is unavailable or when repairing a partial
+release. Do not publish different ZIP bytes for a version already present in
+the appcast, because its embedded Sparkle signature is bound to those exact
+bytes.
 
 1. Tag the release as `vMAJOR.MINOR.PATCH`.
 2. Push the tag and create a GitHub Release from the matching changelog entry.

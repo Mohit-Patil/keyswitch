@@ -136,5 +136,10 @@ jobs:
           grep -Fq '<h2>KeySwitch 0.1.1</h2>' \
             "$RUNNER_TEMP/KeySwitch-0.1.1.html"
           python3 -m py_compile Scripts/changelog_to_html.py
+          python3 -m py_compile Scripts/release_metadata.py
+          python3 -m unittest discover -s Scripts/tests
+          Scripts/release_metadata.py
+          bash -n Scripts/create_release_dmg.sh
+          bash -n Scripts/fetch_create_dmg.sh
           bash -n Scripts/fetch_sparkle_tools.sh
           bash -n Scripts/generate_update_appcast.sh

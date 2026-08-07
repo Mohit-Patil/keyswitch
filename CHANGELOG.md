@@ -7,6 +7,12 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- An automated GitHub Actions release pipeline that signs, notarizes, staples,
+  packages, publishes, and adds each release to the signed Sparkle feed after
+  a new version reaches `main` or a matching version tag is pushed.
+
 ## [0.2.1] - 2026-08-07
 
 ### Changed
