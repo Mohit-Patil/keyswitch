@@ -4,6 +4,126 @@ import XCTest
 @testable import KeySwitch
 
 final class KeyboardEngineTests: XCTestCase {
+    func testBridgeAcceptsOnlyExpectedLoopbackDevToolsSocketURLs() throws {
+        let acceptedValues = [
+            "ws://127.0.0.1:9348/devtools/page/ABC123",
+            "wss://127.0.0.1:9348/devtools/page/ABC123",
+            "ws://[::1]:9348/devtools/page/ABC123",
+        ]
+
+        for value in acceptedValues {
+            XCTAssertNotNil(
+                CodexBridgeEndpointPolicy.validatedWebSocketURL(value, debugPort: 9348),
+                "Expected \(value) to be accepted"
+            )
+        }
+    }
+
+    func testBridgeRejectsRemoteMalformedAndMismatchedDevToolsSocketURLs() {
+        let rejectedValues = [
+            "ws://example.com:9348/devtools/page/ABC123",
+            "ws://127.0.0.1.example.com:9348/devtools/page/ABC123",
+            "ws://localhost:9348/devtools/page/ABC123",
+            "ws://127.0.0.1:9349/devtools/page/ABC123",
+            "ws://127.0.0.1/devtools/page/ABC123",
+            "http://127.0.0.1:9348/devtools/page/ABC123",
+            "ws://user@127.0.0.1:9348/devtools/page/ABC123",
+            "ws://127.0.0.1:9348/devtools/browser/ABC123",
+            "ws://127.0.0.1:9348/devtools/page/",
+            "ws://127.0.0.1:9348/devtools/page/ABC%2F123",
+            "ws://127.0.0.1:9348/devtools/page/ABC.123",
+            "ws://127.0.0.1:9348/devtools/page/ABC123?redirect=example.com",
+            "ws://127.0.0.1:9348/devtools/page/ABC123#fragment",
+            "not a URL",
+        ]
+
+        for value in rejectedValues {
+            XCTAssertNil(
+                CodexBridgeEndpointPolicy.validatedWebSocketURL(value, debugPort: 9348),
+                "Expected \(value) to be rejected"
+            )
+        }
+        XCTAssertNil(
+            CodexBridgeEndpointPolicy.validatedWebSocketURL(
+                "ws://127.0.0.1:9348/devtools/page/ABC123",
+                debugPort: 0
+            )
+        )
+        XCTAssertNil(CodexBridgeEndpointPolicy.discoveryURL(debugPort: 65_536))
+    }
+
+    func testBridgeRejectsRedirectedDiscoveryResponses() throws {
+        let expected = try XCTUnwrap(URL(string: "http://127.0.0.1:9348/json/list"))
+        XCTAssertTrue(
+            CodexBridgeEndpointPolicy.isExpectedDiscoveryResponseURL(
+                expected,
+                debugPort: 9348
+            )
+        )
+
+        let rejectedValues = [
+            "http://example.com:9348/json/list",
+            "http://127.0.0.1:9349/json/list",
+            "https://127.0.0.1:9348/json/list",
+            "http://127.0.0.1:9348/json/list?source=redirect",
+            "http://127.0.0.1:9348/json/version",
+        ]
+        for value in rejectedValues {
+            XCTAssertFalse(
+                CodexBridgeEndpointPolicy.isExpectedDiscoveryResponseURL(
+                    URL(string: value),
+                    debugPort: 9348
+                ),
+                "Expected \(value) to be rejected"
+            )
+        }
+    }
+
+    func testBridgeCapsDiscoveryResponseAtOneMiB() {
+        let limit = CodexBridgeEndpointPolicy.maximumDiscoveryResponseBytes
+        XCTAssertEqual(limit, 1_048_576)
+        XCTAssertTrue(
+            CodexBridgeEndpointPolicy.canAccumulateDiscoveryResponse(
+                currentByteCount: 0,
+                incomingByteCount: limit
+            )
+        )
+        XCTAssertTrue(
+            CodexBridgeEndpointPolicy.canAccumulateDiscoveryResponse(
+                currentByteCount: limit,
+                incomingByteCount: 0
+            )
+        )
+        XCTAssertFalse(
+            CodexBridgeEndpointPolicy.canAccumulateDiscoveryResponse(
+                currentByteCount: 0,
+                incomingByteCount: limit + 1
+            )
+        )
+        XCTAssertFalse(
+            CodexBridgeEndpointPolicy.canAccumulateDiscoveryResponse(
+                currentByteCount: limit,
+                incomingByteCount: 1
+            )
+        )
+        XCTAssertFalse(
+            CodexBridgeEndpointPolicy.canAccumulateDiscoveryResponse(
+                currentByteCount: -1,
+                incomingByteCount: 1
+            )
+        )
+    }
+
+    func testBridgePollingKeepsLightingResponsiveAndThrottlesLayoutReads() {
+        XCTAssertEqual(CodexBridgePollingPolicy.lightingIntervalMilliseconds, 900)
+        XCTAssertFalse(CodexBridgePollingPolicy.shouldPollLayout(onLightingTick: 0))
+        XCTAssertFalse(CodexBridgePollingPolicy.shouldPollLayout(onLightingTick: 1))
+        XCTAssertFalse(CodexBridgePollingPolicy.shouldPollLayout(onLightingTick: 2))
+        XCTAssertTrue(CodexBridgePollingPolicy.shouldPollLayout(onLightingTick: 3))
+        XCTAssertFalse(CodexBridgePollingPolicy.shouldPollLayout(onLightingTick: 4))
+        XCTAssertTrue(CodexBridgePollingPolicy.shouldPollLayout(onLightingTick: 6))
+    }
+
     func testFnAlonePassesThroughWithoutActivatingLayer() throws {
         let engine = makeEngine(mode: .hold, blockUnmapped: true)
         var layerStates: [Bool] = []

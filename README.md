@@ -34,6 +34,8 @@ the layer exits.
   System Settings.
 - Automatic inactivity exit, Escape safety exit, and optional blocking of
   unmapped keys while the layer is active.
+- Optional native Launch at Login registration, managed through macOS Login
+  Items without starting or controlling Codex.
 - Static textured agent lighting by default, with continuous orbit and pulse
   animation available as an opt-in setting.
 - Local settings only: no account system, analytics, or telemetry.

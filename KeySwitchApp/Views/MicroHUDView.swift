@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 struct MicroHUDOverlayView: View {
@@ -59,8 +60,48 @@ struct MicroHUDOverlayView: View {
     }
 }
 
+@MainActor
+private final class HUDAgentLightingClock: ObservableObject {
+    @Published private(set) var date: Date?
+    private var clockTask: Task<Void, Never>?
+
+    func setActive(_ active: Bool) {
+        guard active != (clockTask != nil) else { return }
+
+        clockTask?.cancel()
+        clockTask = nil
+
+        guard active else {
+            date = nil
+            return
+        }
+
+        date = Date()
+        clockTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(nanoseconds: 33_333_333)
+                } catch {
+                    return
+                }
+                guard !Task.isCancelled else { return }
+                self?.date = Date()
+            }
+        }
+    }
+
+    deinit {
+        clockTask?.cancel()
+    }
+}
+
 struct MicroHUDView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var inheritedColorScheme
+    // @State owns the stable reference without subscribing this parent view
+    // to the clock's ObservableObject publications. Only the lighting leaves
+    // below use @ObservedObject.
+    @State private var lightingClock = HUDAgentLightingClock()
     let model: AppModel
     var continuousLightingMotionEnabled = false
     var onSelectControl: ((MicroControl) -> Void)? = nil
@@ -68,13 +109,53 @@ struct MicroHUDView: View {
     private let keySize: CGFloat = 78
     private let spacing: CGFloat = 9
 
+    private var lightingAnimationIsActive: Bool {
+        guard continuousLightingMotionEnabled, !reduceMotion else { return false }
+        return (0..<6).contains { slot in
+            let light = model.lightingSnapshot.light(for: slot)
+            return light.selected || light.status == .working
+        }
+    }
+
     var body: some View {
+        // The one shared clock is observed only by HUDAgentLighting leaves,
+        // so its 30 Hz opt-in updates do not invalidate the chassis, command
+        // rows, dial, or analog stick.
+        hudGrid
+        .padding(15)
+        .frame(width: 384, height: 384)
+        .background {
+            HUDChassisView()
+        }
+        // Keep the preview's HUD appearance local. preferredColorScheme
+        // propagates upward to the enclosing presentation, which would make
+        // the entire Settings window adopt the HUD's Light or Dark choice.
+        .environment(
+            \.colorScheme,
+            model.effectiveHUDAppearance.colorScheme ?? inheritedColorScheme
+        )
+        .accessibilityElement(children: .contain)
+        .onAppear {
+            lightingClock.setActive(lightingAnimationIsActive)
+        }
+        .onChange(of: lightingAnimationIsActive) { _, active in
+            lightingClock.setActive(active)
+        }
+        .onDisappear {
+            lightingClock.setActive(false)
+        }
+    }
+
+    private var hudGrid: some View {
         VStack(spacing: spacing) {
             HStack(spacing: spacing) {
                 HUDSelectableSurface(action: selectionAction(for: .dialPress)) {
                     HUDKnobView(
                         step: model.dialRotationStep,
-                        isPressed: model.pressedControls.contains(.dialPress)
+                        isPressed: model.pressedControls.contains(.dialPress),
+                        previousKey: accessibilityKeyName(for: .dialPrevious),
+                        nextKey: accessibilityKeyName(for: .dialNext),
+                        pressKey: accessibilityKeyName(for: .dialPress)
                     )
                 }
                     .frame(width: keySize, height: keySize)
@@ -112,20 +193,6 @@ struct MicroHUDView: View {
                 key(.submit)
             }
         }
-        .padding(15)
-        .frame(width: 384, height: 384)
-        .background {
-            HUDChassisView()
-        }
-        // Keep the preview's HUD appearance local. preferredColorScheme
-        // propagates upward to the enclosing presentation, which would make
-        // the entire Settings window adopt the HUD's Light or Dark choice.
-        .environment(
-            \.colorScheme,
-            model.effectiveHUDAppearance.colorScheme ?? inheritedColorScheme
-        )
-        .accessibilityElement(children: onSelectControl == nil ? .ignore : .contain)
-        .accessibilityLabel("KeySwitch layer active")
     }
 
     private func selectionAction(for control: MicroControl) -> (() -> Void)? {
@@ -133,15 +200,22 @@ struct MicroHUDView: View {
         return { onSelectControl(control) }
     }
 
-    private func key(_ control: MicroControl, width: CGFloat? = nil) -> some View {
+    private func key(
+        _ control: MicroControl,
+        width: CGFloat? = nil
+    ) -> some View {
         HUDKeyView(
             model: model,
             control: control,
             size: keySize,
             width: width,
-            continuousLightingMotionEnabled: continuousLightingMotionEnabled,
+            lightingClock: lightingClock,
             onSelect: selectionAction(for: control)
         )
+    }
+
+    private func accessibilityKeyName(for control: MicroControl) -> String {
+        model.binding(for: control).physicalKey?.displayName ?? "Not mapped"
     }
 }
 
@@ -369,12 +443,13 @@ private struct HUDGlassKeySurface: View {
 }
 
 private struct HUDKeyView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     let model: AppModel
     let control: MicroControl
     let size: CGFloat
     var width: CGFloat? = nil
-    let continuousLightingMotionEnabled: Bool
+    let lightingClock: HUDAgentLightingClock
     var onSelect: (() -> Void)? = nil
     @State private var isHovered = false
 
@@ -416,10 +491,10 @@ private struct HUDKeyView: View {
 
             if let agentLight {
                 HUDAgentLighting(
+                    animationClock: lightingClock,
                     state: agentLight,
                     brightness: model.effectiveLightingBrightness,
-                    isPressed: isPressed,
-                    continuousMotionEnabled: continuousLightingMotionEnabled
+                    isPressed: isPressed
                 )
             } else {
                 HUDControlGlyph(
@@ -464,17 +539,31 @@ private struct HUDKeyView: View {
         }
         .scaleEffect(isPressed ? 0.955 : 1)
         .shadow(color: isPressed ? pressGlowColor.opacity(0.48) : .clear, radius: 12)
-        .animation(.spring(response: 0.16, dampingFraction: 0.74), value: isPressed)
-        .accessibilityLabel(accessibilityDescription)
+        .animation(
+            reduceMotion ? nil : .spring(response: 0.16, dampingFraction: 0.74),
+            value: isPressed
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(control.title)
+        .accessibilityValue(accessibilityValue)
     }
 
-    private var accessibilityDescription: String {
-        let mapping = "mapped to \(physicalKeyName)"
-        guard let agentLight else { return "\(control.title), \(mapping)" }
+    private var accessibilityValue: String {
+        let mapping = model.binding(for: control).physicalKey.map {
+            "Mapped to \($0.displayName)"
+        } ?? "Not mapped"
+        guard let agentLight else { return mapping }
+
+        var details: [String] = []
         if let title = agentLight.title {
-            return "\(control.title), \(title), \(agentLight.status.title), \(mapping)"
+            details.append(title)
         }
-        return "\(control.title), \(agentLight.status.title), \(mapping)"
+        details.append(agentLight.status.title)
+        if agentLight.selected {
+            details.append("Selected")
+        }
+        details.append(mapping)
+        return details.joined(separator: ", ")
     }
 }
 
@@ -558,11 +647,10 @@ private struct HUDAgentPalette {
 
 private struct HUDAgentLighting: View {
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject var animationClock: HUDAgentLightingClock
     let state: AgentLightState
     let brightness: Double
     let isPressed: Bool
-    let continuousMotionEnabled: Bool
 
     private var signalColor: Color {
         Color(packedRGB: state.status.packedRGB)
@@ -581,83 +669,79 @@ private struct HUDAgentLighting: View {
     }
 
     private var shouldAnimate: Bool {
-        shouldOrbit && continuousMotionEnabled && !reduceMotion
+        shouldOrbit && animationClock.date != nil
     }
 
     var body: some View {
-        TimelineView(
-            .animation(minimumInterval: 1.0 / 60.0, paused: !shouldAnimate)
-        ) { timeline in
-            let pulse = pulseAmount(at: timeline.date)
-            let orbit = orbitDegrees(at: timeline.date)
+        let pulse = pulseAmount(at: animationClock.date)
+        let orbit = orbitDegrees(at: animationClock.date)
 
-            ZStack {
-                if state.status != .off {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [palette.surfaceTop, palette.surfaceBottom],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+        ZStack {
+            if state.status != .off {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [palette.surfaceTop, palette.surfaceBottom],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
-                        .opacity(
-                            (0.82 + 0.12 * normalizedBrightness)
-                                * normalizedBrightness
-                                * pulse
-                        )
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .strokeBorder(
-                                    LinearGradient(
-                                        colors: [
-                                            .white.opacity(0.42),
-                                            palette.rim.opacity(0.82),
-                                            .black.opacity(0.34),
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: state.selected ? 1.6 : 1.2
-                                )
-                                .opacity(normalizedBrightness * pulse)
-                        }
-                        .shadow(
-                            color: palette.glow.opacity(
-                                (isPressed ? 0.72 : 0.38) * normalizedBrightness * pulse
-                            ),
-                            radius: state.selected ? 13 : 8
-                        )
-
-                    if shouldOrbit {
-                        HUDAgentOrbitingRim(
-                            color: signalColor,
-                            phase: orbit,
-                            brightness: normalizedBrightness,
-                            emphasized: state.selected,
-                            isPressed: isPressed
-                        )
-                    } else {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    )
+                    .opacity(
+                        (0.82 + 0.12 * normalizedBrightness)
+                            * normalizedBrightness
+                            * pulse
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .strokeBorder(
                                 LinearGradient(
                                     colors: [
-                                        .white.opacity(0.18),
-                                        palette.rim.opacity(0.3 * normalizedBrightness),
-                                        .clear,
-                                        .black.opacity(0.18),
+                                        .white.opacity(0.42),
+                                        palette.rim.opacity(0.82),
+                                        .black.opacity(0.34),
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),
-                                lineWidth: 0.8
+                                lineWidth: state.selected ? 1.6 : 1.2
                             )
-                            .padding(2)
+                            .opacity(normalizedBrightness * pulse)
                     }
-                }
+                    .shadow(
+                        color: palette.glow.opacity(
+                            (isPressed ? 0.72 : 0.38) * normalizedBrightness * pulse
+                        ),
+                        radius: state.selected ? 13 : 8
+                    )
 
-                lightDot(pulse: pulse)
+                if shouldOrbit {
+                    HUDAgentOrbitingRim(
+                        color: signalColor,
+                        phase: orbit,
+                        brightness: normalizedBrightness,
+                        emphasized: state.selected,
+                        isPressed: isPressed
+                    )
+                } else {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [
+                                    .white.opacity(0.18),
+                                    palette.rim.opacity(0.3 * normalizedBrightness),
+                                    .clear,
+                                    .black.opacity(0.18),
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.8
+                        )
+                        .padding(2)
+                }
             }
+
+            lightDot(pulse: pulse)
         }
     }
 
@@ -697,14 +781,14 @@ private struct HUDAgentLighting: View {
             )
     }
 
-    private func pulseAmount(at date: Date) -> Double {
-        guard shouldAnimate else { return 1 }
+    private func pulseAmount(at date: Date?) -> Double {
+        guard shouldAnimate, let date else { return 1 }
         let wave = (sin(date.timeIntervalSinceReferenceDate * .pi * 1.25) + 1) / 2
         return 0.8 + wave * 0.2
     }
 
-    private func orbitDegrees(at date: Date) -> Double {
-        guard shouldAnimate else { return 0 }
+    private func orbitDegrees(at date: Date?) -> Double {
+        guard shouldAnimate, let date else { return 0 }
         let duration = state.status == .working ? 2.8 : 4.2
         let progress = date.timeIntervalSinceReferenceDate
             .truncatingRemainder(dividingBy: duration) / duration
@@ -825,9 +909,13 @@ private extension HUDAppearance {
 }
 
 private struct HUDKnobView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     let step: Int
     let isPressed: Bool
+    let previousKey: String
+    let nextKey: String
+    let pressKey: String
 
     private var isDark: Bool { colorScheme == .dark }
 
@@ -894,14 +982,25 @@ private struct HUDKnobView: View {
             .padding(5)
             .scaleEffect(isPressed ? 0.94 : 1)
             .shadow(color: .black.opacity(isDark ? 0.52 : 0.34), radius: 5, y: 4)
-            .animation(.spring(response: 0.22, dampingFraction: 0.72), value: step)
-            .animation(.spring(response: 0.16, dampingFraction: 0.76), value: isPressed)
+            .animation(
+                reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.72),
+                value: step
+            )
+            .animation(
+                reduceMotion ? nil : .spring(response: 0.16, dampingFraction: 0.76),
+                value: isPressed
+            )
+            .accessibilityElement(children: .ignore)
             .accessibilityLabel("Dial")
-            .accessibilityValue("Step \(step + 1) of 8")
+            .accessibilityValue(
+                "Position \(step + 1) of 8. Previous mapped to \(previousKey). "
+                    + "Next mapped to \(nextKey). Press mapped to \(pressKey)"
+            )
     }
 }
 
 private struct HUDAnalogStickView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     let model: AppModel
 
@@ -921,6 +1020,16 @@ private struct HUDAnalogStickView: View {
 
     private var isPressed: Bool {
         offset != .zero
+    }
+
+    private var accessibilityValue: String {
+        let position = isPressed ? "Moved" : "Centered"
+        let mappings: [MicroControl] = [.stickUp, .stickRight, .stickDown, .stickLeft]
+        let mappingSummary = mappings.map { control in
+            let key = model.binding(for: control).physicalKey?.displayName ?? "Not mapped"
+            return "\(control.title) mapped to \(key)"
+        }.joined(separator: ". ")
+        return "\(position). \(mappingSummary)"
     }
 
     var body: some View {
@@ -947,9 +1056,13 @@ private struct HUDAnalogStickView: View {
                 .shadow(color: .black.opacity(0.72), radius: 5, y: 3)
                 .offset(offset)
         }
-        .animation(.spring(response: 0.15, dampingFraction: 0.7), value: offset)
+        .animation(
+            reduceMotion ? nil : .spring(response: 0.15, dampingFraction: 0.7),
+            value: offset
+        )
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel("Analog stick")
-        .accessibilityValue(isPressed ? "Moved" : "Centered")
+        .accessibilityValue(accessibilityValue)
     }
 }
 

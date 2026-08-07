@@ -46,6 +46,16 @@ struct MenuBarStatusLabel: View {
     }
 }
 
+enum MenuBarStatusIndicatorSymbol: Equatable {
+    case hollowCircle
+    case circle
+    case diamond
+    case square
+    case triangleUp
+    case triangleDown
+    case error
+}
+
 enum MenuBarStatusIconRenderer {
     private static let imageHeight: CGFloat = 16
     private static let keyboardWidth: CGFloat = 14
@@ -145,16 +155,106 @@ enum MenuBarStatusIconRenderer {
                 width: diameter,
                 height: diameter
             )
-            color.setFill()
-            NSBezierPath(ovalIn: dotRect).fill()
+            drawIndicator(
+                symbol: indicatorSymbol(for: state.status),
+                color: color,
+                metrics: metrics,
+                in: dotRect
+            )
+        }
+    }
 
-            let outline = state.status == .idle
-                ? NSColor.black.withAlphaComponent(0.42)
-                : NSColor.black.withAlphaComponent(0.2)
-            outline.setStroke()
-            let outlinePath = NSBezierPath(ovalIn: dotRect.insetBy(dx: 0.15, dy: 0.15))
-            outlinePath.lineWidth = metrics.outlineLineWidth
-            outlinePath.stroke()
+    static func indicatorSymbol(
+        for status: AgentLightStatus
+    ) -> MenuBarStatusIndicatorSymbol {
+        switch status {
+        case .off: .hollowCircle
+        case .idle: .circle
+        case .working: .diamond
+        case .unread: .square
+        case .awaitingApproval: .triangleUp
+        case .awaitingResponse: .triangleDown
+        case .error: .error
+        }
+    }
+
+    private static func drawIndicator(
+        symbol: MenuBarStatusIndicatorSymbol,
+        color: NSColor,
+        metrics: IndicatorMetrics,
+        in rect: NSRect
+    ) {
+        if symbol == .hollowCircle {
+            color.setStroke()
+            let path = NSBezierPath(ovalIn: rect.insetBy(dx: 0.2, dy: 0.2))
+            path.lineWidth = max(metrics.outlineLineWidth, 0.65)
+            path.stroke()
+            return
+        }
+
+        let path = indicatorPath(for: symbol, in: rect)
+        color.setFill()
+        path.fill()
+
+        NSColor.black.withAlphaComponent(symbol == .circle ? 0.42 : 0.24).setStroke()
+        path.lineWidth = metrics.outlineLineWidth
+        path.stroke()
+
+        guard symbol == .error else { return }
+        NSColor.white.withAlphaComponent(0.92).setStroke()
+        let inset = max(1, rect.width * 0.27)
+        let cross = NSBezierPath()
+        cross.move(to: NSPoint(x: rect.minX + inset, y: rect.minY + inset))
+        cross.line(to: NSPoint(x: rect.maxX - inset, y: rect.maxY - inset))
+        cross.move(to: NSPoint(x: rect.minX + inset, y: rect.maxY - inset))
+        cross.line(to: NSPoint(x: rect.maxX - inset, y: rect.minY + inset))
+        cross.lineWidth = max(metrics.outlineLineWidth, 0.65)
+        cross.lineCapStyle = .round
+        cross.stroke()
+    }
+
+    private static func indicatorPath(
+        for symbol: MenuBarStatusIndicatorSymbol,
+        in rect: NSRect
+    ) -> NSBezierPath {
+        switch symbol {
+        case .hollowCircle, .circle, .error:
+            return NSBezierPath(ovalIn: rect)
+        case .diamond:
+            let path = NSBezierPath()
+            path.move(to: NSPoint(x: rect.midX, y: rect.maxY))
+            path.line(to: NSPoint(x: rect.maxX, y: rect.midY))
+            path.line(to: NSPoint(x: rect.midX, y: rect.minY))
+            path.line(to: NSPoint(x: rect.minX, y: rect.midY))
+            path.close()
+            return path
+        case .square:
+            return NSBezierPath(
+                roundedRect: rect,
+                xRadius: max(0.7, rect.width * 0.18),
+                yRadius: max(0.7, rect.height * 0.18)
+            )
+        case .triangleUp, .triangleDown:
+            let points: [NSPoint]
+            if symbol == .triangleUp {
+                points = [
+                    NSPoint(x: rect.midX, y: rect.maxY),
+                    NSPoint(x: rect.maxX, y: rect.minY),
+                    NSPoint(x: rect.minX, y: rect.minY),
+                ]
+            } else {
+                points = [
+                    NSPoint(x: rect.minX, y: rect.maxY),
+                    NSPoint(x: rect.maxX, y: rect.maxY),
+                    NSPoint(x: rect.midX, y: rect.minY),
+                ]
+            }
+            let path = NSBezierPath()
+            path.move(to: points[0])
+            path.line(to: points[1])
+            path.line(to: points[2])
+            path.close()
+            return path
         }
     }
 

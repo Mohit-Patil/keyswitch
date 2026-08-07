@@ -21,6 +21,241 @@ private struct CodexDebugTarget: Decodable {
     let webSocketDebuggerUrl: String
 }
 
+enum CodexBridgeEndpointPolicy {
+    static let maximumDiscoveryResponseBytes = 1_048_576
+
+    private static let validWebSocketSchemes = Set(["ws", "wss"])
+    private static let numericLoopbackHosts = Set(["127.0.0.1", "[::1]"])
+
+    static func discoveryURL(debugPort: Int) -> URL? {
+        guard (1...65_535).contains(debugPort) else { return nil }
+        return URL(string: "http://127.0.0.1:\(debugPort)/json/list")
+    }
+
+    static func isExpectedDiscoveryResponseURL(_ url: URL?, debugPort: Int) -> Bool {
+        guard (1...65_535).contains(debugPort),
+              let url,
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              components.scheme?.lowercased() == "http",
+              components.host?.lowercased() == "127.0.0.1",
+              components.port == debugPort,
+              components.user == nil,
+              components.password == nil,
+              components.percentEncodedPath == "/json/list",
+              components.percentEncodedQuery == nil,
+              components.fragment == nil else {
+            return false
+        }
+        return true
+    }
+
+    static func validatedWebSocketURL(_ rawValue: String, debugPort: Int) -> URL? {
+        guard (1...65_535).contains(debugPort),
+              let components = URLComponents(string: rawValue),
+              let scheme = components.scheme?.lowercased(),
+              validWebSocketSchemes.contains(scheme),
+              let host = components.host?.lowercased(),
+              numericLoopbackHosts.contains(host),
+              components.port == debugPort,
+              components.user == nil,
+              components.password == nil,
+              components.percentEncodedQuery == nil,
+              components.fragment == nil else {
+            return nil
+        }
+
+        let pathSegments = components.percentEncodedPath.split(
+            separator: "/",
+            omittingEmptySubsequences: true
+        )
+        guard pathSegments.count == 3,
+              pathSegments[0] == "devtools",
+              pathSegments[1] == "page",
+              !pathSegments[2].isEmpty,
+              pathSegments[2].unicodeScalars.allSatisfy({ scalar in
+                  CharacterSet.alphanumerics.contains(scalar)
+                      || scalar == "-"
+                      || scalar == "_"
+              }) else {
+            return nil
+        }
+        return components.url
+    }
+
+    static func canAccumulateDiscoveryResponse(
+        currentByteCount: Int,
+        incomingByteCount: Int
+    ) -> Bool {
+        guard currentByteCount >= 0,
+              incomingByteCount >= 0,
+              currentByteCount <= maximumDiscoveryResponseBytes else {
+            return false
+        }
+        return incomingByteCount <= maximumDiscoveryResponseBytes - currentByteCount
+    }
+}
+
+enum CodexBridgePollingPolicy {
+    static let lightingIntervalMilliseconds = 900
+    static let layoutPollEveryLightingTicks = 3
+
+    static func shouldPollLayout(onLightingTick tick: Int) -> Bool {
+        tick > 0 && tick.isMultiple(of: layoutPollEveryLightingTicks)
+    }
+}
+
+private final class NoRedirectURLSessionDelegate: NSObject, URLSessionTaskDelegate {
+    static let shared = NoRedirectURLSessionDelegate()
+
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest,
+        completionHandler: @escaping (URLRequest?) -> Void
+    ) {
+        completionHandler(nil)
+    }
+}
+
+private enum BoundedDiscoveryRequestError: Error {
+    case responseTooLarge
+}
+
+// URLSession may invoke cancellation and delegate callbacks on different
+// threads. Every mutable field below is protected by stateLock.
+private final class BoundedDiscoveryRequest: NSObject, URLSessionDataDelegate, @unchecked Sendable {
+    private typealias Completion = (Data?, URLResponse?, Error?) -> Void
+
+    private let maximumResponseBytes: Int
+    private let stateLock = NSLock()
+    private var completion: Completion?
+    private var session: URLSession?
+    private var task: URLSessionDataTask?
+    private var response: URLResponse?
+    private var receivedData = Data()
+    private var isFinished = false
+
+    init(maximumResponseBytes: Int) {
+        self.maximumResponseBytes = maximumResponseBytes
+    }
+
+    func start(
+        url: URL,
+        completion: @escaping (Data?, URLResponse?, Error?) -> Void
+    ) {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        configuration.timeoutIntervalForRequest = 3
+        configuration.timeoutIntervalForResource = 5
+        configuration.urlCache = nil
+        let session = URLSession(
+            configuration: configuration,
+            delegate: self,
+            delegateQueue: nil
+        )
+        let task = session.dataTask(with: url)
+
+        stateLock.lock()
+        self.completion = completion
+        self.session = session
+        self.task = task
+        stateLock.unlock()
+
+        task.resume()
+    }
+
+    func cancel() {
+        stateLock.lock()
+        let task = task
+        stateLock.unlock()
+        task?.cancel()
+        finish(error: URLError(.cancelled))
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest,
+        completionHandler: @escaping (URLRequest?) -> Void
+    ) {
+        completionHandler(nil)
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        dataTask: URLSessionDataTask,
+        didReceive response: URLResponse,
+        completionHandler: @escaping (URLSession.ResponseDisposition) -> Void
+    ) {
+        if response.expectedContentLength > Int64(maximumResponseBytes) {
+            completionHandler(.cancel)
+            finish(error: BoundedDiscoveryRequestError.responseTooLarge)
+            return
+        }
+
+        stateLock.lock()
+        let isFinished = isFinished
+        if !isFinished {
+            self.response = response
+        }
+        stateLock.unlock()
+        completionHandler(isFinished ? .cancel : .allow)
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        dataTask: URLSessionDataTask,
+        didReceive data: Data
+    ) {
+        stateLock.lock()
+        let canAccumulate = !isFinished && CodexBridgeEndpointPolicy.canAccumulateDiscoveryResponse(
+            currentByteCount: receivedData.count,
+            incomingByteCount: data.count
+        )
+        if canAccumulate {
+            receivedData.append(data)
+        }
+        stateLock.unlock()
+
+        guard canAccumulate else {
+            dataTask.cancel()
+            finish(error: BoundedDiscoveryRequestError.responseTooLarge)
+            return
+        }
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        didCompleteWithError error: Error?
+    ) {
+        finish(error: error)
+    }
+
+    private func finish(error: Error?) {
+        stateLock.lock()
+        guard !isFinished else {
+            stateLock.unlock()
+            return
+        }
+        isFinished = true
+        let completion = completion
+        self.completion = nil
+        let data = error == nil ? receivedData : nil
+        let response = response
+        let session = session
+        self.session = nil
+        task = nil
+        receivedData.removeAll(keepingCapacity: false)
+        stateLock.unlock()
+
+        session?.invalidateAndCancel()
+        completion?(data, response, error)
+    }
+}
+
 struct CodexMicroKeyEvent: Encodable, Equatable {
     let key: String
     let act: Int
@@ -39,17 +274,24 @@ enum CodexMicroOutboundEvent: Equatable {
     case joystick(CodexMicroJoystickEvent)
 }
 
-final class CodexMicroBridge {
+// All mutable bridge state is confined to queue. The unchecked conformance
+// makes that explicit to Swift's strict-concurrency diagnostics while the
+// public callbacks continue to publish on the main queue.
+final class CodexMicroBridge: @unchecked Sendable {
     private typealias ProtocolCompletion = (Any?) -> Void
 
     private let queue = DispatchQueue(label: "com.keyswitch.codex-bridge")
+    private let webSocketSession: URLSession
+    private var discoveryRequest: BoundedDiscoveryRequest?
     private var socket: URLSessionWebSocketTask?
     private var nextRequestID = 1
     private var pendingResponses: [Int: ProtocolCompletion] = [:]
     private var lightingPollTimer: DispatchSourceTimer?
     private var lightingPollIsInFlight = false
     private var layoutPollIsInFlight = false
+    private var lightingPollTick = 0
     private var lightingSnapshot = CodexLightingSnapshot.off
+    private var layoutSnapshot: CodexMicroLayoutSnapshot?
     private var debugPort: Int
     private var isReady = false
     private var shouldReconnect = false
@@ -62,6 +304,19 @@ final class CodexMicroBridge {
 
     init(debugPort: Int) {
         self.debugPort = debugPort
+        let webSocketConfiguration = URLSessionConfiguration.ephemeral
+        webSocketConfiguration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        webSocketConfiguration.urlCache = nil
+        webSocketSession = URLSession(
+            configuration: webSocketConfiguration,
+            delegate: NoRedirectURLSessionDelegate.shared,
+            delegateQueue: nil
+        )
+    }
+
+    deinit {
+        discoveryRequest?.cancel()
+        webSocketSession.invalidateAndCancel()
     }
 
     func connect() {
@@ -339,16 +594,30 @@ final class CodexMicroBridge {
     }
 
     private func discoverRenderer(attempt: Int) {
-        guard let url = URL(string: "http://127.0.0.1:\(debugPort)/json/list") else {
+        guard let url = CodexBridgeEndpointPolicy.discoveryURL(debugPort: debugPort) else {
             handleConnectionFailure(attempt: attempt)
             return
         }
 
-        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
+        let request = BoundedDiscoveryRequest(
+            maximumResponseBytes: CodexBridgeEndpointPolicy.maximumDiscoveryResponseBytes
+        )
+        let requestIdentifier = ObjectIdentifier(request)
+        discoveryRequest = request
+        request.start(url: url) { [weak self] data, response, error in
             guard let self else { return }
             self.queue.async {
+                if self.discoveryRequest.map(ObjectIdentifier.init) == requestIdentifier {
+                    self.discoveryRequest = nil
+                }
                 guard attempt == self.connectionAttempt, self.shouldReconnect else { return }
-                guard error == nil else {
+                guard error == nil,
+                      let httpResponse = response as? HTTPURLResponse,
+                      httpResponse.statusCode == 200,
+                      CodexBridgeEndpointPolicy.isExpectedDiscoveryResponseURL(
+                        httpResponse.url,
+                        debugPort: self.debugPort
+                      ) else {
                     self.handleConnectionFailure(attempt: attempt)
                     return
                 }
@@ -356,7 +625,10 @@ final class CodexMicroBridge {
                 do {
                     let targets = try JSONDecoder().decode([CodexDebugTarget].self, from: data ?? Data())
                     guard let target = targets.first(where: { $0.url == "app://-/index.html" }),
-                          let socketURL = URL(string: target.webSocketDebuggerUrl) else {
+                          let socketURL = CodexBridgeEndpointPolicy.validatedWebSocketURL(
+                            target.webSocketDebuggerUrl,
+                            debugPort: self.debugPort
+                          ) else {
                         self.handleConnectionFailure(attempt: attempt)
                         return
                     }
@@ -365,12 +637,12 @@ final class CodexMicroBridge {
                     self.handleConnectionFailure(attempt: attempt)
                 }
             }
-        }.resume()
+        }
     }
 
     private func openSocket(_ url: URL, attempt: Int) {
         guard attempt == connectionAttempt, shouldReconnect else { return }
-        let task = URLSession.shared.webSocketTask(with: url)
+        let task = webSocketSession.webSocketTask(with: url)
         socket = task
         task.resume()
         isReady = true
@@ -426,6 +698,9 @@ final class CodexMicroBridge {
         isReady = false
         stopLightingPolling()
         pendingResponses.removeAll()
+        layoutSnapshot = nil
+        discoveryRequest?.cancel()
+        discoveryRequest = nil
         socket?.cancel(with: .goingAway, reason: nil)
         socket = nil
         if updateStatus {
@@ -465,13 +740,17 @@ final class CodexMicroBridge {
 
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(
-            deadline: .now() + .milliseconds(900),
-            repeating: .milliseconds(900),
+            deadline: .now() + .milliseconds(CodexBridgePollingPolicy.lightingIntervalMilliseconds),
+            repeating: .milliseconds(CodexBridgePollingPolicy.lightingIntervalMilliseconds),
             leeway: .milliseconds(100)
         )
         timer.setEventHandler { [weak self] in
-            self?.pollAgentLighting()
-            self?.pollMicroLayout()
+            guard let self else { return }
+            self.pollAgentLighting()
+            self.lightingPollTick += 1
+            if CodexBridgePollingPolicy.shouldPollLayout(onLightingTick: self.lightingPollTick) {
+                self.pollMicroLayout()
+            }
         }
         timer.resume()
         lightingPollTimer = timer
@@ -482,6 +761,7 @@ final class CodexMicroBridge {
         lightingPollTimer = nil
         lightingPollIsInFlight = false
         layoutPollIsInFlight = false
+        lightingPollTick = 0
     }
 
     private func pollAgentLighting() {
@@ -501,6 +781,7 @@ final class CodexMicroBridge {
                   let snapshot = try? JSONDecoder().decode(CodexLightingSnapshot.self, from: data) else {
                 return
             }
+            guard snapshot != self.lightingSnapshot else { return }
             self.lightingSnapshot = snapshot
             self.publishLighting(snapshot)
         }
@@ -530,6 +811,8 @@ final class CodexMicroBridge {
                   ) else {
                 return
             }
+            guard snapshot != self.layoutSnapshot else { return }
+            self.layoutSnapshot = snapshot
             self.publishLayout(snapshot)
         }
 
@@ -677,10 +960,10 @@ final class CodexMicroBridge {
                 return false
             }
             socket.send(.string(json)) { [weak self] error in
-                guard error != nil else { return }
-                self?.queue.async {
-                    self?.disconnectInternal(updateStatus: true)
-                    self?.scheduleReconnect()
+                guard error != nil, let self else { return }
+                self.queue.async {
+                    self.disconnectInternal(updateStatus: true)
+                    self.scheduleReconnect()
                 }
             }
             return true

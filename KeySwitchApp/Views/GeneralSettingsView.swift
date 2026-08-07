@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct GeneralSettingsView: View {
@@ -140,6 +141,33 @@ struct GeneralSettingsView: View {
                 )
             }
 
+            Section("Startup") {
+                Toggle(
+                    "Launch KeySwitch at login",
+                    isOn: Binding(
+                        get: { model.launchAtLoginState.isRequested },
+                        set: { model.setLaunchAtLogin($0) }
+                    )
+                )
+                .disabled(model.launchAtLoginState == .unavailable)
+
+                Text(model.launchAtLoginState.detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if model.launchAtLoginState == .requiresApproval {
+                    Button("Open Login Items Settings") {
+                        model.openLoginItemsSettings()
+                    }
+                }
+
+                if let errorMessage = model.launchAtLoginErrorMessage {
+                    Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+
             Section("Permissions") {
                 PermissionRow(
                     title: "Input Monitoring",
@@ -170,6 +198,14 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .padding(20)
+        .onAppear {
+            model.refreshLaunchAtLoginState()
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
+        ) { _ in
+            model.refreshLaunchAtLoginState()
+        }
         .sheet(item: $shortcutBeingEdited) { shortcut in
             ActivationShortcutEditor(model: model, initialShortcut: shortcut)
         }

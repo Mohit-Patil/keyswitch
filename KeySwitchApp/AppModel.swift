@@ -34,6 +34,24 @@ struct AgentTapTracker {
     }
 }
 
+/// The subset of persisted settings that changes how the global event tap
+/// interprets keyboard input. Keeping this value separate prevents visual,
+/// connection, and onboarding preferences from needlessly rebuilding the
+/// keyboard engine (which also deactivates an active layer for safety).
+struct KeyboardEngineConfigurationSignature: Equatable {
+    let activationMode: ActivationMode
+    let activationShortcut: ActivationShortcut
+    let blockUnmappedKeys: Bool
+    let bindings: [KeyBinding]
+
+    init(configuration: AppConfiguration) {
+        activationMode = configuration.activationMode
+        activationShortcut = configuration.activationShortcut
+        blockUnmappedKeys = configuration.blockUnmappedKeys
+        bindings = configuration.bindings
+    }
+}
+
 @MainActor
 @Observable
 final class AppModel {
@@ -57,6 +75,8 @@ final class AppModel {
     var hudPreviewIsVisible = false
     var codexRelaunchIsInProgress = false
     var setupErrorMessage: String?
+    var launchAtLoginState = LaunchAtLoginService.currentState
+    var launchAtLoginErrorMessage: String?
 
     @ObservationIgnored private var hasStarted = false
     @ObservationIgnored private var permissionRefreshTimer: Timer?
@@ -110,7 +130,7 @@ final class AppModel {
     private lazy var keyboardEngine: KeyboardEngine = {
         let engine = KeyboardEngine(configuration: engineConfiguration)
         engine.onLayerStateChanged = { [weak self] active in
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
                 self?.handleLayerStateChanged(active)
             }
         }
@@ -129,12 +149,13 @@ final class AppModel {
             if shouldFocusCodex {
                 self.bridge.focusCodexWindow()
             }
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 self.handleControlEvent(control, action: action)
             }
         }
         engine.onTapStatusChanged = { [weak self] active in
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
                 self?.eventTapIsActive = active
                 self?.permissions = PermissionService.snapshot()
             }
@@ -164,6 +185,7 @@ final class AppModel {
         guard !hasStarted else { return }
         hasStarted = true
         permissions = PermissionService.snapshot()
+        refreshLaunchAtLoginState()
         eventTapIsActive = keyboardEngine.start()
         bridge.connect()
 
@@ -223,6 +245,24 @@ final class AppModel {
 
     func refreshPermissions() {
         refreshPermissionState(retryIfGranted: true)
+    }
+
+    func refreshLaunchAtLoginState() {
+        launchAtLoginState = LaunchAtLoginService.currentState
+    }
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        launchAtLoginErrorMessage = nil
+        do {
+            try LaunchAtLoginService.setEnabled(enabled)
+        } catch {
+            launchAtLoginErrorMessage = error.localizedDescription
+        }
+        refreshLaunchAtLoginState()
+    }
+
+    func openLoginItemsSettings() {
+        LaunchAtLoginService.openSystemSettings()
     }
 
     func reconnectBridge() {
@@ -466,7 +506,7 @@ final class AppModel {
             at: applicationURL,
             configuration: launchConfiguration
         ) { [weak self] _, error in
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.codexRelaunchIsInProgress = false
                 if let error {
@@ -482,7 +522,10 @@ final class AppModel {
 
     private func configurationDidChange(from previous: AppConfiguration) {
         saveConfiguration()
-        if hasStarted {
+        let keyboardConfigurationChanged = KeyboardEngineConfigurationSignature(
+            configuration: configuration
+        ) != KeyboardEngineConfigurationSignature(configuration: previous)
+        if hasStarted, keyboardConfigurationChanged {
             keyboardEngine.update(configuration: engineConfiguration)
         }
 

@@ -20,6 +20,18 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
   Micro HUD, with migration-safe persistence and live panel resizing.
 - Selecting a HUD size or appearance briefly previews the real, nonactivating
   Codex Micro overlay at the screen's top-right; menu-bar sizes update in place.
+- Native Launch at Login control with explicit macOS approval and error states.
+- A bundled privacy manifest declaring no tracking or collected data and the
+  approved reasons for local preferences and double-tap timing.
+
+### Changed
+
+- Hardened the local Codex bridge against redirects, remote WebSocket targets,
+  malformed endpoints, and oversized discovery responses.
+- Reduced repeated renderer and HUD work while preserving live status updates.
+- Expanded VoiceOver and Reduce Motion support across the HUD and menu status.
+- Unified release version metadata and added universal Release verification to
+  CI.
 
 ### Removed
 

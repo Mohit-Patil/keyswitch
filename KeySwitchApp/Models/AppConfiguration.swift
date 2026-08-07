@@ -68,6 +68,9 @@ enum MenuBarIndicatorSize: String, Codable, CaseIterable, Identifiable {
 }
 
 struct AppConfiguration: Codable, Equatable {
+    static let defaultDebugPort = 9348
+    static let validDebugPortRange = 1...65_535
+
     var activationMode: ActivationMode
     var activationShortcut: ActivationShortcut
     var layerAutoExitTimeout: LayerAutoExitTimeout
@@ -82,7 +85,13 @@ struct AppConfiguration: Codable, Equatable {
     var autoDimTimeout: AutoDimTimeout
     var focusCodexOnSingleTap: Bool
     var hasCompletedFirstRunSetup: Bool
-    var debugPort: Int
+    var debugPort: Int {
+        didSet {
+            if !Self.isValidDebugPort(debugPort) {
+                debugPort = oldValue
+            }
+        }
+    }
     var bindings: [KeyBinding]
 
     init(
@@ -117,7 +126,7 @@ struct AppConfiguration: Codable, Equatable {
         self.autoDimTimeout = autoDimTimeout
         self.focusCodexOnSingleTap = focusCodexOnSingleTap
         self.hasCompletedFirstRunSetup = hasCompletedFirstRunSetup
-        self.debugPort = debugPort
+        self.debugPort = Self.validatedDebugPort(debugPort)
         self.bindings = bindings
     }
 
@@ -173,7 +182,13 @@ struct AppConfiguration: Codable, Equatable {
             Bool.self,
             forKey: .hasCompletedFirstRunSetup
         ) ?? false
-        debugPort = try container.decodeIfPresent(Int.self, forKey: .debugPort) ?? 9348
+        let decodedDebugPort: Int?
+        do {
+            decodedDebugPort = try container.decodeIfPresent(Int.self, forKey: .debugPort)
+        } catch {
+            decodedDebugPort = nil
+        }
+        debugPort = Self.validatedDebugPort(decodedDebugPort)
         let decodedBindings = try container.decodeIfPresent([KeyBinding].self, forKey: .bindings) ?? []
         bindings = KeyBinding.mergingDefaults(into: decodedBindings)
     }
@@ -193,7 +208,18 @@ struct AppConfiguration: Codable, Equatable {
         autoDimTimeout: .threeMinutes,
         focusCodexOnSingleTap: false,
         hasCompletedFirstRunSetup: false,
-        debugPort: 9348,
+        debugPort: defaultDebugPort,
         bindings: KeyBinding.defaults
     )
+
+    static func isValidDebugPort(_ port: Int) -> Bool {
+        validDebugPortRange.contains(port)
+    }
+
+    static func validatedDebugPort(_ port: Int?) -> Int {
+        guard let port, isValidDebugPort(port) else {
+            return defaultDebugPort
+        }
+        return port
+    }
 }
