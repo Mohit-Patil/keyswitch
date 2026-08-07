@@ -55,6 +55,23 @@ pushes made by the release workflow itself.
 GitHub environments or organization-level secrets can replace repository
 secrets later without changing the workflow.
 
+## Main branch protection
+
+The GitHub `main` branch protection policy applies to administrators and:
+
+- requires every change to arrive through a pull request;
+- requires the GitHub Actions `Test` check on a branch that includes the
+  latest `main`;
+- requires all review conversations to be resolved;
+- requires linear history; and
+- blocks force pushes and branch deletion.
+
+The required approval count is intentionally zero. KeySwitch currently has a
+single maintainer, and GitHub does not let a pull request author approve their
+own change. The PR boundary still prevents direct commits and ensures the
+required CI and conversation gates run. Increase the approval count when a
+second regular reviewer is available.
+
 ## Prepare
 
 1. Confirm `main` is green and the worktree is clean.
