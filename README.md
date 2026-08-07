@@ -45,6 +45,8 @@ See the interactive showcase at
   unmapped keys while the layer is active.
 - Optional native Launch at Login registration, managed through macOS Login
   Items without starting or controlling Codex.
+- Signed background update checks with a one-click **Restart to Update** action
+  once a new release is downloaded and ready.
 - Static textured agent lighting by default, with continuous orbit and pulse
   animation available as an opt-in setting.
 - Local settings only: no account system, analytics, or telemetry.
@@ -98,6 +100,9 @@ The repository intentionally does not include signing credentials, notarized
 binaries, profiling traces, or local design-review captures. macOS privacy
 permissions are tied to an app's identity and location, so unsigned rebuilds
 may need their permissions granted again.
+
+Official GitHub release builds can update themselves through Sparkle. Debug,
+unsigned, and development-signed builds deliberately keep the updater disabled.
 
 To regenerate the Xcode project after editing `project.yml`:
 
@@ -212,6 +217,9 @@ Codex versions when reporting bridge issues.
 ## License
 
 KeySwitch is available under the [MIT License](LICENSE).
+
+The bundled Sparkle updater and its notices are documented in
+[`ThirdPartyNotices.txt`](KeySwitchApp/Resources/ThirdPartyNotices.txt).
 
 All third-party product names, trademarks, and registered trademarks are the
 property of their respective owners. Their use is descriptive and does not

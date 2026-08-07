@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>KeySwitch</title>
+        <link>https://mohit-patil.github.io/keyswitch/appcast.xml</link>
+        <description>Signed KeySwitch application updates</description>
+        <language>en</language>
+    </channel>
+</rss>
+<!-- sparkle-signatures:
+edSignature: u1O0CCKmVMs7pTxbeNG+AROG+d8TzWq8WRTBKFiXTKyUASLCJ+TozLKJDJ+XnMZxH1eEmwPrIWR3ONUA0hCuDg==
+length: 390
+-->

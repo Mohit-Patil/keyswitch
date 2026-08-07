@@ -7,6 +7,25 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+### Added
+
+- Signed, automatic application updates powered by Sparkle 2. The menu shows
+  **Restart to Update** only after Sparkle has prepared a downloaded update.
+- An Updates section with automatic-check/download controls, installed-version
+  information, and a manual update check.
+- A signed GitHub Pages appcast, reproducible Sparkle-tool download, and
+  release-feed generation checks.
+
+### Security
+
+- Restrict in-app updates to Developer ID-signed release builds, verify update
+  archives before extraction, and require a signed feed and EdDSA-signed
+  release archive.
+
+### Fixed
+
+- Point the website download buttons at the current notarized 0.1.1 DMG.
+
 ## [0.1.1] - 2026-08-07
 
 ### Fixed

@@ -10,6 +10,8 @@ KeySwitch is designed to operate locally on the Mac.
 - Codex Micro layout metadata and six agent-slot status values exposed by the
   local Codex renderer.
 - Local application and permission status needed for setup and diagnostics.
+- The installed KeySwitch version and ordinary HTTP metadata needed to check
+  the signed update feed and download a selected release archive.
 
 KeySwitch uses key events to resolve configured controls. It does not maintain
 a text history, send keystrokes to an analytics service, or provide a cloud
@@ -31,9 +33,11 @@ does not track people or collect data, and documents its local use of
 ## Network behavior
 
 The Codex bridge connects to the configured Chromium debugging port at
-`127.0.0.1`. No analytics or telemetry endpoint is included. The prototype and
-app should never be configured to expose that privileged port to an external
-network.
+`127.0.0.1`. Official release builds also use Sparkle to request the signed
+appcast from `mohit-patil.github.io` and signed update archives from GitHub
+Releases. Sparkle system profiling is disabled. No analytics or telemetry
+endpoint is included. The prototype and app should never be configured to
+expose the privileged debugging port to an external network.
 
 Because the renderer belongs to Codex, Codex's own storage and network behavior
 is governed by its provider and is outside KeySwitch's control.

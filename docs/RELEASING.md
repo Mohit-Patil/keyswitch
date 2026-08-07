@@ -9,7 +9,8 @@ be committed to the repository.
 2. Review open security advisories and release-blocking issues.
 3. Update `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `project.yml`.
    This file is the version source of truth; do not put literal versions in
-   `KeySwitchApp/Info.plist`.
+   `KeySwitchApp/Info.plist`. `CURRENT_PROJECT_VERSION` must be greater than
+   every build already published in `docs/appcast.xml`.
 4. Run `xcodegen generate` and commit `project.yml`, the generated project,
    and the generated `Info.plist` changes together.
 5. Move completed items from `Unreleased` to a dated version in
@@ -125,16 +126,56 @@ Store notarization credentials in a maintainer keychain profile. Never put the
 Apple ID, app-specific password, API key, or signing certificate in this
 repository or in a shell script.
 
+## Sparkle update signing
+
+KeySwitch uses Sparkle 2.9.5. `Scripts/fetch_sparkle_tools.sh` downloads the
+matching official tools archive and verifies its pinned SHA-256 digest.
+
+The update signing key is stored in the login Keychain under the
+`com.mohitpatil.keyswitch` account. The corresponding public key is committed
+as `SUPublicEDKey`; never commit or paste the private key into a terminal log,
+issue, pull request, or GitHub Actions secret without a separate security
+review.
+
+To inspect the existing public key:
+
+```sh
+sparkle_tools="$(Scripts/fetch_sparkle_tools.sh)"
+"$sparkle_tools/bin/generate_keys" \
+  --account com.mohitpatil.keyswitch -p
+```
+
+The first updater-enabled release requires one normal drag-to-Applications
+installation. Releases installed after that can update in place.
+
 ## Publish
 
 1. Tag the release as `vMAJOR.MINOR.PATCH`.
 2. Push the tag and create a GitHub Release from the matching changelog entry.
-3. Attach the verified DMG and its SHA-256 checksum. Keep the ZIP as an
-   optional secondary artifact.
-4. Mount the public DMG, confirm it contains `KeySwitch.app` and an Applications
+3. Attach the verified DMG, ZIP, and their SHA-256 checksums. The ZIP is the
+   Sparkle update enclosure and is therefore required.
+4. Confirm the public ZIP URL resolves, then generate and verify the signed
+   update feed:
+
+   ```sh
+   Scripts/generate_update_appcast.sh \
+     Release/KeySwitch-v1.2.3-macOS-universal.zip 1.2.3
+   git diff --check
+   xmllint --noout docs/appcast.xml
+   ```
+
+   Commit and push `docs/appcast.xml`, wait for GitHub Pages to deploy, and
+   confirm `https://mohit-patil.github.io/keyswitch/appcast.xml` contains the
+   new version, embedded release notes from `CHANGELOG.md`, and a reachable
+   enclosure URL. Do not publish a feed entry that points at a missing release
+   asset.
+5. Mount the public DMG, confirm it contains `KeySwitch.app` and an Applications
    shortcut, then launch the installed copy and verify the first-run flow on a
    clean user account.
-5. Re-run a Codex bridge smoke test against the supported desktop version.
+6. Re-run a Codex bridge smoke test against the supported desktop version.
+7. From the immediately preceding updater-enabled public build, run **Check for
+   Updates**, let the archive download, verify **Restart to Update** appears in
+   the menu, and confirm its first click installs and relaunches the new build.
 
 Do not add release bundles or archives to git; GitHub Releases is the artifact
 distribution channel.

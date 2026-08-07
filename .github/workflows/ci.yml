@@ -107,3 +107,34 @@ jobs:
           lipo "$executable" -verify_arch arm64 x86_64
           test -f "$privacy_manifest"
           plutil -lint "$privacy_manifest"
+
+      - name: Verify updater packaging and signed feed metadata
+        run: |
+          set -euo pipefail
+
+          app="$RUNNER_TEMP/KeySwitchRelease/Build/Products/Release/KeySwitch.app"
+          plist="$app/Contents/Info.plist"
+          feed="docs/appcast.xml"
+          expected_feed_url="https://mohit-patil.github.io/keyswitch/appcast.xml"
+          expected_public_key="k/PEbhkmYphQ7VTC3Pu04v1O7OLxn6ohRXuoxxN/n+Y="
+
+          test -d "$app/Contents/Frameworks/Sparkle.framework"
+          test -f "$app/Contents/Resources/ThirdPartyNotices.txt"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :SUFeedURL' "$plist")" = \
+            "$expected_feed_url"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$plist")" = \
+            "$expected_public_key"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :SURequireSignedFeed' "$plist")" = \
+            "true"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :SUVerifyUpdateBeforeExtraction' "$plist")" = \
+            "true"
+          xmllint --noout "$feed"
+          grep -Fq '<!-- sparkle-signatures:' "$feed"
+          grep -Fq 'edSignature:' "$feed"
+          python3 Scripts/changelog_to_html.py \
+            CHANGELOG.md 0.1.1 "$RUNNER_TEMP/KeySwitch-0.1.1.html"
+          grep -Fq '<h2>KeySwitch 0.1.1</h2>' \
+            "$RUNNER_TEMP/KeySwitch-0.1.1.html"
+          python3 -m py_compile Scripts/changelog_to_html.py
+          bash -n Scripts/fetch_sparkle_tools.sh
+          bash -n Scripts/generate_update_appcast.sh

@@ -74,6 +74,18 @@ struct MenuBarContentView: View {
                 Label("Codex Micro Setup…", systemImage: "keyboard.badge.ellipsis")
             }
 
+            if model.updater.updateStatus.isUpdateReady {
+                Divider()
+
+                Button {
+                    model.updater.installUpdate()
+                } label: {
+                    Label(restartUpdateTitle, systemImage: "arrow.triangle.2.circlepath")
+                        .foregroundStyle(Color.accentColor)
+                }
+                .help("Install the downloaded update and relaunch KeySwitch")
+            }
+
             Button {
                 presentSettings()
             } label: {
@@ -107,6 +119,13 @@ struct MenuBarContentView: View {
                 })?
                 .makeKeyAndOrderFront(nil)
         }
+    }
+
+    private var restartUpdateTitle: String {
+        guard let version = model.updater.updateStatus.availableVersion else {
+            return "Restart to Update"
+        }
+        return "Restart to Update \(version)"
     }
 }
 
