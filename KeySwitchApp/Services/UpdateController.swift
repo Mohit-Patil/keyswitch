@@ -268,7 +268,7 @@ enum UpdateControllerFactory {
         #endif
     }
 
-    static func currentVersion(bundle: Bundle = .main) -> String {
+    nonisolated static func currentVersion(bundle: Bundle = .main) -> String {
         let marketingVersion =
             bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
             ?? "Unknown"
