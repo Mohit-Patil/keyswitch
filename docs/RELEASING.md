@@ -28,7 +28,8 @@ versions in `project.yml`, regenerate the Xcode project, finalize the matching
 5. uploads versioned artifacts, checksums, and stable latest-download aliases;
 6. creates the version tag when the run came from `main`;
 7. creates or updates the GitHub Release;
-8. signs and commits the Sparkle appcast; and
+8. signs the Sparkle appcast, opens a dedicated feed PR, runs the required CI
+   check, and squash-merges that PR; and
 9. dispatches the GitHub Pages deployment.
 
 Configure these encrypted repository secrets before the first automated
@@ -49,6 +50,8 @@ failed run. It refuses to replace ZIP bytes for a version already published in
 the appcast, because that would invalidate the embedded Sparkle signature.
 Release tags must point to commits contained in `main`, and both Sparkle and
 the DMG packager are fetched at checksum-pinned versions.
+The feed PR allows `main` to remain protected from direct pushes, including
+pushes made by the release workflow itself.
 GitHub environments or organization-level secrets can replace repository
 secrets later without changing the workflow.
 

@@ -14,8 +14,7 @@ on:
         type: string
 
 permissions:
-  actions: write
-  contents: write
+  contents: read
 
 concurrency:
   group: keyswitch-production-release
@@ -100,6 +99,10 @@ jobs:
     if: needs.resolve.outputs.should_release == 'true'
     runs-on: macos-15
     timeout-minutes: 90
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
 
     steps:
       - name: Check out validated source
@@ -397,55 +400,13 @@ jobs:
       - name: Publish signed Sparkle feed
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
           RELEASE_VERSION: ${{ needs.resolve.outputs.version }}
         run: |
           set -euo pipefail
 
-          download_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/$(basename "$RELEASE_ZIP_PATH")"
-          available=false
-          for attempt in {1..12}; do
-            if curl --location --fail --silent --show-error --head \
-              "$download_url" >/dev/null; then
-              available=true
-              break
-            fi
-            sleep 5
-          done
-          if [[ "$available" != "true" ]]; then
-            echo "Release ZIP did not become publicly available: $download_url" >&2
-            exit 1
-          fi
-
-          git fetch origin main
-          feed_worktree="$RUNNER_TEMP/feed-main"
-          git worktree add --detach "$feed_worktree" origin/main
-
-          feed="$feed_worktree/docs/appcast.xml"
-          if grep -Fq \
-            "<sparkle:shortVersionString>${RELEASE_VERSION}</sparkle:shortVersionString>" \
-            "$feed"; then
-            sparkle_tools="$(Scripts/fetch_sparkle_tools.sh)"
-            "$sparkle_tools/bin/sign_update" \
-              --account "$SPARKLE_ACCOUNT" \
-              --verify \
-              "$feed"
-            echo "Sparkle feed already contains $RELEASE_VERSION."
-          else
-            (
-              cd "$feed_worktree"
-              Scripts/generate_update_appcast.sh \
-                "$RELEASE_ZIP_PATH" \
-                "$RELEASE_VERSION"
-              git config user.name "github-actions[bot]"
-              git config user.email \
-                "41898282+github-actions[bot]@users.noreply.github.com"
-              git add docs/appcast.xml
-              git commit -m "Publish $RELEASE_VERSION update feed [skip ci]"
-              git push origin HEAD:main
-            )
-          fi
-
+          Scripts/publish_update_feed.sh \
+            "$RELEASE_ZIP_PATH" \
+            "$RELEASE_VERSION"
           gh workflow run pages.yml --ref main
 
       - name: Remove ephemeral credentials
