@@ -63,6 +63,31 @@ Public distribution should use the maintainer's Developer ID signing and Apple
 notarization workflow. Development-signed or ad-hoc builds are not suitable as
 official downloads.
 
+### Cloud-managed Developer ID workflow
+
+When the team uses Apple's cloud-managed Developer ID certificate, create the
+archive with the development team selected, then distribute it from Xcode's
+Organizer:
+
+```sh
+xcodebuild -project KeySwitch.xcodeproj -scheme KeySwitch \
+  -configuration Release -destination 'generic/platform=macOS' \
+  -archivePath .build/release/KeySwitch.xcarchive \
+  DEVELOPMENT_TEAM="<TEAM_ID>" CODE_SIGN_STYLE=Automatic \
+  -allowProvisioningUpdates ARCHS="arm64 x86_64" \
+  ONLY_ACTIVE_ARCH=NO archive
+```
+
+In Organizer, select the archive, choose **Distribute App → Developer ID →
+Upload**, and complete the validation and upload. Xcode can cloud-sign the app
+when no local Developer ID private key is available, then it downloads and
+staples the notarization ticket after Apple accepts the submission. Export the
+notarized archive for the GitHub Release.
+
+The maintainer must have access to the cloud-managed Developer ID certificate
+in App Store Connect. Xcode stores the signed-in account credentials in the
+macOS Keychain; no credential belongs in the repository.
+
 After exporting a Developer ID-signed app, create the upload archive, notarize
 it, staple the ticket, and validate Gatekeeper before publishing:
 
