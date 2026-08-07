@@ -71,6 +71,19 @@ the bridge to reconnect.
 user-controlled preference; macOS can require separate approval in Login Items,
 which the Settings UI reports explicitly.
 
+### `SparkleUpdaterController`
+
+Owns the Sparkle 2 updater for official Developer ID-signed builds. Automatic
+checks and downloads are enabled by default and can be disabled in Settings.
+Debug, unsigned, development-signed, and Homebrew-managed builds do not start
+Sparkle.
+
+Download completion alone is not treated as installation readiness. The
+controller waits for Sparkle's `willInstallUpdateOnQuit` delegate callback,
+retains its prepared installation action, and only then exposes **Restart to
+Update** in the menu and Settings. Invoking that action lets Sparkle atomically
+replace KeySwitch, terminate it, and relaunch the new version.
+
 ## State flow
 
 ```text
@@ -81,7 +94,8 @@ KeyboardEngine
        │ control + layer callbacks
        ▼
     AppModel ───────────────► HUD panel and Settings
-       │
+       │  │
+       │  └────────────────► Sparkle signed update feed
        ▼
 CodexMicroBridge ◄──────────► Codex renderer on 127.0.0.1
 ```
@@ -102,6 +116,9 @@ KeySwitch remains the source of truth for which Mac key activates each slot.
    configured port first.
 5. **Upstream compatibility:** evaluated renderer modules and state can change
    without notice.
+6. **Application updates:** release builds read a signed HTTPS appcast, verify
+   an EdDSA-signed archive before extraction, and rely on Apple code signing,
+   notarization, and Sparkle for replacement and relaunch.
 
 See [SECURITY.md](../SECURITY.md) for responsible disclosure and
 [PRIVACY.md](PRIVACY.md) for data handling.
@@ -115,7 +132,8 @@ Unit coverage focuses on the deterministic boundaries:
 - stick and dial behavior;
 - configuration round trips and legacy migrations;
 - agent status, menu-bar rendering, HUD-size migrations, endpoint validation,
-  bounded discovery responses, and launch-at-login state mapping; and
+  bounded discovery responses, launch-at-login state mapping, and prepared
+  update action handling; and
 - optional live bridge checks behind an explicit environment flag.
 
 Visual behavior, permission prompts, and live upstream compatibility still

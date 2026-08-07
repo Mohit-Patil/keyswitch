@@ -168,6 +168,56 @@ struct GeneralSettingsView: View {
                 }
             }
 
+            Section("Updates") {
+                if model.updater.isAvailable {
+                    Toggle(
+                        "Automatically check for and download updates",
+                        isOn: Binding(
+                            get: {
+                                model.updater.updateStatus.automaticUpdatesEnabled
+                            },
+                            set: {
+                                model.updater.setAutomaticUpdatesEnabled($0)
+                            }
+                        )
+                    )
+
+                    LabeledContent("Installed version") {
+                        Text(model.updater.currentVersion)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if model.updater.updateStatus.isUpdateReady {
+                        Button {
+                            model.updater.installUpdate()
+                        } label: {
+                            Label(settingsRestartUpdateTitle, systemImage: "arrow.triangle.2.circlepath")
+                        }
+                    } else {
+                        Button {
+                            model.updater.checkForUpdates(nil)
+                        } label: {
+                            Label("Check for Updates…", systemImage: "arrow.clockwise")
+                        }
+                    }
+
+                    Text("Updates are downloaded from the signed KeySwitch GitHub release feed and installed by Sparkle.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Label(
+                        model.updater.unavailableReason ?? "Updates are unavailable in this build.",
+                        systemImage: "info.circle"
+                    )
+                    .foregroundStyle(.secondary)
+
+                    LabeledContent("Installed version") {
+                        Text(model.updater.currentVersion)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
             Section("Permissions") {
                 PermissionRow(
                     title: "Input Monitoring",
@@ -217,6 +267,13 @@ struct GeneralSettingsView: View {
         }
 
         return "The countdown pauses while a mapped key is held and restarts after every mapped action."
+    }
+
+    private var settingsRestartUpdateTitle: String {
+        guard let version = model.updater.updateStatus.availableVersion else {
+            return "Restart to Update"
+        }
+        return "Restart to Update \(version)"
     }
 }
 

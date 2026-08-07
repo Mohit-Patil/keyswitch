@@ -55,6 +55,8 @@ struct KeyboardEngineConfigurationSignature: Equatable {
 @MainActor
 @Observable
 final class AppModel {
+    @ObservationIgnored let updater: any UpdaterProviding
+
     var configuration: AppConfiguration {
         didSet {
             configurationDidChange(from: oldValue)
@@ -169,7 +171,8 @@ final class AppModel {
     @ObservationIgnored
     private lazy var setupWindowController = FirstRunSetupWindowController(model: self)
 
-    init() {
+    init(updater: (any UpdaterProviding)? = nil) {
+        self.updater = updater ?? UpdateControllerFactory.make()
         configuration = Self.loadConfiguration()
         #if DEBUG
         if ProcessInfo.processInfo.environment["KEYSWITCH_PREVIEW_LIGHTS"] == "1" {

@@ -24,5 +24,19 @@
 	<true/>
 	<key>NSInputMonitoringUsageDescription</key>
 	<string>KeySwitch needs Input Monitoring to turn the keyboard into your editable accessibility control layer while its shortcut is active.</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUAutomaticallyUpdate</key>
+	<true/>
+	<key>SUEnableSystemProfiling</key>
+	<false/>
+	<key>SUFeedURL</key>
+	<string>https://mohit-patil.github.io/keyswitch/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>k/PEbhkmYphQ7VTC3Pu04v1O7OLxn6ohRXuoxxN/n+Y=</string>
+	<key>SURequireSignedFeed</key>
+	<true/>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
 </dict>
 </plist>

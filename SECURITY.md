@@ -45,6 +45,13 @@ different local process that binds the configured port first.
 Do not expose the debugging port to other devices or untrusted local users.
 Treat any renderer endpoint as privileged access to the running Codex session.
 
+Official builds use Sparkle for application updates. KeySwitch requires a
+signed HTTPS appcast, verifies the EdDSA signature of every update archive
+before extraction, and only enables the updater in Developer ID-signed builds.
+The Sparkle private key is stored outside the repository. Reports involving
+feed verification, archive substitution, downgrade behavior, or app replacement
+are security sensitive.
+
 ## Out of scope
 
 - Compatibility breakage caused by an ordinary Codex UI update, without a
