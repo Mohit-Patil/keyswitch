@@ -99,8 +99,26 @@ xcrun notarytool submit KeySwitch-notarization.zip \
 xcrun stapler staple KeySwitch.app
 xcrun stapler validate KeySwitch.app
 spctl --assess --type execute --verbose=4 KeySwitch.app
-ditto -c -k --sequesterRsrc --keepParent KeySwitch.app KeySwitch.zip
-shasum -a 256 KeySwitch.zip > KeySwitch.zip.sha256
+```
+
+Package the already notarized app in the drag-to-Applications disk image:
+
+```sh
+brew install create-dmg
+Scripts/create_release_dmg.sh KeySwitch.app 1.2.3 Release
+```
+
+The script refuses an app without a valid signature, stapled notarization
+ticket, Gatekeeper acceptance, and both `arm64` and `x86_64` slices. It then
+mounts the finished image and repeats those checks against the copy inside.
+For managed or command-line installs, a ZIP may be published as a secondary
+artifact:
+
+```sh
+ditto -c -k --sequesterRsrc --keepParent KeySwitch.app \
+  KeySwitch-v1.2.3-macOS-universal.zip
+shasum -a 256 KeySwitch-v1.2.3-macOS-universal.zip \
+  > KeySwitch-v1.2.3-macOS-universal.zip.sha256
 ```
 
 Store notarization credentials in a maintainer keychain profile. Never put the
@@ -111,9 +129,11 @@ repository or in a shell script.
 
 1. Tag the release as `vMAJOR.MINOR.PATCH`.
 2. Push the tag and create a GitHub Release from the matching changelog entry.
-3. Attach only notarized, verified artifacts and their SHA-256 checksums.
-4. Confirm the download starts, launches, and presents the expected permission
-   flow on a clean user account.
+3. Attach the verified DMG and its SHA-256 checksum. Keep the ZIP as an
+   optional secondary artifact.
+4. Mount the public DMG, confirm it contains `KeySwitch.app` and an Applications
+   shortcut, then launch the installed copy and verify the first-run flow on a
+   clean user account.
 5. Re-run a Codex bridge smoke test against the supported desktop version.
 
 Do not add release bundles or archives to git; GitHub Releases is the artifact
