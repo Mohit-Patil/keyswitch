@@ -7,6 +7,13 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-07
+
+### Changed
+
+- Complete the first signed Sparkle delivery from the 0.2.0 bootstrap build
+  and document the repeatable Xcode cloud-signing and notarization workflow.
+
 ## [0.2.0] - 2026-08-07
 
 ### Added
@@ -79,7 +86,8 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 - Local release artifacts, profiling traces, signing identities, and private
   design-review captures are excluded from the repository.
 
-[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Mohit-Patil/keyswitch/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/Mohit-Patil/keyswitch/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.1.0

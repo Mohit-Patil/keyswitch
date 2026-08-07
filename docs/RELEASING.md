@@ -89,6 +89,43 @@ The maintainer must have access to the cloud-managed Developer ID certificate
 in App Store Connect. Xcode stores the signed-in account credentials in the
 macOS Keychain; no credential belongs in the repository.
 
+The upload can also be performed noninteractively. Archive with any valid local
+Apple Development identity, then create an ignored export-options plist with
+these values:
+
+```xml
+<key>destination</key>
+<string>upload</string>
+<key>method</key>
+<string>developer-id</string>
+<key>signingStyle</key>
+<string>automatic</string>
+<key>teamID</key>
+<string>DEVELOPER_ID_TEAM_ID</string>
+```
+
+Submit the archive using the Xcode account stored in Keychain:
+
+```sh
+xcodebuild -exportArchive \
+  -archivePath .build/release/KeySwitch.xcarchive \
+  -exportPath .build/release/upload \
+  -exportOptionsPlist .build/release/DeveloperIDExport.plist \
+  -allowProvisioningUpdates
+```
+
+After Apple accepts the submission, export the cloud-signed app and its stapled
+notarization ticket:
+
+```sh
+xcodebuild -exportNotarizedApp \
+  -archivePath .build/release/KeySwitch.xcarchive \
+  -exportPath .build/release/notarized
+```
+
+An App Store Connect API key can replace the stored Xcode account only when its
+role has Cloud Managed Developer ID signing permission.
+
 After exporting a Developer ID-signed app, create the upload archive, notarize
 it, staple the ticket, and validate Gatekeeper before publishing:
 
