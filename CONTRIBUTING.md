@@ -36,6 +36,7 @@ Clone and validate the project:
 ```sh
 git clone https://github.com/Mohit-Patil/keyswitch.git
 cd keyswitch
+Scripts/scan_secrets.sh
 xcodebuild -project KeySwitch.xcodeproj -scheme KeySwitch \
   -configuration Debug -derivedDataPath .build/xcode \
   CODE_SIGNING_ALLOWED=NO test
@@ -43,8 +44,9 @@ swift build
 ```
 
 Select your own development team in Xcode if you need to run the global event
-tap locally. Never commit a developer team ID, certificate, provisioning
-profile, or signing credential.
+tap locally. Team IDs and certificate fingerprints are public identifiers, but
+private keys, certificate exports, provisioning profiles, API credentials, and
+their passwords must never be committed.
 
 When changing `project.yml`, run:
 
@@ -63,6 +65,11 @@ Commit the manifest and generated Xcode project together.
    safety behavior.
 5. Update the README, architecture notes, or changelog when behavior changes.
 6. Run the complete validation commands before opening a pull request.
+
+`Scripts/scan_secrets.sh` downloads a checksum-pinned Gitleaks binary into the
+ignored `.build` directory and scans every reachable Git revision. Its output
+is fully redacted. GitHub also scans the public repository and blocks supported
+secret types at push time.
 
 Do not commit local app bundles, archives, Instruments traces, derived data,
 screenshots containing private Codex content, or design-review artifacts.

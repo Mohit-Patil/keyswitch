@@ -50,6 +50,9 @@ failed run. It refuses to replace ZIP bytes for a version already published in
 the appcast, because that would invalidate the embedded Sparkle signature.
 Release tags must point to commits contained in `main`, and both Sparkle and
 the DMG packager are fetched at checksum-pinned versions.
+All external workflow actions are pinned to full commit SHAs. The repository's
+Actions policy permits only GitHub-owned actions and rejects mutable action
+references.
 The feed PR allows `main` to remain protected from direct pushes, including
 pushes made by the release workflow itself.
 GitHub environments or organization-level secrets can replace repository

@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public Sparkle Ed25519 update-verification key"
+regexes = [
+  '''^k/PEbhkmYphQ7VTC3Pu04v1O7OLxn6ohRXuoxxN/n\+Y=$''',
+]

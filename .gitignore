@@ -25,6 +25,29 @@ __pycache__/
 .env
 .env.*
 !.env.example
+.envrc
+.direnv/
+*.p8
+*.p12
+*.pfx
+*.pkcs12
+*.pem
+*.key
+*.ppk
+*.secret
+*.mobileprovision
+*.provisionprofile
+*.cer
+*.crt
+*.jks
+*.keystore
+*.kdbx
+*.ovpn
+.netrc
+.npmrc
+credentials*.json
+service-account*.json
+secrets*.json
 
 # Local release, profiling, and design-review artifacts
 /Release/

@@ -52,6 +52,21 @@ The Sparkle private key is stored outside the repository. Reports involving
 feed verification, archive substitution, downgrade behavior, or app replacement
 are security sensitive.
 
+## Repository secret controls
+
+CI copies of signing and notarization material are stored only as encrypted
+GitHub Actions secrets; maintainer backups remain outside the repository. The
+release workflow exposes each value only to the step that needs it, writes
+private-key files with owner-only permissions on an ephemeral GitHub-hosted
+runner, and removes those files and its temporary keychain immediately after
+use with a final `always()` cleanup as a fallback. Release artifacts are
+uploaded from a dedicated directory that never contains credentials.
+
+The required CI job runs `Scripts/scan_secrets.sh` across full Git history with
+redacted output. GitHub secret scanning and push protection provide a second
+independent check. Workflow actions are pinned to complete commit SHAs, while
+Dependabot proposes reviewed pin updates.
+
 ## Out of scope
 
 - Compatibility breakage caused by an ordinary Codex UI update, without a
