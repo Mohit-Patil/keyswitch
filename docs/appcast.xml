@@ -1,13 +1,39 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- sparkle-sign-warning:
+IMPORTANT: This file was signed by Sparkle. Any modifications to this file requires re-signing this file with generate_appcast or sign_update! The signed signature will be embedded at the end of this file.
+--><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
         <title>KeySwitch</title>
         <link>https://mohit-patil.github.io/keyswitch/appcast.xml</link>
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
+        <item>
+            <title>0.2.0</title>
+            <pubDate>Fri, 07 Aug 2026 22:11:40 +0530</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.2.0</sparkle:fullReleaseNotesLink>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>0.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.2.0</h2>
+<h3>Added</h3>
+<ul>
+<li>Signed, automatic application updates powered by Sparkle 2. The menu shows **Restart to Update** only after Sparkle has prepared a downloaded update.</li>
+<li>An Updates section with automatic-check/download controls, installed-version information, and a manual update check.</li>
+<li>A signed GitHub Pages appcast, reproducible Sparkle-tool download, and release-feed generation checks.</li>
+</ul>
+<h3>Security</h3>
+<ul>
+<li>Restrict in-app updates to Developer ID-signed release builds, verify update archives before extraction, and require a signed feed and EdDSA-signed release archive.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Point the website download buttons at the current notarized 0.1.1 DMG.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.0/KeySwitch-v0.2.0-macOS-universal.zip" length="3202796" type="application/octet-stream" sparkle:edSignature="GQec4ZjzXbwoGparvf0aG7bA9O73HbuqdQHYMLaf85fRBehrZX3f8zq/9jOCSYt6l4LvXY+QJGojXTCrV8KRAg=="></enclosure>
+        </item>
     </channel>
-</rss>
-<!-- sparkle-signatures:
-edSignature: u1O0CCKmVMs7pTxbeNG+AROG+d8TzWq8WRTBKFiXTKyUASLCJ+TozLKJDJ+XnMZxH1eEmwPrIWR3ONUA0hCuDg==
-length: 390
+</rss><!-- sparkle-signatures:
+edSignature: L748LaQ1I+NvRsMXbKQ/i2e0fChO0caopE5RxoWPsF2DWN53SP9rft1UbL9kSt8DSBJdMfhmL8++opLYRHjNAQ==
+length: 2267
 -->
