@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#101116">
+    <meta
+      name="description"
+      content="KeySwitch turns your Mac keyboard into a configurable Codex Micro-style control layer with live agent status."
+    >
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="KeySwitch — Your keyboard, reprogrammed for agents">
+    <meta
+      property="og:description"
+      content="A native macOS keyboard layer and live status surface for Codex Micro controls."
+    >
+    <meta
+      property="og:image"
+      content="https://mohit-patil.github.io/keyswitch/images/keyswitch-micro-dark.png"
+    >
+    <meta property="og:url" content="https://mohit-patil.github.io/keyswitch/">
+    <meta name="twitter:card" content="summary_large_image">
+    <title>KeySwitch — Your keyboard, reprogrammed for agents</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="site.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" aria-label="Primary navigation">
+      <a class="brand" href="#top" aria-label="KeySwitch home">
+        <span class="brand-mark" aria-hidden="true">
+          <i></i><i></i><i></i>
+        </span>
+        <span>KeySwitch</span>
+      </a>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="#controls">Controls</a>
+        <a href="https://github.com/Mohit-Patil/keyswitch">GitHub</a>
+        <button class="theme-toggle" type="button" aria-label="Use light appearance">
+          <span aria-hidden="true">◐</span>
+        </button>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero section" id="top">
+        <div class="hero-copy reveal">
+          <div class="eyebrow"><span></span> Native macOS control layer</div>
+          <h1>Your keyboard,<br><em>reprogrammed for agents.</em></h1>
+          <p class="hero-lede">
+            Hold <kbd>Fn</kbd> + <kbd>Control</kbd> and your Mac keyboard becomes
+            a configurable Codex Micro-style control surface. Release it, and
+            every key is yours again.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="https://github.com/Mohit-Patil/keyswitch#build-from-source">
+              Build KeySwitch <span aria-hidden="true">↗</span>
+            </a>
+            <a class="button secondary" href="#demo">See it in action</a>
+          </div>
+          <p class="compatibility">
+            <span aria-hidden="true">●</span> macOS 14+ · Apple silicon and Intel
+          </p>
+        </div>
+
+        <div class="hero-stage reveal" aria-label="KeySwitch Micro control preview">
+          <div class="ambient-orb orb-blue"></div>
+          <div class="ambient-orb orb-green"></div>
+          <div class="menu-simulator">
+            <span class="menu-apple" aria-hidden="true">●</span>
+            <strong>KeySwitch</strong>
+            <span class="menu-spacer"></span>
+            <span class="status-dot idle"></span>
+            <span class="status-dot thinking"></span>
+            <span class="status-dot complete"></span>
+            <span class="status-dot input"></span>
+            <span class="status-dot off"></span>
+            <span class="status-dot idle"></span>
+          </div>
+          <div class="micro-shell">
+            <img
+              class="hero-micro dark-capture"
+              src="images/keyswitch-micro-dark.png"
+              alt="Dark KeySwitch Codex Micro-style keyboard overlay"
+              width="768"
+              height="768"
+            >
+            <img
+              class="hero-micro light-capture"
+              src="images/keyswitch-micro-light.png"
+              alt="Light KeySwitch Codex Micro-style keyboard overlay"
+              width="768"
+              height="768"
+            >
+          </div>
+          <div class="mapping-chip chip-agent"><kbd>Q</kbd><span>Agent 1</span></div>
+          <div class="mapping-chip chip-fast"><kbd>A</kbd><span>Fast mode</span></div>
+          <div class="mapping-chip chip-stick"><kbd>I J K L</kbd><span>Stick</span></div>
+          <div class="activation-chip"><span></span> Layer active</div>
+        </div>
+      </section>
+
+      <section class="trust-strip" aria-label="KeySwitch qualities">
+        <div><span>⌨</span> Native Swift</div>
+        <div><span>◎</span> Local only</div>
+        <div><span>◇</span> Fully editable</div>
+        <div><span>↯</span> Instant activation</div>
+        <div><span>◌</span> Open source</div>
+      </section>
+
+      <section class="section intro" id="features">
+        <div class="section-heading reveal">
+          <div class="eyebrow"><span></span> Built for flow</div>
+          <h2>Agent control without<br>another piece of hardware.</h2>
+          <p>
+            KeySwitch maps the physical controls Codex already understands to
+            the keyboard already under your hands.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card feature-wide reveal">
+            <div class="feature-copy">
+              <div class="feature-icon agent-icon" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <h3>Six agents. One glance.</h3>
+              <p>
+                Live menu-bar indicators show idle, thinking, complete,
+                input-needed, and error states without opening another window.
+              </p>
+            </div>
+            <div class="status-demo" aria-label="Animated agent status example">
+              <span class="agent light"></span>
+              <span class="agent blue"></span>
+              <span class="agent green"></span>
+              <span class="agent amber"></span>
+              <span class="agent red"></span>
+              <span class="agent empty"></span>
+            </div>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="feature-icon shortcut-icon" aria-hidden="true">⌘</div>
+            <h3>A layer, not a takeover.</h3>
+            <p>
+              Hold or toggle your shortcut. Automatic inactivity exit and
+              <kbd>Esc</kbd> provide a fast route back to normal typing.
+            </p>
+            <div class="shortcut-demo" aria-hidden="true">
+              <kbd>fn</kbd><span>+</span><kbd>⌃</kbd><span>→</span><strong>ON</strong>
+            </div>
+          </article>
+
+          <article class="feature-card reveal">
+            <div class="feature-icon sync-icon" aria-hidden="true">↻</div>
+            <h3>Codex stays in charge.</h3>
+            <p>
+              Change a Micro keycap or action inside Codex and KeySwitch mirrors
+              the layout. Your Mac keys map to slots, not hard-coded commands.
+            </p>
+            <div class="sync-demo" aria-hidden="true">
+              <span>Codex</span><i>→</i><span>KeySwitch</span>
+            </div>
+          </article>
+
+          <article class="feature-card feature-wide safety-card reveal">
+            <div class="feature-copy">
+              <div class="feature-icon privacy-icon" aria-hidden="true">◉</div>
+              <h3>Designed to stay out of the way.</h3>
+              <p>
+                No account, analytics, telemetry, or cloud service. The HUD
+                never steals focus, respects Reduce Motion, and disappears when
+                the layer exits.
+              </p>
+            </div>
+            <div class="privacy-list">
+              <span><i>✓</i> Input stays on your Mac</span>
+              <span><i>✓</i> Loopback-only Codex bridge</span>
+              <span><i>✓</i> Native Launch at Login</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section demo-section" id="demo">
+        <div class="section-heading centered reveal">
+          <div class="eyebrow"><span></span> Make it yours</div>
+          <h2>As subtle—or as visible—as you want.</h2>
+          <p>Preview the four HUD sizes and both appearances.</p>
+        </div>
+
+        <div class="interactive-demo reveal">
+          <div class="demo-toolbar" aria-label="Preview controls">
+            <div class="segmented" role="group" aria-label="HUD size">
+              <button type="button" data-size="compact">Compact</button>
+              <button type="button" data-size="standard" class="selected">Standard</button>
+              <button type="button" data-size="large">Large</button>
+              <button type="button" data-size="extra-large">XL</button>
+            </div>
+            <div class="segmented" role="group" aria-label="HUD appearance">
+              <button type="button" data-preview-theme="light">Light</button>
+              <button type="button" data-preview-theme="dark" class="selected">Dark</button>
+            </div>
+          </div>
+          <div class="demo-canvas" data-size="standard" data-preview-theme="dark">
+            <div class="desktop-menu">
+              <span>KeySwitch</span>
+              <span class="desktop-time">Fri 9:41</span>
+              <div class="mini-status" aria-label="Six agent status indicators">
+                <i class="idle"></i><i class="thinking"></i><i class="complete"></i>
+                <i class="input"></i><i class="off"></i><i class="idle"></i>
+              </div>
+            </div>
+            <div class="desktop-copy" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <img
+              class="demo-micro demo-dark"
+              src="images/keyswitch-micro-dark.png"
+              alt="Resizable dark KeySwitch HUD preview"
+              width="768"
+              height="768"
+            >
+            <img
+              class="demo-micro demo-light"
+              src="images/keyswitch-micro-light.png"
+              alt="Resizable light KeySwitch HUD preview"
+              width="768"
+              height="768"
+            >
+            <div class="demo-hint"><kbd>Fn</kbd> + <kbd>Control</kbd> to activate</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section controls-section" id="controls">
+        <div class="section-heading reveal">
+          <div class="eyebrow"><span></span> Sensible defaults</div>
+          <h2>Mapped for muscle memory.<br>Editable down to every key.</h2>
+        </div>
+        <div class="control-layout reveal">
+          <div class="keyboard-map" aria-label="Default KeySwitch keyboard mapping">
+            <div class="key-row agents">
+              <div><kbd>Q</kbd><span>Agent 1</span></div>
+              <div><kbd>W</kbd><span>Agent 2</span></div>
+              <div><kbd>E</kbd><span>Agent 3</span></div>
+              <div><kbd>R</kbd><span>Agent 4</span></div>
+              <div><kbd>T</kbd><span>Agent 5</span></div>
+              <div><kbd>Y</kbd><span>Agent 6</span></div>
+            </div>
+            <div class="key-row commands">
+              <div><kbd>A</kbd><span>Fast</span></div>
+              <div><kbd>S</kbd><span>Approve</span></div>
+              <div><kbd>D</kbd><span>Reject</span></div>
+              <div><kbd>F</kbd><span>Fork</span></div>
+            </div>
+            <div class="key-row utility">
+              <div class="wide"><kbd>Space</kbd><span>Push to talk</span></div>
+              <div><kbd>J K I L</kbd><span>Stick</span></div>
+              <div><kbd>⇧ ` ⇥</kbd><span>Dial</span></div>
+            </div>
+          </div>
+          <div class="control-copy">
+            <div>
+              <strong>01</strong>
+              <span><b>Activate</b> with a shortcut that does not steal your emoji key.</span>
+            </div>
+            <div>
+              <strong>02</strong>
+              <span><b>Control</b> agents, commands, stick, dial, and push-to-talk.</span>
+            </div>
+            <div>
+              <strong>03</strong>
+              <span><b>Exit</b> automatically after your chosen inactivity interval.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section open-source-section">
+        <div class="source-card reveal">
+          <div>
+            <div class="eyebrow"><span></span> Open source · MIT</div>
+            <h2>Inspect it. Change it.<br>Make it yours.</h2>
+            <p>
+              KeySwitch is built in public. Read the architecture, audit the
+              privacy boundaries, propose a mapping, or help make the Codex
+              bridge more resilient.
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="https://github.com/Mohit-Patil/keyswitch">
+                View on GitHub <span aria-hidden="true">↗</span>
+              </a>
+              <a class="button secondary" href="https://github.com/Mohit-Patil/keyswitch/blob/main/CONTRIBUTING.md">
+                Contribute
+              </a>
+            </div>
+          </div>
+          <div class="code-window" aria-label="KeySwitch architecture overview">
+            <div class="window-bar"><i></i><i></i><i></i><span>architecture</span></div>
+            <pre><code><span class="muted">// your keyboard</span>
+Global event tap
+        <span class="blue">│</span>
+        <span class="blue">▼</span>
+KeyboardEngine <span class="green">────►</span> Frosted HUD
+        <span class="blue">│</span>
+        <span class="blue">▼</span>
+CodexMicroBridge <span class="green">──►</span> <span class="amber">127.0.0.1</span></code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="section final-cta reveal">
+        <div class="cta-glow"></div>
+        <div class="brand-mark large" aria-hidden="true"><i></i><i></i><i></i></div>
+        <h2>Keep your hands on the keyboard.</h2>
+        <p>Turn the Mac you already own into the agent controller you wanted.</p>
+        <a class="button primary" href="https://github.com/Mohit-Patil/keyswitch#build-from-source">
+          Build KeySwitch <span aria-hidden="true">↗</span>
+        </a>
+      </section>
+    </main>
+
+    <footer>
+      <a class="brand" href="#top">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>KeySwitch</span>
+      </a>
+      <p>
+        Independent and experimental. Not affiliated with or endorsed by
+        OpenAI or any hardware vendor.
+      </p>
+      <nav aria-label="Footer navigation">
+        <a href="https://github.com/Mohit-Patil/keyswitch/blob/main/docs/PRIVACY.md">Privacy</a>
+        <a href="https://github.com/Mohit-Patil/keyswitch/blob/main/SECURITY.md">Security</a>
+        <a href="https://github.com/Mohit-Patil/keyswitch/blob/main/LICENSE">MIT License</a>
+      </nav>
+    </footer>
+  </body>
+</html>

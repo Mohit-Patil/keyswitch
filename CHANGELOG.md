@@ -23,6 +23,8 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 - Native Launch at Login control with explicit macOS approval and error states.
 - A bundled privacy manifest declaring no tracking or collected data and the
   approved reasons for local preferences and double-tap timing.
+- A responsive, dependency-free GitHub Pages showcase with interactive HUD
+  size and appearance previews.
 
 ### Changed
 

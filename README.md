@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black.svg)](https://support.apple.com/macos)
 [![Swift 5](https://img.shields.io/badge/Swift-5-F05138.svg?logo=swift&logoColor=white)](https://www.swift.org/)
+[![Website](https://img.shields.io/badge/website-KeySwitch-6f8cff.svg)](https://mohit-patil.github.io/keyswitch/)
 
 <p align="center">
   <img src="docs/images/keyswitch-micro-light.png" alt="KeySwitch Codex Micro HUD in light mode" width="370">&nbsp;&nbsp;
@@ -15,6 +16,9 @@ KeySwitch is a native macOS menu-bar app that turns the built-in keyboard into
 an editable, Codex Micro-style control layer. Hold `Fn + Control` to activate
 the default layer, use the mapped controls, and return to normal typing when
 the layer exits.
+
+See the interactive showcase at
+[mohit-patil.github.io/keyswitch](https://mohit-patil.github.io/keyswitch/).
 
 > [!IMPORTANT]
 > KeySwitch is an independent, experimental project. It is not affiliated with
