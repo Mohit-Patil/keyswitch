@@ -5,6 +5,12 @@
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black.svg)](https://support.apple.com/macos)
 [![Swift 5](https://img.shields.io/badge/Swift-5-F05138.svg?logo=swift&logoColor=white)](https://www.swift.org/)
 
+<p align="center">
+  <img src="docs/images/keyswitch-micro-light.png" alt="KeySwitch Codex Micro HUD in light mode" width="370">&nbsp;&nbsp;
+  <img src="docs/images/keyswitch-micro-dark.png" alt="KeySwitch Codex Micro HUD in dark mode" width="370">
+</p>
+<p align="center"><sub>Light appearance · Dark appearance</sub></p>
+
 KeySwitch is a native macOS menu-bar app that turns the built-in keyboard into
 an editable, Codex Micro-style control layer. Hold `Fn + Control` to activate
 the default layer, use the mapped controls, and return to normal typing when
