@@ -136,22 +136,11 @@ enum MenuBarStatusIconRenderer {
             NSGraphicsContext.saveGraphicsState()
             NSBezierPath(rect: cellRect).addClip()
 
-            if state.selected, state.status != .off {
-                color.withAlphaComponent(0.72).setStroke()
-                let ringRect = NSRect(
-                    x: center.x - metrics.ringDiameter / 2,
-                    y: center.y - metrics.ringDiameter / 2,
-                    width: metrics.ringDiameter,
-                    height: metrics.ringDiameter
-                )
-                let ring = NSBezierPath(ovalIn: ringRect)
-                ring.lineWidth = metrics.ringLineWidth
-                ring.stroke()
-            }
-
-            let diameter = state.selected && state.status != .off
-                ? metrics.selectedDotDiameter
-                : metrics.dotDiameter
+            // The menu bar is a compact status surface. Selection remains in
+            // the accessibility value and the full HUD, but it must not alter
+            // a light's silhouette here: a ring reads as a separate hollow
+            // icon beside the other filled dots at menu-bar scale.
+            let diameter = metrics.dotDiameter
             let dotRect = NSRect(
                 x: center.x - diameter / 2,
                 y: center.y - diameter / 2,
@@ -247,19 +236,10 @@ struct MenuBarStatusIndicatorMetrics {
     let startX: CGFloat
     let cellWidth: CGFloat
     let dotDiameter: CGFloat
-    let selectedDotDiameter: CGFloat
-    let ringDiameter: CGFloat
-    let ringLineWidth: CGFloat
     let outlineLineWidth: CGFloat
 
     var maximumPaintDiameter: CGFloat {
-        max(
-            dotDiameter + outlineLineWidth,
-            max(
-                selectedDotDiameter + outlineLineWidth,
-                ringDiameter + ringLineWidth
-            )
-        )
+        dotDiameter + outlineLineWidth
     }
 
     func cellRect(for slot: Int, in imageRect: NSRect) -> NSRect {
@@ -278,36 +258,24 @@ struct MenuBarStatusIndicatorMetrics {
             startX = 18
             cellWidth = 5
             dotDiameter = 3.75
-            selectedDotDiameter = 2.9
-            ringDiameter = 4.1
-            ringLineWidth = 0.6
             outlineLineWidth = 0.4
         case .standard:
             imageWidth = 57
             startX = 17.5
             cellWidth = 6.5
             dotDiameter = 5
-            selectedDotDiameter = 4
-            ringDiameter = 5.5
-            ringLineWidth = 0.7
             outlineLineWidth = 0.45
         case .large:
             imageWidth = 65
             startX = 17.5
             cellWidth = 7.75
             dotDiameter = 6.25
-            selectedDotDiameter = 5
-            ringDiameter = 6.75
-            ringLineWidth = 0.8
             outlineLineWidth = 0.5
         case .extraLarge:
             imageWidth = 73
             startX = 17.5
             cellWidth = 9
             dotDiameter = 7.5
-            selectedDotDiameter = 6
-            ringDiameter = 7.75
-            ringLineWidth = 0.9
             outlineLineWidth = 0.55
         }
     }
