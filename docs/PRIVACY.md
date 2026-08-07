@@ -24,6 +24,10 @@ or by using the relevant reset controls in the app.
 KeySwitch does not intentionally write Codex task content, screenshots,
 profiling traces, or event logs to disk during normal use.
 
+The app bundle includes `PrivacyInfo.xcprivacy`. It declares that KeySwitch
+does not track people or collect data, and documents its local use of
+`UserDefaults` and system uptime for preferences and double-tap timing.
+
 ## Network behavior
 
 The Codex bridge connects to the configured Chromium debugging port at

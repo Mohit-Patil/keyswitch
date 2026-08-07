@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black.svg)](https://support.apple.com/macos)
 [![Swift 5](https://img.shields.io/badge/Swift-5-F05138.svg?logo=swift&logoColor=white)](https://www.swift.org/)
+[![Website](https://img.shields.io/badge/website-KeySwitch-6f8cff.svg)](https://mohit-patil.github.io/keyswitch/)
 
 <p align="center">
   <img src="docs/images/keyswitch-micro-light.png" alt="KeySwitch Codex Micro HUD in light mode" width="370">&nbsp;&nbsp;
@@ -16,6 +17,9 @@ an editable, Codex Micro-style control layer. Hold `Fn + Control` to activate
 the default layer, use the mapped controls, and return to normal typing when
 the layer exits.
 
+See the interactive showcase at
+[mohit-patil.github.io/keyswitch](https://mohit-patil.github.io/keyswitch/).
+
 > [!IMPORTANT]
 > KeySwitch is an independent, experimental project. It is not affiliated with
 > or endorsed by OpenAI or any hardware vendor. Its Codex bridge relies on
@@ -26,14 +30,16 @@ the layer exits.
 - Editable Hold or Toggle activation, with `Fn + Control` as the safe default.
 - A persistent mapping for every supported agent, command, stick, and dial
   control.
-- A non-focus-stealing frosted HUD with live agent colors and an optional
-  compact status pill.
+- A configurable six-agent status strip in the menu bar, plus a
+  non-focus-stealing frosted HUD with four sizes for the active keyboard layer.
 - Automatic synchronization of keycaps and slot actions from Codex Micro
   settings.
 - Input Monitoring and Accessibility health checks with direct links to macOS
   System Settings.
 - Automatic inactivity exit, Escape safety exit, and optional blocking of
   unmapped keys while the layer is active.
+- Optional native Launch at Login registration, managed through macOS Login
+  Items without starting or controlling Codex.
 - Static textured agent lighting by default, with continuous orbit and pulse
   animation available as an opt-in setting.
 - Local settings only: no account system, analytics, or telemetry.

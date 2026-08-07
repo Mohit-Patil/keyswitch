@@ -39,7 +39,71 @@ jobs:
             -destination 'platform=macOS' \
             -derivedDataPath "$RUNNER_TEMP/KeySwitchDerivedData" \
             CODE_SIGNING_ALLOWED=NO \
+            SWIFT_STRICT_CONCURRENCY=complete \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
             test
+
+      - name: Run Xcode static analyzer
+        run: |
+          xcodebuild \
+            -project KeySwitch.xcodeproj \
+            -scheme KeySwitch \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/KeySwitchDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            SWIFT_STRICT_CONCURRENCY=complete \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
+            analyze
 
       - name: Build command-line prototype
         run: swift build --configuration debug
+
+      - name: Build universal Release app
+        run: |
+          xcodebuild \
+            -project KeySwitch.xcodeproj \
+            -scheme KeySwitch \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/KeySwitchRelease" \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Verify Release architecture and metadata
+        run: |
+          set -euo pipefail
+
+          app="$RUNNER_TEMP/KeySwitchRelease/Build/Products/Release/KeySwitch.app"
+          executable="$app/Contents/MacOS/KeySwitch"
+          plist="$app/Contents/Info.plist"
+          privacy_manifest="$app/Contents/Resources/PrivacyInfo.xcprivacy"
+
+          expected_marketing_version="$(
+            xcodebuild -project KeySwitch.xcodeproj -target KeySwitch \
+              -configuration Release -showBuildSettings |
+              awk -F ' = ' \
+                '/^[[:space:]]*MARKETING_VERSION = / && !found { print $2; found=1 }'
+          )"
+          expected_build_version="$(
+            xcodebuild -project KeySwitch.xcodeproj -target KeySwitch \
+              -configuration Release -showBuildSettings |
+              awk -F ' = ' \
+                '/^[[:space:]]*CURRENT_PROJECT_VERSION = / && !found { print $2; found=1 }'
+          )"
+          actual_marketing_version="$(
+            /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$plist"
+          )"
+          actual_build_version="$(
+            /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$plist"
+          )"
+
+          test -n "$expected_marketing_version"
+          test -n "$expected_build_version"
+          test "$actual_marketing_version" = "$expected_marketing_version"
+          test "$actual_build_version" = "$expected_build_version"
+          lipo "$executable" -verify_arch arm64 x86_64
+          test -f "$privacy_manifest"
+          plutil -lint "$privacy_manifest"

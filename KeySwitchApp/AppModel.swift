@@ -34,6 +34,24 @@ struct AgentTapTracker {
     }
 }
 
+/// The subset of persisted settings that changes how the global event tap
+/// interprets keyboard input. Keeping this value separate prevents visual,
+/// connection, and onboarding preferences from needlessly rebuilding the
+/// keyboard engine (which also deactivates an active layer for safety).
+struct KeyboardEngineConfigurationSignature: Equatable {
+    let activationMode: ActivationMode
+    let activationShortcut: ActivationShortcut
+    let blockUnmappedKeys: Bool
+    let bindings: [KeyBinding]
+
+    init(configuration: AppConfiguration) {
+        activationMode = configuration.activationMode
+        activationShortcut = configuration.activationShortcut
+        blockUnmappedKeys = configuration.blockUnmappedKeys
+        bindings = configuration.bindings
+    }
+}
+
 @MainActor
 @Observable
 final class AppModel {
@@ -54,26 +72,25 @@ final class AppModel {
     var codexMicroLayout = CodexMicroLayoutSnapshot.codexDefault
     var hasLiveCodexMicroLayout = false
     var hudLightingIsDimmed = false
-    var statusHUDPillIsVisible = false
+    var hudPreviewIsVisible = false
     var codexRelaunchIsInProgress = false
     var setupErrorMessage: String?
+    var launchAtLoginState = LaunchAtLoginService.currentState
+    var launchAtLoginErrorMessage: String?
 
     @ObservationIgnored private var hasStarted = false
     @ObservationIgnored private var permissionRefreshTimer: Timer?
     @ObservationIgnored private var autoDimTimer: Timer?
     @ObservationIgnored private var layerAutoExitTimer: Timer?
-    @ObservationIgnored private var statusHUDHideTimer: Timer?
-    @ObservationIgnored private var hudWindowHideTask: Task<Void, Never>?
+    @ObservationIgnored private var hudPreviewDismissTask: Task<Void, Never>?
     @ObservationIgnored private var agentTapTracker = AgentTapTracker()
     @ObservationIgnored private var shouldBeginSetupAfterReconnect = false
-    @ObservationIgnored private var lastStatusHUDConnectionState: Bool?
 
     @ObservationIgnored
     private lazy var bridge: CodexMicroBridge = {
         let bridge = CodexMicroBridge(debugPort: configuration.debugPort)
         bridge.onStatusChange = { [weak self] status in
             guard let self else { return }
-            let statusChanged = self.bridgeStatus != status
             self.bridgeStatus = status
             if status != .connected {
                 self.hasLiveCodexMicroLayout = false
@@ -84,9 +101,6 @@ final class AppModel {
                     self.beginCodexMicroSetup()
                 }
             }
-            if statusChanged {
-                self.noteBridgeStatusHUDActivity(status)
-            }
         }
         bridge.onLightingChange = { [weak self] snapshot in
             #if DEBUG
@@ -95,16 +109,10 @@ final class AppModel {
             }
             #endif
             guard let self else { return }
-            let meaningfulStatusChange = snapshot.hasMeaningfulStatusChange(
-                comparedTo: self.lightingSnapshot
-            )
             let changed = self.lightingSnapshot != snapshot
-            self.lightingSnapshot = snapshot
             if changed {
+                self.lightingSnapshot = snapshot
                 self.noteLightingActivity()
-            }
-            if meaningfulStatusChange {
-                self.noteStatusHUDActivity()
             }
         }
         bridge.onLayoutChange = { [weak self] layout in
@@ -122,7 +130,7 @@ final class AppModel {
     private lazy var keyboardEngine: KeyboardEngine = {
         let engine = KeyboardEngine(configuration: engineConfiguration)
         engine.onLayerStateChanged = { [weak self] active in
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
                 self?.handleLayerStateChanged(active)
             }
         }
@@ -141,12 +149,13 @@ final class AppModel {
             if shouldFocusCodex {
                 self.bridge.focusCodexWindow()
             }
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 self.handleControlEvent(control, action: action)
             }
         }
         engine.onTapStatusChanged = { [weak self] active in
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
                 self?.eventTapIsActive = active
                 self?.permissions = PermissionService.snapshot()
             }
@@ -166,9 +175,6 @@ final class AppModel {
         if ProcessInfo.processInfo.environment["KEYSWITCH_PREVIEW_LIGHTS"] == "1" {
             lightingSnapshot = .preview
         }
-        if ProcessInfo.processInfo.environment["KEYSWITCH_PREVIEW_STATUS_PILL"] == "1" {
-            statusHUDPillIsVisible = true
-        }
         #endif
         DispatchQueue.main.async { [weak self] in
             self?.start()
@@ -179,6 +185,7 @@ final class AppModel {
         guard !hasStarted else { return }
         hasStarted = true
         permissions = PermissionService.snapshot()
+        refreshLaunchAtLoginState()
         eventTapIsActive = keyboardEngine.start()
         bridge.connect()
 
@@ -214,9 +221,7 @@ final class AppModel {
         stopPermissionRefreshTimer()
         stopAutoDimTimer()
         stopLayerAutoExitTimer()
-        stopStatusHUDHideTimer()
-        hudWindowHideTask?.cancel()
-        hudWindowHideTask = nil
+        stopHUDPreview()
         hasStarted = false
     }
 
@@ -242,6 +247,24 @@ final class AppModel {
         refreshPermissionState(retryIfGranted: true)
     }
 
+    func refreshLaunchAtLoginState() {
+        launchAtLoginState = LaunchAtLoginService.currentState
+    }
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        launchAtLoginErrorMessage = nil
+        do {
+            try LaunchAtLoginService.setEnabled(enabled)
+        } catch {
+            launchAtLoginErrorMessage = error.localizedDescription
+        }
+        refreshLaunchAtLoginState()
+    }
+
+    func openLoginItemsSettings() {
+        LaunchAtLoginService.openSystemSettings()
+    }
+
     func reconnectBridge() {
         bridge.reconnect(debugPort: configuration.debugPort)
     }
@@ -262,7 +285,6 @@ final class AppModel {
     func completeFirstRunSetup() {
         configuration.hasCompletedFirstRunSetup = true
         setupWindowController.hide()
-        noteStatusHUDActivity()
     }
 
     func beginCodexMicroSetup() {
@@ -332,25 +354,14 @@ final class AppModel {
         return configuration.hudAppearance
     }
 
-    var shouldDisplayStatusPill: Bool {
-        guard configuration.showHUD,
-              configuration.hasCompletedFirstRunSetup,
-              !layerIsActive else { return false }
-
+    var effectiveExpandedHUDSize: ExpandedHUDSize {
         #if DEBUG
-        if ProcessInfo.processInfo.environment["KEYSWITCH_PREVIEW_STATUS_PILL"] == "1" {
-            return true
+        if let previewValue = ProcessInfo.processInfo.environment["KEYSWITCH_PREVIEW_HUD_SIZE"],
+           let previewSize = ExpandedHUDSize(rawValue: previewValue) {
+            return previewSize
         }
         #endif
-
-        switch configuration.statusHUDMode {
-        case .smart:
-            return statusHUDPillIsVisible
-        case .always:
-            return true
-        case .hidden:
-            return false
-        }
+        return configuration.expandedHUDSize
     }
 
     func light(for control: MicroControl) -> AgentLightState? {
@@ -396,16 +407,11 @@ final class AppModel {
         if !active {
             pressedControls.removeAll()
             stopLayerAutoExitTimer()
-            noteStatusHUDActivity()
+            updateHUDVisibility()
             return
         }
-        if active {
-            stopStatusHUDHideTimer()
-            hudWindowHideTask?.cancel()
-            hudWindowHideTask = nil
-            noteLightingActivity()
-            restartLayerAutoExitTimer()
-        }
+        noteLightingActivity()
+        restartLayerAutoExitTimer()
         updateHUDVisibility()
     }
 
@@ -500,7 +506,7 @@ final class AppModel {
             at: applicationURL,
             configuration: launchConfiguration
         ) { [weak self] _, error in
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.codexRelaunchIsInProgress = false
                 if let error {
@@ -516,21 +522,31 @@ final class AppModel {
 
     private func configurationDidChange(from previous: AppConfiguration) {
         saveConfiguration()
-        if hasStarted {
+        let keyboardConfigurationChanged = KeyboardEngineConfigurationSignature(
+            configuration: configuration
+        ) != KeyboardEngineConfigurationSignature(configuration: previous)
+        if hasStarted, keyboardConfigurationChanged {
             keyboardEngine.update(configuration: engineConfiguration)
         }
 
         if configuration.debugPort != previous.debugPort, hasStarted {
             bridge.reconnect(debugPort: configuration.debugPort)
         }
-        if configuration.showHUD != previous.showHUD
-            || configuration.hasCompletedFirstRunSetup != previous.hasCompletedFirstRunSetup
-            || configuration.statusHUDMode != previous.statusHUDMode
-            || configuration.statusHUDHideDelay != previous.statusHUDHideDelay {
-            updateStatusHUDConfiguration(from: previous)
+        if configuration.showHUD != previous.showHUD {
+            if configuration.showHUD {
+                presentHUDPreview()
+            } else {
+                stopHUDPreview()
+                updateHUDVisibility()
+            }
         }
         if configuration.hudAppearance != previous.hudAppearance {
             hudController.updateAppearance()
+            presentHUDPreview()
+        }
+        if configuration.expandedHUDSize != previous.expandedHUDSize {
+            hudController.updateSize()
+            presentHUDPreview()
         }
         if configuration.autoDimTimeout != previous.autoDimTimeout {
             noteLightingActivity()
@@ -541,115 +557,34 @@ final class AppModel {
     }
 
     private func updateHUDVisibility() {
-        if configuration.showHUD && (layerIsActive || shouldDisplayStatusPill) {
+        if configuration.showHUD && (layerIsActive || hudPreviewIsVisible) {
             hudController.show()
         } else {
             hudController.hide()
         }
     }
 
-    private func updateStatusHUDConfiguration(from previous: AppConfiguration) {
-        guard configuration.showHUD, configuration.hasCompletedFirstRunSetup else {
-            concealStatusPill(animated: false)
-            return
-        }
+    private func presentHUDPreview() {
+        guard hasStarted, configuration.showHUD else { return }
 
-        if layerIsActive {
-            updateHUDVisibility()
-            return
-        }
+        hudPreviewDismissTask?.cancel()
+        hudPreviewIsVisible = true
+        noteLightingActivity()
+        updateHUDVisibility()
 
-        switch configuration.statusHUDMode {
-        case .hidden:
-            concealStatusPill(animated: false)
-        case .always:
-            stopStatusHUDHideTimer()
-            hudWindowHideTask?.cancel()
-            hudWindowHideTask = nil
-            statusHUDPillIsVisible = true
-            updateHUDVisibility()
-        case .smart:
-            if previous.statusHUDMode != .smart
-                || previous.statusHUDHideDelay != configuration.statusHUDHideDelay
-                || !previous.showHUD
-                || !previous.hasCompletedFirstRunSetup {
-                noteStatusHUDActivity()
-            } else {
-                updateHUDVisibility()
-            }
+        hudPreviewDismissTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            guard !Task.isCancelled, let self else { return }
+            self.hudPreviewDismissTask = nil
+            self.hudPreviewIsVisible = false
+            self.updateHUDVisibility()
         }
     }
 
-    private func noteStatusHUDActivity() {
-        guard configuration.showHUD,
-              configuration.hasCompletedFirstRunSetup,
-              !layerIsActive else { return }
-
-        hudWindowHideTask?.cancel()
-        hudWindowHideTask = nil
-
-        switch configuration.statusHUDMode {
-        case .hidden:
-            concealStatusPill(animated: false)
-        case .always:
-            stopStatusHUDHideTimer()
-            statusHUDPillIsVisible = true
-            updateHUDVisibility()
-        case .smart:
-            statusHUDPillIsVisible = true
-            updateHUDVisibility()
-            restartStatusHUDHideTimer()
-        }
-    }
-
-    private func noteBridgeStatusHUDActivity(_ status: BridgeStatus) {
-        guard let connectionState = status.statusHUDConnectionState else { return }
-        guard lastStatusHUDConnectionState != connectionState else { return }
-        lastStatusHUDConnectionState = connectionState
-        guard hasStarted else { return }
-        noteStatusHUDActivity()
-    }
-
-    private func restartStatusHUDHideTimer() {
-        stopStatusHUDHideTimer()
-        guard configuration.statusHUDMode == .smart else { return }
-
-        let timer = Timer(
-            timeInterval: configuration.statusHUDHideDelay.interval,
-            repeats: false
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.concealStatusPill(animated: true)
-            }
-        }
-        statusHUDHideTimer = timer
-        RunLoop.main.add(timer, forMode: .common)
-    }
-
-    private func stopStatusHUDHideTimer() {
-        statusHUDHideTimer?.invalidate()
-        statusHUDHideTimer = nil
-    }
-
-    private func concealStatusPill(animated: Bool) {
-        stopStatusHUDHideTimer()
-        statusHUDPillIsVisible = false
-        hudWindowHideTask?.cancel()
-
-        guard animated, !layerIsActive else {
-            hudWindowHideTask = nil
-            updateHUDVisibility()
-            return
-        }
-
-        // Keep the transparent panel alive just long enough for SwiftUI's
-        // compositor-only fade to finish, then remove it from WindowServer.
-        hudWindowHideTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 180_000_000)
-            guard !Task.isCancelled else { return }
-            self?.hudWindowHideTask = nil
-            self?.updateHUDVisibility()
-        }
+    private func stopHUDPreview() {
+        hudPreviewDismissTask?.cancel()
+        hudPreviewDismissTask = nil
+        hudPreviewIsVisible = false
     }
 
     private func startPermissionRefreshTimer() {

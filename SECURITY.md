@@ -36,9 +36,14 @@ contracts. Reports involving permission misuse, event interception, renderer
 evaluation, local-port exposure, unintended app control, or persistence are
 especially important.
 
-KeySwitch connects to `127.0.0.1` by default. Do not expose the debugging port
-to other devices or untrusted local users. Treat any renderer endpoint as
-privileged access to the running Codex session.
+KeySwitch connects to `127.0.0.1` by default. Renderer discovery accepts only
+numeric loopback WebSocket endpoints on the configured port and rejects
+redirects, credentials, query strings, fragments, malformed page paths, and
+discovery responses larger than 1 MiB. These checks do not authenticate a
+different local process that binds the configured port first.
+
+Do not expose the debugging port to other devices or untrusted local users.
+Treat any renderer endpoint as privileged access to the running Codex session.
 
 ## Out of scope
 

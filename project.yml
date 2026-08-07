@@ -22,6 +22,8 @@ targets:
     info:
       path: KeySwitchApp/Info.plist
       properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSUIElement: true
         NSInputMonitoringUsageDescription: >-
           KeySwitch needs Input Monitoring to turn the keyboard into your

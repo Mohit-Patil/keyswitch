@@ -25,8 +25,10 @@ enum PermissionService {
         }
 
         if !AXIsProcessTrusted() {
-            let promptKey = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
-            _ = AXIsProcessTrustedWithOptions([promptKey: true] as CFDictionary)
+            // Use the documented option value directly. Referencing the
+            // imported mutable CF global produces a Swift 6 data-race warning.
+            let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+            _ = AXIsProcessTrustedWithOptions(options)
         }
     }
 
