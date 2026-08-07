@@ -14,6 +14,17 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
   agent status lighting, and first-run setup.
 - Keyboard-engine, renderer-contract, configuration-migration, and status-HUD
   tests.
+- Live six-agent menu-bar indicators with brief state transitions and a
+  migration-safe visibility setting and four configurable sizes.
+- Compact, Standard, Large, and Extra Large presets for the expanded Codex
+  Micro HUD, with migration-safe persistence and live panel resizing.
+- Selecting a HUD size or appearance briefly previews the real, nonactivating
+  Codex Micro overlay at the screen's top-right; menu-bar sizes update in place.
+
+### Removed
+
+- The floating agent-status pill and its timers; passive status now lives in
+  the configurable menu-bar indicators.
 
 ### Security
 

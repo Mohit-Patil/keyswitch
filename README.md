@@ -26,8 +26,8 @@ the layer exits.
 - Editable Hold or Toggle activation, with `Fn + Control` as the safe default.
 - A persistent mapping for every supported agent, command, stick, and dial
   control.
-- A non-focus-stealing frosted HUD with live agent colors and an optional
-  compact status pill.
+- A configurable six-agent status strip in the menu bar, plus a
+  non-focus-stealing frosted HUD with four sizes for the active keyboard layer.
 - Automatic synchronization of keycaps and slot actions from Codex Micro
   settings.
 - Input Monitoring and Accessibility health checks with direct links to macOS

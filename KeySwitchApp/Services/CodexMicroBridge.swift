@@ -14,16 +14,6 @@ enum BridgeStatus: String {
         }
     }
 
-    /// Connecting is a retrying intermediate state. Treating it as a visible
-    /// status transition would make the Smart HUD resurface every two seconds
-    /// while Codex is unavailable.
-    var statusHUDConnectionState: Bool? {
-        switch self {
-        case .connected: true
-        case .disconnected: false
-        case .connecting: nil
-        }
-    }
 }
 
 private struct CodexDebugTarget: Decodable {

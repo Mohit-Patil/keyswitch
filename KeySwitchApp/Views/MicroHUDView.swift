@@ -6,52 +6,45 @@ struct MicroHUDOverlayView: View {
     @State private var expandedLightingMotionIsEnabled = false
     let model: AppModel
 
-    private let statusPillWidth: CGFloat = 184
-    private let statusPillHeight: CGFloat = 46
-    private let expandedWidth: CGFloat = 384
-    private let overlayHeight: CGFloat = 384
+    private var expandedSideLength: CGFloat {
+        model.effectiveExpandedHUDSize.sideLength
+    }
 
     private var panelAnimation: Animation? {
         guard !reduceMotion else { return nil }
         return .smooth(duration: 0.16, extraBounce: 0)
     }
 
+    private var isPresented: Bool {
+        model.layerIsActive || model.hudPreviewIsVisible
+    }
+
     var body: some View {
-        let statusPillIsVisible = model.shouldDisplayStatusPill
         let expandedLightingAnimationRequested = model.layerIsActive
             && model.configuration.animatedAgentLighting
             && !reduceMotion
 
-        ZStack(alignment: .topTrailing) {
-            MicroHUDView(
-                model: model,
-                continuousLightingMotionEnabled: expandedLightingMotionIsEnabled
-                    && model.configuration.animatedAgentLighting
-            )
-                .opacity(model.layerIsActive ? 1 : 0)
-                .animation(panelAnimation, value: model.layerIsActive)
-                .accessibilityHidden(!model.layerIsActive)
-
-            HUDStatusPillView(model: model)
-                .frame(width: statusPillWidth, height: statusPillHeight)
-                .opacity(statusPillIsVisible ? 1 : 0)
-                .scaleEffect(
-                    statusPillIsVisible ? 1 : 0.96,
-                    anchor: .topTrailing
-                )
-                .animation(panelAnimation, value: statusPillIsVisible)
-                .accessibilityHidden(!statusPillIsVisible)
-        }
+        MicroHUDView(
+            model: model,
+            continuousLightingMotionEnabled: expandedLightingMotionIsEnabled
+                && model.configuration.animatedAgentLighting
+        )
+        .scaleEffect(
+            model.effectiveExpandedHUDSize.scale,
+            anchor: .topTrailing
+        )
+        .opacity(isPresented ? 1 : 0)
+        .animation(panelAnimation, value: isPresented)
         .frame(
-            width: expandedWidth,
-            height: overlayHeight,
+            width: expandedSideLength,
+            height: expandedSideLength,
             alignment: .topTrailing
         )
         .accessibilityElement(children: .contain)
         .accessibilityLabel(
-            model.layerIsActive ? "KeySwitch layer active" : "KeySwitch agent status"
+            model.layerIsActive ? "KeySwitch layer active" : "Codex Micro size preview"
         )
-        .accessibilityHidden(!model.layerIsActive && !statusPillIsVisible)
+        .accessibilityHidden(!isPresented)
         .task(id: expandedLightingAnimationRequested) {
             expandedLightingMotionIsEnabled = false
             guard expandedLightingAnimationRequested else { return }
@@ -267,147 +260,6 @@ private struct HUDActiveVisualEffectView: NSViewRepresentable {
         view.blendingMode = .behindWindow
         view.state = .active
         view.isEmphasized = true
-    }
-}
-
-private struct HUDStatusPillView: View {
-    let model: AppModel
-
-    private var accessibilitySummary: String {
-        (0..<6).map { slot in
-            let light = model.lightingSnapshot.light(for: slot)
-            let selection = light.selected ? ", selected" : ""
-            return "Agent \(slot + 1): \(light.status.title)\(selection)"
-        }
-        .joined(separator: ", ")
-    }
-
-    var body: some View {
-        HStack(spacing: 2) {
-            ForEach(0..<6, id: \.self) { slot in
-                HUDStatusAgentLight(
-                    state: model.lightingSnapshot.light(for: slot),
-                    brightness: model.effectiveLightingBrightness
-                )
-            }
-        }
-        .padding(.horizontal, 9)
-        .padding(.vertical, 11)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            HUDStatusPillChassisView()
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Codex agent status")
-        .accessibilityValue(accessibilitySummary)
-    }
-}
-
-private struct HUDStatusPillChassisView: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    private var isDark: Bool { colorScheme == .dark }
-    private let shape = Capsule()
-
-    var body: some View {
-        ZStack {
-            HUDActiveVisualEffectView()
-
-            Group {
-                if isDark {
-                    Color.black.opacity(0.48)
-                } else {
-                    Color(red: 0.18, green: 0.19, blue: 0.22).opacity(0.62)
-                }
-            }
-
-            LinearGradient(
-                colors: isDark
-                    ? [.white.opacity(0.075), .clear, .black.opacity(0.28)]
-                    : [.white.opacity(0.18), .white.opacity(0.025), .black.opacity(0.3)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-        .clipShape(shape)
-        .overlay {
-            shape.strokeBorder(
-                LinearGradient(
-                    colors: [
-                        .white.opacity(isDark ? 0.14 : 0.38),
-                        .white.opacity(isDark ? 0.025 : 0.06),
-                        .black.opacity(isDark ? 0.52 : 0.44),
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ),
-                lineWidth: 1
-            )
-        }
-        .shadow(color: .black.opacity(isDark ? 0.28 : 0.24), radius: 8, y: 4)
-    }
-}
-
-private struct HUDStatusAgentLight: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let state: AgentLightState
-    let brightness: Double
-
-    private var normalizedBrightness: Double {
-        min(max(brightness, 0), 1)
-    }
-
-    private var color: Color {
-        state.status == .off
-            ? Color(packedRGB: 0x6A6D76)
-            : Color(packedRGB: state.status.packedRGB)
-    }
-
-    private var coreDiameter: CGFloat {
-        state.selected ? 18 : 12
-    }
-
-    var body: some View {
-        ZStack {
-            if state.selected, state.status != .off {
-                Circle()
-                    .fill(color.opacity(0.2 * normalizedBrightness))
-                    .frame(width: 25, height: 25)
-                    .blur(radius: 3)
-
-                Circle()
-                    .stroke(color.opacity(0.52 * normalizedBrightness), lineWidth: 0.75)
-                    .frame(width: 23, height: 23)
-            }
-
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            .white.opacity(state.status == .off ? 0.1 : 0.62),
-                            color,
-                            color.opacity(0.76),
-                        ],
-                        center: .topLeading,
-                        startRadius: 0,
-                        endRadius: 11
-                    )
-                )
-                .frame(width: coreDiameter, height: coreDiameter)
-                .opacity(state.status == .off ? 0.34 : 0.52 + normalizedBrightness * 0.48)
-                .overlay {
-                    Circle()
-                        .stroke(.white.opacity(state.selected ? 0.42 : 0.14), lineWidth: 0.75)
-                }
-                .shadow(
-                    color: color.opacity(
-                        state.status == .off ? 0 : (state.selected ? 0.68 : 0.34) * normalizedBrightness
-                    ),
-                    radius: state.selected ? 6 : 3
-                )
-        }
-        .frame(width: 26, height: 24)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: state)
     }
 }
 

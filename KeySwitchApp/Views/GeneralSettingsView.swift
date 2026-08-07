@@ -65,36 +65,53 @@ struct GeneralSettingsView: View {
                 )
 
                 Picker(
-                    "Agent status pill",
+                    "Expanded HUD size",
                     selection: Binding(
-                        get: { model.configuration.statusHUDMode },
-                        set: { model.configuration.statusHUDMode = $0 }
+                        get: { model.configuration.expandedHUDSize },
+                        set: { model.configuration.expandedHUDSize = $0 }
                     )
                 ) {
-                    ForEach(StatusHUDMode.allCases) { mode in
-                        Text(mode.title).tag(mode)
+                    ForEach(ExpandedHUDSize.allCases) { size in
+                        Text(size.title).tag(size)
                     }
                 }
+                .pickerStyle(.segmented)
                 .disabled(!model.configuration.showHUD)
 
-                Text(model.configuration.statusHUDMode.helpText)
+                Text(
+                    "\(model.configuration.expandedHUDSize.title) is "
+                        + "\(Int(model.configuration.expandedHUDSize.sideLength)) × "
+                        + "\(Int(model.configuration.expandedHUDSize.sideLength)) pt. "
+                        + "Changing it briefly previews the real Micro at the top-right of your screen."
+                )
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                if model.configuration.statusHUDMode == .smart {
-                    Picker(
-                        "Hide status pill after",
-                        selection: Binding(
-                            get: { model.configuration.statusHUDHideDelay },
-                            set: { model.configuration.statusHUDHideDelay = $0 }
-                        )
-                    ) {
-                        ForEach(StatusHUDHideDelay.allCases) { delay in
-                            Text(delay.title).tag(delay)
-                        }
+                Toggle(
+                    "Show agent status in the menu bar",
+                    isOn: Binding(
+                        get: { model.configuration.showMenuBarAgentStatus },
+                        set: { model.configuration.showMenuBarAgentStatus = $0 }
+                    )
+                )
+
+                Picker(
+                    "Indicator size",
+                    selection: Binding(
+                        get: { model.configuration.menuBarIndicatorSize },
+                        set: { model.configuration.menuBarIndicatorSize = $0 }
+                    )
+                ) {
+                    ForEach(MenuBarIndicatorSize.allCases) { size in
+                        Text(size.title).tag(size)
                     }
-                    .disabled(!model.configuration.showHUD)
                 }
+                .pickerStyle(.menu)
+                .disabled(!model.configuration.showMenuBarAgentStatus)
+
+                Text("Displays the six Codex agent states beside the KeySwitch icon. Size changes appear immediately in the actual menu bar.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
                 Picker(
                     "HUD appearance",

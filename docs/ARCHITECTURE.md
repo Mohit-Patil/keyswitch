@@ -28,8 +28,14 @@ mappings.
 ### `HUDWindowController` and SwiftUI views
 
 `HUDWindowController` owns one transparent, non-activating `NSPanel`. SwiftUI
-renders the expanded Micro layout and compact agent-status pill inside that
-panel. The panel never becomes the typing focus.
+renders the expanded Micro layout inside that panel while the keyboard layer is
+active. The controller keeps the selected HUD size anchored to the top-right of
+the active screen, and the panel never becomes the typing focus.
+
+`MenuBarStatusLabel` renders the same six agent states into the app's
+`MenuBarExtra` label. It uses a compact original-color image because macOS
+extracts the image portion of a menu-bar label rather than preserving arbitrary
+colored shape views.
 
 The selected HUD appearance is scoped to the HUD subtree and panel; it must not
 change the Settings window or other app UI.
@@ -93,7 +99,7 @@ Unit coverage focuses on the deterministic boundaries:
 - Micro slot and payload contracts;
 - stick and dial behavior;
 - configuration round trips and legacy migrations;
-- agent status and compact-HUD visibility decisions; and
+- agent status, menu-bar rendering, and HUD-size migrations; and
 - optional live bridge checks behind an explicit environment flag.
 
 Visual behavior, permission prompts, and live upstream compatibility still

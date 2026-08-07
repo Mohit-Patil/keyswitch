@@ -12,9 +12,10 @@ final class HUDWindowController {
 
     func show() {
         let panel = panel ?? makePanel()
-        guard !panel.isVisible else { return }
         applyAppearance(to: panel)
+        applySize(to: panel)
         position(panel)
+        guard !panel.isVisible else { return }
         panel.orderFrontRegardless()
     }
 
@@ -27,8 +28,15 @@ final class HUDWindowController {
         applyAppearance(to: panel)
     }
 
+    func updateSize() {
+        guard let panel else { return }
+        applySize(to: panel)
+        position(panel)
+    }
+
     private func makePanel() -> NSPanel {
-        let size = NSSize(width: 384, height: 384)
+        let sideLength = model.effectiveExpandedHUDSize.sideLength
+        let size = NSSize(width: sideLength, height: sideLength)
         let panel = NSPanel(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless, .nonactivatingPanel],
@@ -59,6 +67,11 @@ final class HUDWindowController {
         panel.contentView = hostingView
         self.panel = panel
         return panel
+    }
+
+    private func applySize(to panel: NSPanel) {
+        let sideLength = model.effectiveExpandedHUDSize.sideLength
+        panel.setContentSize(NSSize(width: sideLength, height: sideLength))
     }
 
     private func applyAppearance(to panel: NSPanel) {

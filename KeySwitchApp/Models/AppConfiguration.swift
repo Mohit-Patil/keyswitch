@@ -16,47 +16,54 @@ enum HUDAppearance: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-enum StatusHUDMode: String, Codable, CaseIterable, Identifiable {
-    case smart
-    case always
-    case hidden
+enum ExpandedHUDSize: String, Codable, CaseIterable, Identifiable {
+    case compact
+    case standard
+    case large
+    case extraLarge
+
+    static let standardSideLength: CGFloat = 384
 
     var id: Self { self }
 
     var title: String {
         switch self {
-        case .smart: "Smart"
-        case .always: "Always visible"
-        case .hidden: "Hidden"
+        case .compact: "Compact"
+        case .standard: "Standard"
+        case .large: "Large"
+        case .extraLarge: "Extra Large"
         }
     }
 
-    var helpText: String {
+    var sideLength: CGFloat {
         switch self {
-        case .smart:
-            "The agent pill appears after meaningful status or connection changes, then hides automatically."
-        case .always:
-            "The agent pill remains visible whenever the full keyboard layer is closed."
-        case .hidden:
-            "The agent pill stays hidden. Your activation shortcut still opens the complete HUD."
+        case .compact: 320
+        case .standard: Self.standardSideLength
+        case .large: 448
+        case .extraLarge: 512
         }
+    }
+
+    var scale: CGFloat {
+        sideLength / Self.standardSideLength
     }
 }
 
-enum StatusHUDHideDelay: Int, Codable, CaseIterable, Identifiable {
-    case twoSeconds = 2
-    case threeSeconds = 3
-    case fiveSeconds = 5
-    case tenSeconds = 10
+enum MenuBarIndicatorSize: String, Codable, CaseIterable, Identifiable {
+    case compact
+    case standard
+    case large
+    case extraLarge
 
     var id: Self { self }
 
     var title: String {
-        "\(rawValue) seconds"
-    }
-
-    var interval: TimeInterval {
-        TimeInterval(rawValue)
+        switch self {
+        case .compact: "Compact"
+        case .standard: "Standard"
+        case .large: "Large"
+        case .extraLarge: "Extra Large"
+        }
     }
 }
 
@@ -66,8 +73,9 @@ struct AppConfiguration: Codable, Equatable {
     var layerAutoExitTimeout: LayerAutoExitTimeout
     var showHUD: Bool
     var hudAppearance: HUDAppearance
-    var statusHUDMode: StatusHUDMode
-    var statusHUDHideDelay: StatusHUDHideDelay
+    var expandedHUDSize: ExpandedHUDSize
+    var showMenuBarAgentStatus: Bool
+    var menuBarIndicatorSize: MenuBarIndicatorSize
     var blockUnmappedKeys: Bool
     var lightingBrightness: Double
     var animatedAgentLighting: Bool
@@ -83,8 +91,9 @@ struct AppConfiguration: Codable, Equatable {
         layerAutoExitTimeout: LayerAutoExitTimeout = .threeSeconds,
         showHUD: Bool,
         hudAppearance: HUDAppearance = .system,
-        statusHUDMode: StatusHUDMode = .smart,
-        statusHUDHideDelay: StatusHUDHideDelay = .threeSeconds,
+        expandedHUDSize: ExpandedHUDSize = .standard,
+        showMenuBarAgentStatus: Bool = true,
+        menuBarIndicatorSize: MenuBarIndicatorSize = .standard,
         blockUnmappedKeys: Bool,
         lightingBrightness: Double = 1,
         animatedAgentLighting: Bool = false,
@@ -99,8 +108,9 @@ struct AppConfiguration: Codable, Equatable {
         self.layerAutoExitTimeout = layerAutoExitTimeout
         self.showHUD = showHUD
         self.hudAppearance = hudAppearance
-        self.statusHUDMode = statusHUDMode
-        self.statusHUDHideDelay = statusHUDHideDelay
+        self.expandedHUDSize = expandedHUDSize
+        self.showMenuBarAgentStatus = showMenuBarAgentStatus
+        self.menuBarIndicatorSize = menuBarIndicatorSize
         self.blockUnmappedKeys = blockUnmappedKeys
         self.lightingBrightness = lightingBrightness
         self.animatedAgentLighting = animatedAgentLighting
@@ -130,14 +140,18 @@ struct AppConfiguration: Codable, Equatable {
             HUDAppearance.self,
             forKey: .hudAppearance
         ) ?? .system
-        statusHUDMode = try container.decodeIfPresent(
-            StatusHUDMode.self,
-            forKey: .statusHUDMode
-        ) ?? .smart
-        statusHUDHideDelay = try container.decodeIfPresent(
-            StatusHUDHideDelay.self,
-            forKey: .statusHUDHideDelay
-        ) ?? .threeSeconds
+        expandedHUDSize = try container.decodeIfPresent(
+            ExpandedHUDSize.self,
+            forKey: .expandedHUDSize
+        ) ?? .standard
+        showMenuBarAgentStatus = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .showMenuBarAgentStatus
+        ) ?? true
+        menuBarIndicatorSize = try container.decodeIfPresent(
+            MenuBarIndicatorSize.self,
+            forKey: .menuBarIndicatorSize
+        ) ?? .standard
         blockUnmappedKeys = try container.decodeIfPresent(Bool.self, forKey: .blockUnmappedKeys) ?? true
         lightingBrightness = min(
             max(try container.decodeIfPresent(Double.self, forKey: .lightingBrightness) ?? 1, 0),
@@ -170,8 +184,9 @@ struct AppConfiguration: Codable, Equatable {
         layerAutoExitTimeout: .threeSeconds,
         showHUD: true,
         hudAppearance: .system,
-        statusHUDMode: .smart,
-        statusHUDHideDelay: .threeSeconds,
+        expandedHUDSize: .standard,
+        showMenuBarAgentStatus: true,
+        menuBarIndicatorSize: .standard,
         blockUnmappedKeys: true,
         lightingBrightness: 1,
         animatedAgentLighting: false,

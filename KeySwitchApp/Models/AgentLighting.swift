@@ -91,17 +91,4 @@ struct CodexLightingSnapshot: Codable, Equatable {
         )
     }
 
-    /// Returns true only for changes a person can act on or recognize in the
-    /// status pill. Brightness and renderer timeout refreshes intentionally do
-    /// not count, so polling cannot keep resurfacing the HUD.
-    func hasMeaningfulStatusChange(comparedTo previous: CodexLightingSnapshot) -> Bool {
-        (0..<6).contains { slot in
-            let currentLight = light(for: slot)
-            let previousLight = previous.light(for: slot)
-            return currentLight.threadKey != previousLight.threadKey
-                || currentLight.status != previousLight.status
-                || currentLight.selected != previousLight.selected
-        }
-    }
-
 }

@@ -502,8 +502,9 @@ final class KeyboardEngineTests: XCTestCase {
         configuration.animatedAgentLighting = true
         configuration.autoDimTimeout = .fifteenMinutes
         configuration.hudAppearance = .light
-        configuration.statusHUDMode = .always
-        configuration.statusHUDHideDelay = .tenSeconds
+        configuration.expandedHUDSize = .extraLarge
+        configuration.showMenuBarAgentStatus = false
+        configuration.menuBarIndicatorSize = .extraLarge
         configuration.focusCodexOnSingleTap = true
         configuration.hasCompletedFirstRunSetup = true
 
@@ -515,8 +516,9 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertTrue(decoded.animatedAgentLighting)
         XCTAssertEqual(decoded.autoDimTimeout, .fifteenMinutes)
         XCTAssertEqual(decoded.hudAppearance, .light)
-        XCTAssertEqual(decoded.statusHUDMode, .always)
-        XCTAssertEqual(decoded.statusHUDHideDelay, .tenSeconds)
+        XCTAssertEqual(decoded.expandedHUDSize, .extraLarge)
+        XCTAssertFalse(decoded.showMenuBarAgentStatus)
+        XCTAssertEqual(decoded.menuBarIndicatorSize, .extraLarge)
         XCTAssertTrue(decoded.focusCodexOnSingleTap)
         XCTAssertTrue(decoded.hasCompletedFirstRunSetup)
     }
@@ -534,19 +536,65 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertEqual(decoded.layerAutoExitTimeout, .threeSeconds)
     }
 
-    func testLegacySettingsGainSmartStatusHUDDefaults() throws {
+    func testLegacyFloatingStatusPillSettingsAreIgnored() throws {
         let currentData = try JSONEncoder().encode(AppConfiguration.default)
         var legacyObject = try XCTUnwrap(
             JSONSerialization.jsonObject(with: currentData) as? [String: Any]
         )
-        legacyObject.removeValue(forKey: "statusHUDMode")
-        legacyObject.removeValue(forKey: "statusHUDHideDelay")
+        legacyObject["statusHUDMode"] = "always"
+        legacyObject["statusHUDHideDelay"] = 10
 
         let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
         let decoded = try JSONDecoder().decode(AppConfiguration.self, from: legacyData)
 
-        XCTAssertEqual(decoded.statusHUDMode, .smart)
-        XCTAssertEqual(decoded.statusHUDHideDelay, .threeSeconds)
+        XCTAssertEqual(decoded, .default)
+    }
+
+    func testLegacySettingsShowAgentStatusInMenuBarByDefault() throws {
+        let currentData = try JSONEncoder().encode(AppConfiguration.default)
+        var legacyObject = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: currentData) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "showMenuBarAgentStatus")
+
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let decoded = try JSONDecoder().decode(AppConfiguration.self, from: legacyData)
+
+        XCTAssertTrue(decoded.showMenuBarAgentStatus)
+    }
+
+    func testLegacySettingsGainStandardMenuBarIndicatorSize() throws {
+        let currentData = try JSONEncoder().encode(AppConfiguration.default)
+        var legacyObject = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: currentData) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "menuBarIndicatorSize")
+
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let decoded = try JSONDecoder().decode(AppConfiguration.self, from: legacyData)
+
+        XCTAssertEqual(decoded.menuBarIndicatorSize, .standard)
+    }
+
+    func testLegacySettingsGainStandardExpandedHUDSize() throws {
+        let currentData = try JSONEncoder().encode(AppConfiguration.default)
+        var legacyObject = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: currentData) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "expandedHUDSize")
+
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let decoded = try JSONDecoder().decode(AppConfiguration.self, from: legacyData)
+
+        XCTAssertEqual(decoded.expandedHUDSize, .standard)
+    }
+
+    func testExpandedHUDSizePresetsUseStableGeometry() {
+        XCTAssertEqual(ExpandedHUDSize.compact.sideLength, 320)
+        XCTAssertEqual(ExpandedHUDSize.standard.sideLength, 384)
+        XCTAssertEqual(ExpandedHUDSize.large.sideLength, 448)
+        XCTAssertEqual(ExpandedHUDSize.extraLarge.sideLength, 512)
+        XCTAssertEqual(ExpandedHUDSize.standard.scale, 1)
     }
 
     func testAgentLightingAnimationIsOptInForDefaultsAndLegacySettings() throws {
@@ -570,19 +618,6 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertEqual(LayerAutoExitTimeout.fourSeconds.interval, 4)
         XCTAssertEqual(LayerAutoExitTimeout.fiveSeconds.interval, 5)
         XCTAssertNil(LayerAutoExitTimeout.never.interval)
-    }
-
-    func testStatusHUDHideDelayIntervals() {
-        XCTAssertEqual(StatusHUDHideDelay.twoSeconds.interval, 2)
-        XCTAssertEqual(StatusHUDHideDelay.threeSeconds.interval, 3)
-        XCTAssertEqual(StatusHUDHideDelay.fiveSeconds.interval, 5)
-        XCTAssertEqual(StatusHUDHideDelay.tenSeconds.interval, 10)
-    }
-
-    func testStatusHUDIgnoresIntermediateBridgeRetries() {
-        XCTAssertEqual(BridgeStatus.connected.statusHUDConnectionState, true)
-        XCTAssertEqual(BridgeStatus.disconnected.statusHUDConnectionState, false)
-        XCTAssertNil(BridgeStatus.connecting.statusHUDConnectionState)
     }
 
     func testAgentTapTrackerFocusesMatchingAgentOnDoubleTap() {
@@ -731,38 +766,6 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertEqual(AgentLightStatus.awaitingApproval.packedRGB, 0xFF6D00)
         XCTAssertEqual(AgentLightStatus.awaitingResponse.packedRGB, 0xFF6D00)
         XCTAssertEqual(AgentLightStatus.error.packedRGB, 0xFF0033)
-    }
-
-    func testStatusHUDIgnoresBrightnessOnlyLightingRefreshes() {
-        let dimmedSnapshot = CodexLightingSnapshot(
-            brightness: 0.2,
-            inactivityTimeoutMs: 60_000,
-            slots: CodexLightingSnapshot.off.slots
-        )
-
-        XCTAssertFalse(
-            dimmedSnapshot.hasMeaningfulStatusChange(comparedTo: .off)
-        )
-    }
-
-    func testStatusHUDRecognizesAgentStateAndSelectionChanges() {
-        let workingSnapshot = CodexLightingSnapshot(
-            brightness: 1,
-            inactivityTimeoutMs: 180_000,
-            slots: [
-                AgentLightState(
-                    id: 0,
-                    title: "Working task",
-                    threadKey: "local:working",
-                    status: .working,
-                    selected: true
-                )
-            ]
-        )
-
-        XCTAssertTrue(
-            workingSnapshot.hasMeaningfulStatusChange(comparedTo: .off)
-        )
     }
 
     func testRendererLightingSnapshotDecodesAllAgentStates() throws {
