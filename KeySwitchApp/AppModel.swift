@@ -500,6 +500,7 @@ final class AppModel {
 
         let launchConfiguration = NSWorkspace.OpenConfiguration()
         launchConfiguration.arguments = [
+            "--remote-debugging-address=127.0.0.1",
             "--remote-debugging-port=\(configuration.debugPort)",
             "--no-first-run",
         ]
