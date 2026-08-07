@@ -7,6 +7,8 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-07
+
 ### Added
 
 - Initial open-source project structure and community documentation.
@@ -25,6 +27,8 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
   approved reasons for local preferences and double-tap timing.
 - A responsive, dependency-free GitHub Pages showcase with interactive HUD
   size and appearance previews.
+- The layered-switch KeySwitch identity, optically sized macOS app icons, and
+  matching website and favicon marks.
 
 ### Changed
 
@@ -44,3 +48,6 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 - Local release artifacts, profiling traces, signing identities, and private
   design-review captures are excluded from the repository.
+
+[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.1.0
