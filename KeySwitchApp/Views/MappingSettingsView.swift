@@ -415,10 +415,19 @@ private struct AgentLightingLegend: View {
             ForEach(statuses, id: \.self) { status in
                 HStack(spacing: 7) {
                     Circle()
-                        .fill(Color(agentLightStatus: status))
+                        .fill(
+                            status == .off
+                                ? Color.clear
+                                : Color(agentLightStatus: status)
+                        )
                         .frame(width: 10, height: 10)
                         .overlay {
-                            Circle().stroke(.white.opacity(0.28), lineWidth: 0.7)
+                            Circle().stroke(
+                                status == .off
+                                    ? Color.secondary.opacity(0.72)
+                                    : Color.white.opacity(0.28),
+                                lineWidth: status == .off ? 1 : 0.7
+                            )
                         }
                         .shadow(
                             color: Color(agentLightStatus: status)

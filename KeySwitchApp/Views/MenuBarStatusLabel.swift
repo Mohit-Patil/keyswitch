@@ -49,7 +49,6 @@ struct MenuBarStatusLabel: View {
 enum MenuBarStatusIndicatorSymbol: Equatable {
     case hollowCircle
     case circle
-    case error
 }
 
 enum MenuBarStatusIconRenderer {
@@ -162,8 +161,7 @@ enum MenuBarStatusIconRenderer {
     ) -> MenuBarStatusIndicatorSymbol {
         switch status {
         case .off: .hollowCircle
-        case .idle, .working, .unread, .awaitingApproval, .awaitingResponse: .circle
-        case .error: .error
+        case .idle, .working, .unread, .awaitingApproval, .awaitingResponse, .error: .circle
         }
     }
 
@@ -185,21 +183,9 @@ enum MenuBarStatusIconRenderer {
         color.setFill()
         path.fill()
 
-        NSColor.black.withAlphaComponent(symbol == .circle ? 0.42 : 0.24).setStroke()
+        NSColor.black.withAlphaComponent(0.42).setStroke()
         path.lineWidth = metrics.outlineLineWidth
         path.stroke()
-
-        guard symbol == .error else { return }
-        NSColor.white.withAlphaComponent(0.92).setStroke()
-        let inset = max(1, rect.width * 0.27)
-        let cross = NSBezierPath()
-        cross.move(to: NSPoint(x: rect.minX + inset, y: rect.minY + inset))
-        cross.line(to: NSPoint(x: rect.maxX - inset, y: rect.maxY - inset))
-        cross.move(to: NSPoint(x: rect.minX + inset, y: rect.maxY - inset))
-        cross.line(to: NSPoint(x: rect.maxX - inset, y: rect.minY + inset))
-        cross.lineWidth = max(metrics.outlineLineWidth, 0.65)
-        cross.lineCapStyle = .round
-        cross.stroke()
     }
 
     private static func indicatorPath(
@@ -207,7 +193,7 @@ enum MenuBarStatusIconRenderer {
         in rect: NSRect
     ) -> NSBezierPath {
         switch symbol {
-        case .hollowCircle, .circle, .error:
+        case .hollowCircle, .circle:
             return NSBezierPath(ovalIn: rect)
         }
     }
