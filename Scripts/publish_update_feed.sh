@@ -21,7 +21,8 @@ archive_path="$1"
 version="$2"
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 github_repository="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
-sparkle_account="${SPARKLE_ACCOUNT:?SPARKLE_ACCOUNT is required}"
+sparkle_private_key_path="${SPARKLE_PRIVATE_KEY_PATH:?SPARKLE_PRIVATE_KEY_PATH is required}"
+sparkle_public_key="${SPARKLE_PUBLIC_KEY:?SPARKLE_PUBLIC_KEY is required}"
 runner_temporary_root="${RUNNER_TEMP:-/tmp}"
 temporary_directory="$(mktemp -d "$runner_temporary_root/keyswitch-feed.XXXXXX")"
 feed_worktree="$temporary_directory/worktree"
@@ -44,6 +45,11 @@ trap cleanup EXIT
 
 if [[ ! -f "$archive_path" ]]; then
     echo "error: update archive not found: $archive_path" >&2
+    exit 66
+fi
+
+if [[ "$sparkle_private_key_path" != /* || ! -s "$sparkle_private_key_path" ]]; then
+    echo "error: SPARKLE_PRIVATE_KEY_PATH must be an absolute, nonempty file" >&2
     exit 66
 fi
 
@@ -135,7 +141,7 @@ verify_published_feed() {
             "$published_feed"; then
             sparkle_tools="$("$repository_root/Scripts/fetch_sparkle_tools.sh")"
             "$sparkle_tools/bin/sign_update" \
-                --account "$sparkle_account" \
+                --ed-key-file "$sparkle_private_key_path" \
                 --verify \
                 "$published_feed"
             return

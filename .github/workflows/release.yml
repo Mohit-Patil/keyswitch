@@ -26,7 +26,6 @@ concurrency:
 env:
   DEVELOPER_IDENTITY: "Developer ID Application: Mohit Patil (4NWUS8362L)"
   DEVELOPER_TEAM_ID: "4NWUS8362L"
-  SPARKLE_ACCOUNT: "com.mohitpatil.keyswitch"
   SPARKLE_PUBLIC_KEY: "k/PEbhkmYphQ7VTC3Pu04v1O7OLxn6ohRXuoxxN/n+Y="
 
 jobs:
@@ -458,25 +457,12 @@ jobs:
             if [[ -e "$sparkle_key_path" ]]; then
               /bin/unlink "$sparkle_key_path"
             fi
-            security delete-generic-password \
-              -s https://sparkle-project.org \
-              -a "$SPARKLE_ACCOUNT" >/dev/null 2>&1 || true
           }
           trap cleanup_sparkle_key EXIT
 
           printf '%s' "$SPARKLE_PRIVATE_KEY" > "$sparkle_key_path"
           unset SPARKLE_PRIVATE_KEY
-          sparkle_tools="$(Scripts/fetch_sparkle_tools.sh)"
-          "$sparkle_tools/bin/generate_keys" \
-            --account "$SPARKLE_ACCOUNT" \
-            -f "$sparkle_key_path" >/dev/null
-          imported_public_key="$(
-            "$sparkle_tools/bin/generate_keys" \
-              --account "$SPARKLE_ACCOUNT" \
-              -p
-          )"
-          test "$imported_public_key" = "$SPARKLE_PUBLIC_KEY"
-          /bin/unlink "$sparkle_key_path"
+          export SPARKLE_PRIVATE_KEY_PATH="$sparkle_key_path"
 
           Scripts/publish_update_feed.sh \
             "$RELEASE_ZIP_PATH" \
@@ -508,6 +494,3 @@ jobs:
           if [[ -e "$RUNNER_TEMP/sparkle-private-key" ]]; then
             /bin/unlink "$RUNNER_TEMP/sparkle-private-key" || true
           fi
-          security delete-generic-password \
-            -s https://sparkle-project.org \
-            -a "$SPARKLE_ACCOUNT" >/dev/null 2>&1 || true

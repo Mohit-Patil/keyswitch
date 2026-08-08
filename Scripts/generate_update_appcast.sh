@@ -7,9 +7,9 @@ usage() {
 Usage: Scripts/generate_update_appcast.sh <update-zip> <version>
 
 Validates a notarized KeySwitch update ZIP, signs it with the Sparkle EdDSA key
-stored under the com.mohitpatil.keyswitch Keychain account, and updates the
-signed docs/appcast.xml feed. Upload the ZIP to the matching GitHub Release
-before publishing the updated feed.
+at SPARKLE_PRIVATE_KEY_PATH, and updates the signed docs/appcast.xml feed.
+SPARKLE_PUBLIC_KEY must contain the public key embedded in KeySwitch. Upload
+the ZIP to the matching GitHub Release before publishing the updated feed.
 EOF
 }
 
@@ -21,6 +21,8 @@ fi
 archive_path="$1"
 version="$2"
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+sparkle_private_key_path="${SPARKLE_PRIVATE_KEY_PATH:?SPARKLE_PRIVATE_KEY_PATH is required}"
+sparkle_public_key="${SPARKLE_PUBLIC_KEY:?SPARKLE_PUBLIC_KEY is required}"
 feed_path="$repository_root/docs/appcast.xml"
 archive_name="$(basename "$archive_path")"
 expected_archive_name="KeySwitch-v${version}-macOS-universal.zip"
@@ -47,9 +49,13 @@ if [[ ! -f "$feed_path" ]]; then
     exit 66
 fi
 
+if [[ "$sparkle_private_key_path" != /* || ! -s "$sparkle_private_key_path" ]]; then
+    echo "error: SPARKLE_PRIVATE_KEY_PATH must be an absolute, nonempty file" >&2
+    exit 66
+fi
+
 sparkle_tools="$("$repository_root/Scripts/fetch_sparkle_tools.sh")"
 generate_appcast="$sparkle_tools/bin/generate_appcast"
-generate_keys="$sparkle_tools/bin/generate_keys"
 sign_update="$sparkle_tools/bin/sign_update"
 temporary_directory="$(mktemp -d /tmp/keyswitch-appcast.XXXXXX)"
 extracted_directory="$temporary_directory/extracted"
@@ -113,15 +119,16 @@ fi
 embedded_public_key="$(/usr/libexec/PlistBuddy \
     -c 'Print :SUPublicEDKey' \
     "$app_path/Contents/Info.plist")"
-keychain_public_key="$("$generate_keys" \
-    --account com.mohitpatil.keyswitch -p)"
-if [[ "$embedded_public_key" != "$keychain_public_key" ]]; then
-    echo "error: archived app Sparkle key does not match the release Keychain" >&2
+if [[ "$embedded_public_key" != "$sparkle_public_key" ]]; then
+    echo "error: archived app Sparkle key does not match SPARKLE_PUBLIC_KEY" >&2
     exit 65
 fi
+swift "$repository_root/Scripts/verify_sparkle_private_key.swift" \
+    "$sparkle_private_key_path" \
+    "$sparkle_public_key" >/dev/null
 
 "$sign_update" \
-    --account com.mohitpatil.keyswitch \
+    --ed-key-file "$sparkle_private_key_path" \
     --verify \
     "$feed_path"
 
@@ -145,7 +152,7 @@ release_notes_path="$archives_directory/${archive_name%.zip}.html"
     "$release_notes_path"
 
 "$generate_appcast" \
-    --account com.mohitpatil.keyswitch \
+    --ed-key-file "$sparkle_private_key_path" \
     --download-url-prefix "$download_url_prefix" \
     --embed-release-notes \
     --full-release-notes-url "https://github.com/Mohit-Patil/keyswitch/releases/tag/v${version}" \
@@ -155,11 +162,11 @@ release_notes_path="$archives_directory/${archive_name%.zip}.html"
     "$archives_directory"
 
 "$sign_update" \
-    --account com.mohitpatil.keyswitch \
+    --ed-key-file "$sparkle_private_key_path" \
     --disable-signing-warning \
     "$archives_directory/appcast.xml"
 "$sign_update" \
-    --account com.mohitpatil.keyswitch \
+    --ed-key-file "$sparkle_private_key_path" \
     --verify \
     "$archives_directory/appcast.xml"
 

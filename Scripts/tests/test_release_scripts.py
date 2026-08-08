@@ -62,6 +62,51 @@ class ReleaseScriptTests(unittest.TestCase):
                 result = self.normalize_keychain_path(value)
                 self.assertNotEqual(result.returncode, 0)
 
+    def test_sparkle_private_key_verifier_derives_expected_public_key(self) -> None:
+        private_key = self.root / "sparkle-private-key"
+        private_key.write_text(
+            "nWGxne/9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A=\n",
+            encoding="utf-8",
+        )
+        expected_public_key = "11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo="
+
+        result = subprocess.run(
+            [
+                "swift",
+                REPOSITORY_ROOT / "Scripts" / "verify_sparkle_private_key.swift",
+                private_key,
+                expected_public_key,
+            ],
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), expected_public_key)
+
+    def test_sparkle_private_key_verifier_rejects_wrong_public_key(self) -> None:
+        private_key = self.root / "sparkle-private-key"
+        private_key.write_text(
+            "nWGxne/9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A=",
+            encoding="utf-8",
+        )
+
+        result = subprocess.run(
+            [
+                "swift",
+                REPOSITORY_ROOT / "Scripts" / "verify_sparkle_private_key.swift",
+                private_key,
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            ],
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("does not match", result.stderr)
+
     def test_signing_script_signs_sparkle_inside_out(self) -> None:
         app = self.root / "KeySwitch.app"
         sparkle = (
