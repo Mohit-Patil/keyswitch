@@ -9,6 +9,38 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
         <item>
+            <title>0.2.2</title>
+            <pubDate>Sat, 08 Aug 2026 02:07:24 +0000</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.2.2</sparkle:fullReleaseNotesLink>
+            <sparkle:version>5</sparkle:version>
+            <sparkle:shortVersionString>0.2.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.2.2</h2>
+<h3>Added</h3>
+<ul>
+<li>An automated GitHub Actions release pipeline that signs, notarizes, staples, packages, publishes, and adds each release to the signed Sparkle feed after a new version reaches <code>main</code> or a matching version tag is pushed.</li>
+<li>A CI-gated update-feed pull request so the release bot never needs to bypass the protected <code>main</code> branch.</li>
+<li>Administrator-enforced pull-request protection for <code>main</code>, with strict CI, resolved-conversation, linear-history, force-push, and deletion safeguards.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>Start a <code>main</code> release only after the complete CI workflow succeeds, then build and publish the exact commit that CI tested.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Keep selected and unselected menu-bar agent statuses visually consistent by rendering every active status as the same filled circular indicator.</li>
+</ul>
+<h3>Security</h3>
+<ul>
+<li>Scan the complete Git history for credentials during CI, restrict Actions to immutable GitHub-owned revisions, and minimize signing-key lifetime on the release runner.</li>
+<li>Restrict the privileged post-CI release trigger to successful <code>push</code> runs from this repository&#x27;s <code>main</code> branch and verify its tested commit before any release credentials are used.</li>
+<li>Bind the undocumented local Codex debugging bridge explicitly to loopback.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.2/KeySwitch-v0.2.2-macOS-universal.zip" length="3172630" type="application/octet-stream" sparkle:edSignature="8DwtPgMAJTxNsQav9pGNfy8Bbbr5c2lJraWJBSODOT/YKdV9rRKsfzeTfYY9MbXu075fmJm7yRZOUI7lOZNoBA=="/>
+        </item>
+        <item>
             <title>0.2.1</title>
             <pubDate>Fri, 07 Aug 2026 22:26:16 +0530</pubDate>
             <link>https://mohit-patil.github.io/keyswitch/</link>
@@ -53,6 +85,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: xdKwPLCCKIu7aPm/sDswO4QmovG3aE/BDjgESRGTtf2ntATMlvmbPGb33UmsnURhRO8CWyMRmxh/eIc2C3ILCg==
-length: 3345
+edSignature: okW7ZNvF9p2Aa/R8Zq4RsNlpoGC/XhtQW3KPn78VuCTVbSlCcG113x5h4edoD4Q6qCdG+2S+LggyrX+wgod/AA==
+length: 5667
 -->
