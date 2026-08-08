@@ -46,6 +46,18 @@ class ReleaseWorkflowContractTests(unittest.TestCase):
             self.workflow,
         )
 
+    def test_release_resigns_nested_sparkle_components(self) -> None:
+        self.assertIn("Scripts/sign_release_app.sh", self.workflow)
+        self.assertIn('"$DEVELOPER_IDENTITY"', self.workflow)
+        self.assertIn('"$DEVELOPER_TEAM_ID"', self.workflow)
+
+    def test_notarization_uses_diagnostic_wrapper_for_app_and_dmg(self) -> None:
+        self.assertEqual(
+            self.workflow.count("Scripts/notarize_artifact.sh"),
+            2,
+        )
+        self.assertNotIn("xcrun notarytool submit", self.workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
