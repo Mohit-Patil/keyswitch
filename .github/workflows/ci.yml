@@ -148,4 +148,6 @@ jobs:
           bash -n Scripts/fetch_create_dmg.sh
           bash -n Scripts/fetch_sparkle_tools.sh
           bash -n Scripts/generate_update_appcast.sh
+          bash -n Scripts/notarize_artifact.sh
           bash -n Scripts/publish_update_feed.sh
+          bash -n Scripts/sign_release_app.sh

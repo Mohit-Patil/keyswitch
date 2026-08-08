@@ -252,6 +252,10 @@ jobs:
           app_path="$archive_path/Products/Applications/KeySwitch.app"
           plist="$app_path/Contents/Info.plist"
           test -d "$app_path"
+          Scripts/sign_release_app.sh \
+            "$app_path" \
+            "$DEVELOPER_IDENTITY" \
+            "$DEVELOPER_TEAM_ID"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$plist")" = \
             "$RELEASE_VERSION"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$plist")" = \
@@ -285,11 +289,11 @@ jobs:
 
           notarization_zip="$RUNNER_TEMP/KeySwitch-notarization.zip"
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$notarization_zip"
-          xcrun notarytool submit "$notarization_zip" \
-            --key "$asc_key_path" \
-            --key-id "$ASC_KEY_ID" \
-            --issuer "$ASC_ISSUER_ID" \
-            --wait
+          Scripts/notarize_artifact.sh \
+            "$notarization_zip" \
+            "$asc_key_path" \
+            "$ASC_KEY_ID" \
+            "$ASC_ISSUER_ID"
           xcrun stapler staple "$APP_PATH"
           xcrun stapler validate "$APP_PATH"
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
@@ -338,11 +342,11 @@ jobs:
             "$release_directory"
           codesign --force --timestamp --sign "$DEVELOPER_IDENTITY" "$dmg_path"
           codesign --verify --verbose=2 "$dmg_path"
-          xcrun notarytool submit "$dmg_path" \
-            --key "$asc_key_path" \
-            --key-id "$ASC_KEY_ID" \
-            --issuer "$ASC_ISSUER_ID" \
-            --wait
+          Scripts/notarize_artifact.sh \
+            "$dmg_path" \
+            "$asc_key_path" \
+            "$ASC_KEY_ID" \
+            "$ASC_ISSUER_ID"
           xcrun stapler staple "$dmg_path"
           xcrun stapler validate "$dmg_path"
           codesign --verify --verbose=2 "$dmg_path"

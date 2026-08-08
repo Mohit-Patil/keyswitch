@@ -26,8 +26,10 @@ versions in `project.yml`, regenerate the Xcode project, finalize the matching
    push and checks out the CI-tested SHA;
 3. reruns the app test suite before any signing credential is imported;
 4. imports the Developer ID identity into an ephemeral runner keychain;
-5. creates a universal Developer ID archive;
-6. notarizes and staples the app and signed DMG;
+5. creates a universal Developer ID archive and explicitly signs every nested
+   Sparkle updater component with the same Developer ID identity;
+6. verifies all nested signatures, then notarizes and staples the app and
+   signed DMG;
 7. uploads versioned artifacts, checksums, and stable latest-download aliases;
 8. creates the version tag when the run came from tested `main`;
 9. creates or updates the GitHub Release;
@@ -51,6 +53,9 @@ The workflow checks the imported certificate and Sparkle public key before it
 builds, and deletes its temporary keychain and private-key files even after a
 failed run. It refuses to replace ZIP bytes for a version already published in
 the appcast, because that would invalidate the embedded Sparkle signature.
+When Apple rejects a notarization submission, the workflow retrieves and
+prints the structured validation issues before stopping; no tag or release is
+published from a rejected artifact.
 Release tags must point to commits contained in `main`, and both Sparkle and
 the DMG packager are fetched at checksum-pinned versions.
 All external workflow actions are pinned to full commit SHAs. The repository's
