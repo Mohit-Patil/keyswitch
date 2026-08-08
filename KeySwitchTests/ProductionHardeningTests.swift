@@ -2,6 +2,20 @@ import XCTest
 @testable import KeySwitch
 
 final class ProductionHardeningTests: XCTestCase {
+    func testLayerAutoExitOnlyAppliesToToggleMode() {
+        var configuration = AppConfiguration.default
+        configuration.layerAutoExitTimeout = .fiveSeconds
+
+        configuration.activationMode = .hold
+        XCTAssertNil(configuration.layerAutoExitInterval)
+
+        configuration.activationMode = .toggle
+        XCTAssertEqual(configuration.layerAutoExitInterval, 5)
+
+        configuration.layerAutoExitTimeout = .never
+        XCTAssertNil(configuration.layerAutoExitInterval)
+    }
+
     func testVisualAndLifecyclePreferencesDoNotChangeKeyboardEngineSignature() {
         let baseline = AppConfiguration.default
         let baselineSignature = KeyboardEngineConfigurationSignature(configuration: baseline)

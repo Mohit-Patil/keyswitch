@@ -555,7 +555,8 @@ final class AppModel {
         if configuration.autoDimTimeout != previous.autoDimTimeout {
             noteLightingActivity()
         }
-        if configuration.layerAutoExitTimeout != previous.layerAutoExitTimeout {
+        if configuration.activationMode != previous.activationMode
+            || configuration.layerAutoExitTimeout != previous.layerAutoExitTimeout {
             updateLayerAutoExitTimerForControlState()
         }
     }
@@ -628,7 +629,9 @@ final class AppModel {
     }
 
     private func updateLayerAutoExitTimerForControlState() {
-        guard layerIsActive, pressedControls.isEmpty else {
+        guard configuration.activationMode == .toggle,
+              layerIsActive,
+              pressedControls.isEmpty else {
             stopLayerAutoExitTimer()
             return
         }
@@ -654,6 +657,7 @@ final class AppModel {
     }
 
     private var effectiveLayerAutoExitInterval: TimeInterval? {
+        guard configuration.activationMode == .toggle else { return nil }
         #if DEBUG
         if let previewValue = ProcessInfo.processInfo.environment[
             "KEYSWITCH_PREVIEW_AUTO_EXIT_SECONDS"
@@ -661,7 +665,7 @@ final class AppModel {
             return previewInterval
         }
         #endif
-        return configuration.layerAutoExitTimeout.interval
+        return configuration.layerAutoExitInterval
     }
 
     private func stopLayerAutoExitTimer() {
