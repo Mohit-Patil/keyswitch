@@ -52,6 +52,7 @@ struct GeneralSettingsView: View {
                         Text(timeout.title).tag(timeout)
                     }
                 }
+                .disabled(model.configuration.activationMode == .hold)
 
                 Text(autoExitHelpText)
                     .font(.caption)
@@ -241,7 +242,7 @@ struct GeneralSettingsView: View {
             }
 
             Section("Safety") {
-                Text("Escape immediately turns off the keyboard layer. The inactivity timer and menu-bar control can also disable it at any time.")
+                Text("Escape immediately turns off the keyboard layer. Releasing a held shortcut, the toggle-mode inactivity timer, and the menu-bar control can also disable it.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -262,11 +263,15 @@ struct GeneralSettingsView: View {
     }
 
     private var autoExitHelpText: String {
-        if model.configuration.layerAutoExitTimeout == .never {
-            return "The layer stays active until you release a held shortcut, press a toggled shortcut again, or use Escape."
+        if model.configuration.activationMode == .hold {
+            return "Hold mode ignores this timeout and stays active until you release the activation shortcut."
         }
 
-        return "The countdown pauses while a mapped key is held and restarts after every mapped action."
+        if model.configuration.layerAutoExitTimeout == .never {
+            return "The layer stays active until you press the toggle shortcut again or use Escape."
+        }
+
+        return "In Toggle mode, the countdown pauses while a mapped key is held and restarts after every mapped action."
     }
 
     private var settingsRestartUpdateTitle: String {

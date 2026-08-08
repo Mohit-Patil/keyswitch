@@ -94,6 +94,11 @@ struct AppConfiguration: Codable, Equatable {
     }
     var bindings: [KeyBinding]
 
+    var layerAutoExitInterval: TimeInterval? {
+        guard activationMode == .toggle else { return nil }
+        return layerAutoExitTimeout.interval
+    }
+
     init(
         activationMode: ActivationMode,
         activationShortcut: ActivationShortcut,
