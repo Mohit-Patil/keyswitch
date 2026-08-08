@@ -25,6 +25,43 @@ class ReleaseScriptTests(unittest.TestCase):
         path.chmod(0o755)
         return path
 
+    def normalize_keychain_path(self, value: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [REPOSITORY_ROOT / "Scripts" / "normalize_keychain_path.sh"],
+            input=value,
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+
+    def test_keychain_normalizer_handles_github_runner_security_output(self) -> None:
+        result = self.normalize_keychain_path(
+            '    "/Users/runner/Library/Keychains/login.keychain-db"\n'
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            result.stdout,
+            "/Users/runner/Library/Keychains/login.keychain-db\n",
+        )
+
+    def test_keychain_normalizer_preserves_spaces_inside_absolute_path(self) -> None:
+        result = self.normalize_keychain_path(
+            '  "/Users/runner/Library/Keychains/Release Login.keychain-db"  \n'
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            result.stdout,
+            "/Users/runner/Library/Keychains/Release Login.keychain-db\n",
+        )
+
+    def test_keychain_normalizer_rejects_unsafe_paths(self) -> None:
+        for value in ("", "login.keychain-db\n", "/first\n/second\n"):
+            with self.subTest(value=value):
+                result = self.normalize_keychain_path(value)
+                self.assertNotEqual(result.returncode, 0)
+
     def test_signing_script_signs_sparkle_inside_out(self) -> None:
         app = self.root / "KeySwitch.app"
         sparkle = (
