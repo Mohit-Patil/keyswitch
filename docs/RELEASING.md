@@ -53,6 +53,9 @@ The workflow checks the imported certificate and Sparkle public key before it
 builds, and deletes its temporary keychain and private-key files even after a
 failed run. It refuses to replace ZIP bytes for a version already published in
 the appcast, because that would invalidate the embedded Sparkle signature.
+The original runner keychain path is normalized and validated before the
+temporary release keychain is installed, so the signing identity can be
+removed before release artifacts are published.
 When Apple rejects a notarization submission, the workflow retrieves and
 prints the structured validation issues before stopping; no tag or release is
 published from a rejected artifact.

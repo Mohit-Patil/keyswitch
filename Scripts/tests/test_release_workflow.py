@@ -51,6 +51,17 @@ class ReleaseWorkflowContractTests(unittest.TestCase):
         self.assertIn('"$DEVELOPER_IDENTITY"', self.workflow)
         self.assertIn('"$DEVELOPER_TEAM_ID"', self.workflow)
 
+    def test_runner_default_keychain_path_is_normalized_before_export(self) -> None:
+        self.assertIn(
+            "security default-keychain -d user |\n"
+            "              Scripts/normalize_keychain_path.sh",
+            self.workflow,
+        )
+        self.assertIn(
+            'echo "ORIGINAL_DEFAULT_KEYCHAIN_PATH=$original_default_keychain"',
+            self.workflow,
+        )
+
     def test_notarization_uses_diagnostic_wrapper_for_app_and_dmg(self) -> None:
         self.assertEqual(
             self.workflow.count("Scripts/notarize_artifact.sh"),

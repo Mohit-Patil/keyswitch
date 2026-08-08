@@ -194,7 +194,7 @@ jobs:
           p12_path="$RUNNER_TEMP/developer-id.p12"
           original_default_keychain="$(
             security default-keychain -d user |
-              sed -e 's/^"//' -e 's/"$//'
+              Scripts/normalize_keychain_path.sh
           )"
 
           echo "RELEASE_KEYCHAIN_PATH=$keychain_path" >> "$GITHUB_ENV"
