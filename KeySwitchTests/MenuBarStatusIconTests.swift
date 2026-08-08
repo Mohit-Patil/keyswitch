@@ -110,49 +110,156 @@ final class MenuBarStatusIconTests: XCTestCase {
         }
     }
 
-    func testSelectedCompleteGreenNeverBleedsIntoAnotherSlot() throws {
-        let scale = 4
+    func testEveryActiveIndicatorInteriorContainsOnlyItsStatusColor() throws {
+        let scale = 8
+        let activeStatuses = AgentLightStatus.allCases.filter { $0 != .off }
 
-        for size in MenuBarIndicatorSize.allCases {
-            for selectedSlot in 0..<6 {
-                var lights = AgentLightState.offSlots
-                lights[selectedSlot] = AgentLightState(
-                    id: selectedSlot,
-                    title: "Complete",
-                    threadKey: "test:\(selectedSlot)",
-                    status: .unread,
-                    selected: true
-                )
+        for colorScheme in [ColorScheme.light, .dark] {
+            for size in MenuBarIndicatorSize.allCases {
+                let metrics = MenuBarStatusIndicatorMetrics(size: size)
+                let imageRect = NSRect(x: 0, y: 0, width: metrics.imageWidth, height: 16)
+                let cell = metrics.cellRect(for: 0, in: imageRect)
+                let sampleOffset = metrics.dotDiameter * 0.14
 
+                for status in activeStatuses {
+                    var lights = AgentLightState.offSlots
+                    lights[0] = AgentLightState(
+                        id: 0,
+                        title: status.title,
+                        threadKey: "test:0",
+                        status: status,
+                        selected: true
+                    )
+
+                    let image = MenuBarStatusIconRenderer.image(
+                        layerIsActive: false,
+                        showsAgentStatus: true,
+                        indicatorSize: size,
+                        lights: lights,
+                        colorScheme: colorScheme
+                    )
+                    let bitmap = try bitmapRepresentation(of: image, scale: scale)
+                    let rgb = status.packedRGB
+                    let expectedRed = CGFloat((rgb >> 16) & 0xFF) / 255
+                    let expectedGreen = CGFloat((rgb >> 8) & 0xFF) / 255
+                    let expectedBlue = CGFloat(rgb & 0xFF) / 255
+
+                    for xOffset in [-sampleOffset, 0, sampleOffset] {
+                        for yOffset in [-sampleOffset, 0, sampleOffset] {
+                            let x = Int((cell.midX + xOffset) * CGFloat(scale))
+                            let y = Int((imageRect.midY + yOffset) * CGFloat(scale))
+                            let color = try XCTUnwrap(
+                                bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB)
+                            )
+
+                            XCTAssertEqual(color.redComponent, expectedRed, accuracy: 0.04)
+                            XCTAssertEqual(color.greenComponent, expectedGreen, accuracy: 0.04)
+                            XCTAssertEqual(color.blueComponent, expectedBlue, accuracy: 0.04)
+                            XCTAssertEqual(color.alphaComponent, 1, accuracy: 0.02)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    func testUnassignedIndicatorRemainsHollowAtEverySizeAndAppearance() throws {
+        let scale = 8
+
+        for colorScheme in [ColorScheme.light, .dark] {
+            for size in MenuBarIndicatorSize.allCases {
                 let image = MenuBarStatusIconRenderer.image(
                     layerIsActive: false,
                     showsAgentStatus: true,
                     indicatorSize: size,
-                    lights: lights,
-                    colorScheme: .dark
+                    lights: AgentLightState.offSlots,
+                    colorScheme: colorScheme
                 )
                 let bitmap = try bitmapRepresentation(of: image, scale: scale)
                 let metrics = MenuBarStatusIndicatorMetrics(size: size)
-                let slotRect = metrics.cellRect(
-                    for: selectedSlot,
+                let cell = metrics.cellRect(
+                    for: 0,
                     in: NSRect(origin: .zero, size: image.size)
                 )
+                let center = try XCTUnwrap(
+                    bitmap.colorAt(
+                        x: Int(cell.midX * CGFloat(scale)),
+                        y: Int(image.size.height / 2 * CGFloat(scale))
+                    )?.usingColorSpace(.deviceRGB)
+                )
 
-                for y in 0..<bitmap.pixelsHigh {
-                    for x in 0..<bitmap.pixelsWide {
-                        guard let color = bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB),
-                              color.alphaComponent > 0.02,
-                              color.greenComponent > 0.45,
-                              color.greenComponent > color.redComponent + 0.2,
-                              color.greenComponent > color.blueComponent + 0.1 else {
-                            continue
-                        }
+                XCTAssertLessThan(center.alphaComponent, 0.02)
+            }
+        }
+    }
 
-                        let logicalX = (CGFloat(x) + 0.5) / CGFloat(scale)
-                        XCTAssertTrue(
-                            slotRect.contains(NSPoint(x: logicalX, y: slotRect.midY)),
-                            "\(size.title) Complete green escaped slot \(selectedSlot + 1) at x=\(logicalX)"
+    func testEveryActiveStatusNeverBleedsIntoAnotherSlot() throws {
+        let scale = 2
+        let activeStatuses = AgentLightStatus.allCases.filter { $0 != .off }
+
+        for colorScheme in [ColorScheme.light, .dark] {
+            for size in MenuBarIndicatorSize.allCases {
+                let baselineImage = MenuBarStatusIconRenderer.image(
+                    layerIsActive: false,
+                    showsAgentStatus: true,
+                    indicatorSize: size,
+                    lights: AgentLightState.offSlots,
+                    colorScheme: colorScheme
+                )
+                let baseline = try bitmapRepresentation(of: baselineImage, scale: scale)
+                let metrics = MenuBarStatusIndicatorMetrics(size: size)
+
+                for status in activeStatuses {
+                    for selectedSlot in 0..<6 {
+                        var lights = AgentLightState.offSlots
+                        lights[selectedSlot] = AgentLightState(
+                            id: selectedSlot,
+                            title: status.title,
+                            threadKey: "test:\(selectedSlot)",
+                            status: status,
+                            selected: true
                         )
+
+                        let image = MenuBarStatusIconRenderer.image(
+                            layerIsActive: false,
+                            showsAgentStatus: true,
+                            indicatorSize: size,
+                            lights: lights,
+                            colorScheme: colorScheme
+                        )
+                        let bitmap = try bitmapRepresentation(of: image, scale: scale)
+                        let slotRect = metrics.cellRect(
+                            for: selectedSlot,
+                            in: NSRect(origin: .zero, size: image.size)
+                        )
+
+                        for y in 0..<bitmap.pixelsHigh {
+                            for x in 0..<bitmap.pixelsWide {
+                                let logicalX = (CGFloat(x) + 0.5) / CGFloat(scale)
+                                guard logicalX < slotRect.minX || logicalX > slotRect.maxX else {
+                                    continue
+                                }
+
+                                let actual = try XCTUnwrap(
+                                    bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB)
+                                )
+                                let expected = try XCTUnwrap(
+                                    baseline.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB)
+                                )
+                                let maximumDelta = [
+                                    abs(actual.redComponent - expected.redComponent),
+                                    abs(actual.greenComponent - expected.greenComponent),
+                                    abs(actual.blueComponent - expected.blueComponent),
+                                    abs(actual.alphaComponent - expected.alphaComponent),
+                                ].max() ?? 0
+
+                                XCTAssertLessThanOrEqual(
+                                    maximumDelta,
+                                    0.01,
+                                    "\(size.title) \(status.title) escaped slot \(selectedSlot + 1) at x=\(logicalX)"
+                                )
+                            }
+                        }
                     }
                 }
             }

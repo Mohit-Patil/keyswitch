@@ -73,24 +73,15 @@ final class ProductionHardeningTests: XCTestCase {
         )
     }
 
-    func testAgentStatusesUseAConsistentCircularMenuBarSilhouette() {
+    func testAgentStatusesUseAConsistentColorOnlyCircularMenuBarSilhouette() {
         XCTAssertEqual(
             MenuBarStatusIconRenderer.indicatorSymbol(for: .off),
             .hollowCircle
         )
 
-        let activeStatuses = AgentLightStatus.allCases.filter {
-            $0 != .off && $0 != .error
-        }
+        let activeStatuses = AgentLightStatus.allCases.filter { $0 != .off }
         XCTAssertTrue(activeStatuses.allSatisfy {
             MenuBarStatusIconRenderer.indicatorSymbol(for: $0) == .circle
         })
-
-        // Error keeps a white cross for immediate recognition, but its outer
-        // silhouette remains the same circle as every other active light.
-        XCTAssertEqual(
-            MenuBarStatusIconRenderer.indicatorSymbol(for: .error),
-            .error
-        )
     }
 }
