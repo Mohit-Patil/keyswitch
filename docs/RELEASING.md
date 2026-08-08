@@ -13,7 +13,9 @@ supports three entry points:
 - pushing a new `vMAJOR.MINOR.PATCH` tag releases that tagged source unless it
   is already present in the signed update feed;
 - the manual workflow input resumes an existing, not-yet-published tag after a
-  partial failure.
+  partial failure; and
+- the `Publish update feed` workflow adds an already-published release to the
+  Sparkle feed without rebuilding or replacing its signed artifacts.
 
 An ordinary merge does not create another binary when the current version is
 already tagged. This keeps documentation and housekeeping changes from
@@ -49,10 +51,13 @@ release:
 | `APP_STORE_CONNECT_PRIVATE_KEY` | Complete `AuthKey_*.p8` contents |
 | `SPARKLE_PRIVATE_KEY` | Private key exported by Sparkle `generate_keys -x` |
 
-The workflow checks the imported certificate and Sparkle public key before it
-builds, and deletes its temporary keychain and private-key files even after a
-failed run. It refuses to replace ZIP bytes for a version already published in
-the appcast, because that would invalidate the embedded Sparkle signature.
+The workflow checks the imported certificate and derives the Sparkle public
+key from the private seed before publishing. Sparkle receives the private key
+through a mode-`077` temporary file, so feed signing never imports it into the
+runner's login Keychain or waits for a headless permission prompt. The workflow
+deletes its temporary keychain and private-key files even after a failed run.
+It refuses to replace ZIP bytes for a version already published in the appcast,
+because that would invalidate the embedded Sparkle signature.
 The original runner keychain path is normalized and validated before the
 temporary release keychain is installed, so the signing identity can be
 removed before release artifacts are published.
@@ -256,11 +261,12 @@ repository or in a shell script.
 KeySwitch uses Sparkle 2.9.5. `Scripts/fetch_sparkle_tools.sh` downloads the
 matching official tools archive and verifies its pinned SHA-256 digest.
 
-The update signing key is stored in the login Keychain under the
-`com.mohitpatil.keyswitch` account. The corresponding public key is committed
-as `SUPublicEDKey`; never commit or paste the private key into a terminal log,
-issue, pull request, or GitHub Actions secret without a separate security
-review.
+Maintainers may store the update signing key in the login Keychain under the
+`com.mohitpatil.keyswitch` account. GitHub Actions keeps the exported seed in
+the encrypted `SPARKLE_PRIVATE_KEY` secret and writes it only to an ephemeral
+file for Sparkle's `--ed-key-file` mode. The corresponding public key is
+committed as `SUPublicEDKey`; never commit or paste the private key into a
+terminal log, issue, or pull request.
 
 To inspect the existing public key:
 
@@ -288,6 +294,15 @@ bytes.
    update feed:
 
    ```sh
+   umask 077
+   sparkle_private_key_path="$(mktemp /tmp/keyswitch-sparkle-key.XXXXXX)"
+   trap '/bin/unlink "$sparkle_private_key_path"' EXIT
+   sparkle_tools="$(Scripts/fetch_sparkle_tools.sh)"
+   "$sparkle_tools/bin/generate_keys" \
+     --account com.mohitpatil.keyswitch \
+     -x "$sparkle_private_key_path"
+   export SPARKLE_PRIVATE_KEY_PATH="$sparkle_private_key_path"
+   export SPARKLE_PUBLIC_KEY="k/PEbhkmYphQ7VTC3Pu04v1O7OLxn6ohRXuoxxN/n+Y="
    Scripts/generate_update_appcast.sh \
      Release/KeySwitch-v1.2.3-macOS-universal.zip 1.2.3
    git diff --check
@@ -299,6 +314,12 @@ bytes.
    new version, embedded release notes from `CHANGELOG.md`, and a reachable
    enclosure URL. Do not publish a feed entry that points at a missing release
    asset.
+
+For a release whose signed ZIP is already public but whose feed step failed,
+run the `Publish update feed` workflow with the version without its `v` prefix.
+The workflow downloads the existing ZIP, opens a protected feed PR, waits for
+the required `Test` check, merges the PR, and dispatches GitHub Pages. It never
+rebuilds the app or moves the existing release tag.
 5. Mount the public DMG, confirm it contains `KeySwitch.app` and an Applications
    shortcut, then launch the installed copy and verify the first-run flow on a
    clean user account.

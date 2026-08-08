@@ -1,0 +1,86 @@
+name: Publish update feed
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published version to add to the Sparkle feed (for example, 1.2.3)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keyswitch-production-release
+  cancel-in-progress: false
+
+env:
+  SPARKLE_PUBLIC_KEY: "k/PEbhkmYphQ7VTC3Pu04v1O7OLxn6ohRXuoxxN/n+Y="
+
+jobs:
+  publish:
+    name: Publish existing release to Sparkle
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out protected main
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Require Sparkle credential
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          [[ -n "$SPARKLE_PRIVATE_KEY" ]] || {
+            echo "Missing required GitHub Actions secret: SPARKLE_PRIVATE_KEY" >&2
+            exit 1
+          }
+
+      - name: Download release and publish signed feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+
+          if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][A-Za-z0-9.]+)?$ ]]; then
+            echo "Version must look like 1.2.3." >&2
+            exit 64
+          fi
+
+          release_tag="v$RELEASE_VERSION"
+          archive_name="KeySwitch-v${RELEASE_VERSION}-macOS-universal.zip"
+          archive_path="$RUNNER_TEMP/$archive_name"
+          sparkle_key_path="$RUNNER_TEMP/sparkle-private-key"
+          cleanup_sparkle_key() {
+            if [[ -e "$sparkle_key_path" ]]; then
+              /bin/unlink "$sparkle_key_path"
+            fi
+          }
+          trap cleanup_sparkle_key EXIT
+
+          gh release view "$release_tag" --json isDraft --jq \
+            'select(.isDraft == false) | true' | grep -Fx true
+          gh release download "$release_tag" \
+            --pattern "$archive_name" \
+            --dir "$RUNNER_TEMP"
+
+          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$sparkle_key_path"
+          unset SPARKLE_PRIVATE_KEY
+          export SPARKLE_PRIVATE_KEY_PATH="$sparkle_key_path"
+
+          Scripts/publish_update_feed.sh \
+            "$archive_path" \
+            "$RELEASE_VERSION"
+          gh workflow run pages.yml --ref main

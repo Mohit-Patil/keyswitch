@@ -152,3 +152,4 @@ jobs:
           bash -n Scripts/normalize_keychain_path.sh
           bash -n Scripts/publish_update_feed.sh
           bash -n Scripts/sign_release_app.sh
+          swiftc -typecheck Scripts/verify_sparkle_private_key.swift

@@ -7,11 +7,18 @@ from pathlib import Path
 class ReleaseWorkflowContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        cls.repository_root = Path(__file__).resolve().parents[2]
         cls.workflow = (
-            Path(__file__).resolve().parents[2]
-            / ".github"
-            / "workflows"
-            / "release.yml"
+            cls.repository_root / ".github" / "workflows" / "release.yml"
+        ).read_text(encoding="utf-8")
+        cls.feed_workflow = (
+            cls.repository_root / ".github" / "workflows" / "publish-feed.yml"
+        ).read_text(encoding="utf-8")
+        cls.generate_script = (
+            cls.repository_root / "Scripts" / "generate_update_appcast.sh"
+        ).read_text(encoding="utf-8")
+        cls.publish_script = (
+            cls.repository_root / "Scripts" / "publish_update_feed.sh"
         ).read_text(encoding="utf-8")
 
     def test_main_release_is_triggered_by_completed_ci_not_direct_push(self) -> None:
@@ -68,6 +75,37 @@ class ReleaseWorkflowContractTests(unittest.TestCase):
             2,
         )
         self.assertNotIn("xcrun notarytool submit", self.workflow)
+
+    def test_sparkle_feed_signing_never_imports_the_key_into_keychain(self) -> None:
+        signing_sources = "\n".join(
+            (
+                self.workflow,
+                self.feed_workflow,
+                self.generate_script,
+                self.publish_script,
+            )
+        )
+        self.assertNotIn("generate_keys", signing_sources)
+        self.assertNotIn("delete-generic-password", signing_sources)
+        self.assertNotIn("--account", self.generate_script)
+        self.assertNotIn("--account", self.publish_script)
+        self.assertIn('--ed-key-file "$sparkle_private_key_path"', self.generate_script)
+        self.assertIn('--ed-key-file "$sparkle_private_key_path"', self.publish_script)
+
+    def test_existing_release_can_be_published_through_feed_only_workflow(self) -> None:
+        self.assertIn("workflow_dispatch:", self.feed_workflow)
+        self.assertIn("version:", self.feed_workflow)
+        self.assertIn('ref: main', self.feed_workflow)
+        self.assertIn('gh release download "$release_tag"', self.feed_workflow)
+        self.assertIn("Scripts/publish_update_feed.sh", self.feed_workflow)
+        self.assertIn("gh workflow run pages.yml --ref main", self.feed_workflow)
+
+    def test_sparkle_secret_is_only_written_to_an_ephemeral_file(self) -> None:
+        for workflow in (self.workflow, self.feed_workflow):
+            self.assertIn('umask 077', workflow)
+            self.assertIn('printf \'%s\' "$SPARKLE_PRIVATE_KEY"', workflow)
+            self.assertIn('export SPARKLE_PRIVATE_KEY_PATH="$sparkle_key_path"', workflow)
+            self.assertIn('/bin/unlink "$sparkle_key_path"', workflow)
 
 
 if __name__ == "__main__":
