@@ -96,6 +96,15 @@ own change. The PR boundary still prevents direct commits and ensures the
 required CI and conversation gates run. Increase the approval count when a
 second regular reviewer is available.
 
+The repository's Actions contributor approval policy is set to **Require
+approval for first-time contributors who are new to GitHub**. This lets the
+repository's established `github-actions[bot]` identity run the read-only CI
+check on automated update-feed PRs without a manual release interruption.
+Pull-request CI has only `contents: read`, uses GitHub-hosted runners, and does
+not receive release secrets. If this policy is tightened, approve the feed
+PR's pending workflow run and rerun **Publish update feed** for the already
+published version.
+
 ## Prepare
 
 1. Confirm `main` is green and the worktree is clean.

@@ -83,48 +83,66 @@ push_feed_branch() {
     fi
 }
 
-test_check_state() {
+pr_test_check_state() {
+    local pull_request_number="$1"
+    gh pr view "$pull_request_number" \
+        --repo "$github_repository" \
+        --json statusCheckRollup \
+        --jq '(([.statusCheckRollup[] | select(.__typename == "CheckRun" and .name == "Test")] | last) // {}) | [((.status // "") | ascii_downcase), ((.conclusion // "") | ascii_downcase), (.detailsUrl // "")] | @tsv'
+}
+
+approval_required_run_url() {
     local commit_sha="$1"
-    gh api \
-        -H "Accept: application/vnd.github+json" \
-        "repos/$github_repository/commits/$commit_sha/check-runs?per_page=100" \
-        --jq '(([.check_runs[] | select(.name == "Test")] | sort_by(.started_at) | last) // {}) | [(.status // ""), (.conclusion // "")] | @tsv'
+    gh run list \
+        --repo "$github_repository" \
+        --event pull_request \
+        --branch "$feed_branch" \
+        --limit 20 \
+        --json conclusion,headSha,url \
+        --jq ".[] | select(.headSha == \"$commit_sha\" and .conclusion == \"action_required\") | .url" |
+        head -n 1
 }
 
 wait_for_test_check() {
-    local commit_sha="$1"
+    local pull_request_number="$1"
+    local commit_sha="$2"
     local check_state
     local check_status
     local check_conclusion
+    local check_url
+    local approval_url
     local wait_attempt
 
-    check_state="$(test_check_state "$commit_sha")"
-    IFS=$'\t' read -r check_status check_conclusion <<< "$check_state"
+    check_state="$(pr_test_check_state "$pull_request_number")"
+    IFS=$'\t' read -r check_status check_conclusion check_url <<< "$check_state"
     if [[ "$check_status" == completed && "$check_conclusion" == success ]]; then
         echo "Required Test check already passed for $commit_sha."
         return
     fi
-    if [[ -z "$check_status" ]]; then
-        gh workflow run ci.yml \
-            --repo "$github_repository" \
-            --ref "$feed_branch"
-    fi
 
     for wait_attempt in {1..120}; do
-        check_state="$(test_check_state "$commit_sha")"
-        IFS=$'\t' read -r check_status check_conclusion <<< "$check_state"
+        check_state="$(pr_test_check_state "$pull_request_number")"
+        IFS=$'\t' read -r check_status check_conclusion check_url <<< "$check_state"
         if [[ "$check_status" == completed ]]; then
             if [[ "$check_conclusion" == success ]]; then
                 echo "Required Test check passed for $commit_sha."
                 return
             fi
-            echo "error: Test check concluded with $check_conclusion" >&2
+            echo "error: protected PR Test check concluded with $check_conclusion: $check_url" >&2
             exit 1
+        fi
+        if [[ -z "$check_status" ]]; then
+            approval_url="$(approval_required_run_url "$commit_sha")"
+            if [[ -n "$approval_url" ]]; then
+                echo "error: protected PR Test check requires maintainer approval: $approval_url" >&2
+                echo "Approve that run, then rerun the Publish update feed workflow for $version." >&2
+                exit 1
+            fi
         fi
         sleep 10
     done
 
-    echo "error: timed out waiting for the Test check" >&2
+    echo "error: timed out waiting for the protected PR Test check" >&2
     exit 1
 }
 
@@ -212,7 +230,7 @@ fi
 merged=false
 for integration_attempt in {1..3}; do
     feed_commit="$(git -C "$feed_worktree" rev-parse HEAD)"
-    wait_for_test_check "$feed_commit"
+    wait_for_test_check "$pull_request_number" "$feed_commit"
 
     fetch_main
     if ! git -C "$repository_root" merge-base --is-ancestor \

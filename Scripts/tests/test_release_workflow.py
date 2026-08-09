@@ -100,6 +100,16 @@ class ReleaseWorkflowContractTests(unittest.TestCase):
         self.assertIn("Scripts/publish_update_feed.sh", self.feed_workflow)
         self.assertIn("gh workflow run pages.yml --ref main", self.feed_workflow)
 
+    def test_feed_merge_waits_for_the_pr_attached_protected_check(self) -> None:
+        self.assertIn("--json statusCheckRollup", self.publish_script)
+        self.assertIn(
+            'select(.__typename == "CheckRun" and .name == "Test")',
+            self.publish_script,
+        )
+        self.assertIn("ascii_downcase", self.publish_script)
+        self.assertIn('conclusion == \\"action_required\\"', self.publish_script)
+        self.assertNotIn("gh workflow run ci.yml", self.publish_script)
+
     def test_sparkle_secret_is_only_written_to_an_ephemeral_file(self) -> None:
         for workflow in (self.workflow, self.feed_workflow):
             self.assertIn('umask 077', workflow)
