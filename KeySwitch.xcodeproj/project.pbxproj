@@ -19,6 +19,7 @@
 		3C7D5B29B8A6F6A5F9285D77 /* CodexMicroPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55E393EF61E1F9FD3FAFA7A0 /* CodexMicroPreferences.swift */; };
 		4D26A4E2DFC7DFB72DB95180 /* KeyRecorderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE76D89480F9A9DDE7F71BFB /* KeyRecorderSheet.swift */; };
 		521C8142007117D6E90BF4B4 /* KeyboardEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DB2CBB2AF26B56BF190F1DF /* KeyboardEngineTests.swift */; };
+		5A5305533930ECB0E988E2AE /* PermissionDragGuideController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF14BBEF2B397D07992A3F03 /* PermissionDragGuideController.swift */; };
 		694B49031F6029A7C0D36AC9 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D35B9BB844BA4E6AE430FC /* AppModel.swift */; };
 		746AC73F5D9D2E0F573243A4 /* CodexMicroBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4DE453197555629BD783B6A /* CodexMicroBridge.swift */; };
 		89CEA1C682480B4227BC6F1F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = BB6F69A2217026BEE3F825F3 /* PrivacyInfo.xcprivacy */; };
@@ -88,6 +89,7 @@
 		A975FE13B0DE3110D6E2A6B0 /* KeyBinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyBinding.swift; sourceTree = "<group>"; };
 		A98E2173603733E136B87D7F /* ActivationMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationMode.swift; sourceTree = "<group>"; };
 		AAA5CB5F254EB7666C2CBF75 /* KeycapEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeycapEditorSheet.swift; sourceTree = "<group>"; };
+		AF14BBEF2B397D07992A3F03 /* PermissionDragGuideController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionDragGuideController.swift; sourceTree = "<group>"; };
 		AFFBFE40DD8CEF5763D6ADD5 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 		BB6F69A2217026BEE3F825F3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BD395FDBBAFC73B0C72A1E52 /* LaunchAtLoginServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginServiceTests.swift; sourceTree = "<group>"; };
@@ -136,6 +138,7 @@
 				F2F035BE167BFD1638037162 /* HUDWindowController.swift */,
 				96D1DA3DEB737ED9CB4034A2 /* KeyboardEngine.swift */,
 				86B93B3739704BEAD61D017B /* LaunchAtLoginService.swift */,
+				AF14BBEF2B397D07992A3F03 /* PermissionDragGuideController.swift */,
 				F701D876CB85D8E87447385A /* PermissionService.swift */,
 				FC45BFF7ED8573FC03D706F8 /* UpdateController.swift */,
 			);
@@ -350,6 +353,7 @@
 				E36AE2806EC6CF3BF6735D1F /* MenuBarStatusLabel.swift in Sources */,
 				FFD05CEEE8F7EBDB6E25D5E1 /* MicroControl.swift in Sources */,
 				33FF2E76C16A837FB53923D3 /* MicroHUDView.swift in Sources */,
+				5A5305533930ECB0E988E2AE /* PermissionDragGuideController.swift in Sources */,
 				3AF3FE0D4D9B6F7B9335B315 /* PermissionService.swift in Sources */,
 				9BE824DAC8F0354A1B945B8A /* PhysicalKey.swift in Sources */,
 				90B9756EB0DC0C89D1E32732 /* SettingsRootView.swift in Sources */,
@@ -402,7 +406,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -415,7 +419,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.5;
+				MARKETING_VERSION = 0.2.6;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -536,7 +540,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -555,7 +559,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.5;
+				MARKETING_VERSION = 0.2.6;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

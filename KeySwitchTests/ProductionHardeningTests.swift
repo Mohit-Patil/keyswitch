@@ -2,6 +2,46 @@ import XCTest
 @testable import KeySwitch
 
 final class ProductionHardeningTests: XCTestCase {
+    func testPermissionSetupSelectsInputMonitoringBeforeAccessibility() {
+        XCTAssertEqual(
+            PermissionService.nextRequiredPermission(
+                in: PermissionSnapshot(
+                    inputMonitoringGranted: false,
+                    accessibilityGranted: false
+                )
+            ),
+            .inputMonitoring
+        )
+        XCTAssertEqual(
+            PermissionService.nextRequiredPermission(
+                in: PermissionSnapshot(
+                    inputMonitoringGranted: true,
+                    accessibilityGranted: false
+                )
+            ),
+            .accessibility
+        )
+        XCTAssertNil(
+            PermissionService.nextRequiredPermission(
+                in: PermissionSnapshot(
+                    inputMonitoringGranted: true,
+                    accessibilityGranted: true
+                )
+            )
+        )
+    }
+
+    func testPermissionSettingsAnchorsMatchMacOSPrivacyPanes() {
+        XCTAssertEqual(
+            KeyboardPermissionKind.inputMonitoring.settingsAnchor,
+            "Privacy_ListenEvent"
+        )
+        XCTAssertEqual(
+            KeyboardPermissionKind.accessibility.settingsAnchor,
+            "Privacy_Accessibility"
+        )
+    }
+
     func testLayerAutoExitOnlyAppliesToToggleMode() {
         var configuration = AppConfiguration.default
         configuration.layerAutoExitTimeout = .fiveSeconds

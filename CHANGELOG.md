@@ -7,6 +7,25 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-08-09
+
+### Added
+
+- Show a Soren-style floating permission guide containing the real KeySwitch
+  app bundle, which users can drag directly into the macOS Input Monitoring or
+  Accessibility list.
+
+### Changed
+
+- Guide first-run permission setup through Input Monitoring and Accessibility
+  one at a time, automatically hiding the drag guide after an accepted drop or
+  completed grant.
+
+### Fixed
+
+- Prevent onboarding permission actions from opening a System Settings list
+  with no KeySwitch entry and no way to understand what to do next.
+
 ## [0.2.5] - 2026-08-09
 
 ### Fixed
@@ -154,7 +173,8 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 - Local release artifacts, profiling traces, signing identities, and private
   design-review captures are excluded from the repository.
 
-[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.2...v0.2.3
