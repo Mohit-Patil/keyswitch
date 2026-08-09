@@ -40,7 +40,6 @@ Scripts/scan_secrets.sh
 xcodebuild -project KeySwitch.xcodeproj -scheme KeySwitch \
   -configuration Debug -derivedDataPath .build/xcode \
   CODE_SIGNING_ALLOWED=NO test
-swift build
 ```
 
 Select your own development team in Xcode if you need to run the global event

@@ -9,7 +9,6 @@
 ## Validation
 
 - [ ] `xcodebuild` unit tests pass
-- [ ] `swift build` passes for the prototype
 - [ ] Manual keyboard-layer safety check completed when input behavior changed
 - [ ] Screenshots or recordings attached for visual changes
 - [ ] Performance or memory evidence attached for continuous UI work

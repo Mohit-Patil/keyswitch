@@ -10,9 +10,6 @@ the app.
   large-format use.
 - `keyswitch-mark.svg` is an optically simplified mark for navigation,
   favicons, and raster exports up to 64 px.
-- `keyswitch-icon-1024.png` is the generated social and website fallback.
-- `concepts/keyswitch-logo-c-layered-switch.png` is the original selected
-  visual direction. It is retained as design provenance, not as a build input.
 
 Both SVG files are deterministic source assets. Do not edit the generated PNG
 files directly.

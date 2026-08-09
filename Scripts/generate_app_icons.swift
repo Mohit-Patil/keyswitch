@@ -18,8 +18,6 @@ private let compactSourceURL = repositoryRoot
     .appendingPathComponent("docs/brand/keyswitch-mark.svg")
 private let appIconDirectory = repositoryRoot
     .appendingPathComponent("KeySwitchApp/Assets.xcassets/AppIcon.appiconset")
-private let websiteIconURL = repositoryRoot
-    .appendingPathComponent("docs/brand/keyswitch-icon-1024.png")
 
 private let outputs = [
     IconOutput(pixels: 16, filename: "AppIcon-16.png"),
@@ -98,6 +96,3 @@ for output in outputs {
     try renderPNG(sourceImage: sourceImage, pixels: output.pixels, destination: destination)
     print("Generated \(output.filename) (\(output.pixels) px)")
 }
-
-try renderPNG(sourceImage: detailedSourceImage, pixels: 1024, destination: websiteIconURL)
-print("Generated \(websiteIconURL.lastPathComponent) (1024 px)")

@@ -174,15 +174,6 @@ The bridge:
 Do not expose the debugging port to another network interface. See
 [Privacy](docs/PRIVACY.md) and [Security](SECURITY.md) for the trust boundaries.
 
-The earlier command-line proof remains available as:
-
-```sh
-swift run keyswitch-prototype 9348
-```
-
-Do not run the prototype and menu-bar app simultaneously because both install
-a global keyboard event tap.
-
 ## Architecture
 
 ```text
