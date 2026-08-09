@@ -7,6 +7,13 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-08-08
+
+### Fixed
+
+- Keep the keyboard layer active for as long as the activation shortcut is
+  held in Hold mode, regardless of the configured inactivity timeout.
+
 ## [0.2.2] - 2026-08-08
 
 ### Added
@@ -118,7 +125,8 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 - Local release artifacts, profiling traces, signing identities, and private
   design-review captures are excluded from the repository.
 
-[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Mohit-Patil/keyswitch/compare/v0.1.1...v0.2.0
