@@ -233,11 +233,6 @@ struct GeneralSettingsView: View {
 
             Section("Permissions") {
                 PermissionRow(
-                    title: "Input Monitoring",
-                    granted: model.permissions.inputMonitoringGranted,
-                    action: PermissionService.openInputMonitoringSettings
-                )
-                PermissionRow(
                     title: "Accessibility",
                     granted: model.permissions.accessibilityGranted,
                     action: PermissionService.openAccessibilitySettings

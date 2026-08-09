@@ -15,8 +15,8 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
-    MARKETING_VERSION: "0.2.6"
-    CURRENT_PROJECT_VERSION: "9"
+    MARKETING_VERSION: "0.2.7"
+    CURRENT_PROJECT_VERSION: "10"
 
 targets:
   KeySwitch:
@@ -31,9 +31,6 @@ targets:
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSApplicationCategoryType: public.app-category.productivity
         LSUIElement: true
-        NSInputMonitoringUsageDescription: >-
-          KeySwitch needs Input Monitoring to turn the keyboard into your
-          editable accessibility control layer while its shortcut is active.
         SUFeedURL: https://mohit-patil.github.io/keyswitch/appcast.xml
         SUPublicEDKey: "k/PEbhkmYphQ7VTC3Pu04v1O7OLxn6ohRXuoxxN/n+Y="
         SUEnableAutomaticChecks: true

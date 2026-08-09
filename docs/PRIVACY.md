@@ -48,16 +48,15 @@ KeySwitch requests:
 
 | Permission | Purpose |
 | --- | --- |
-| Input Monitoring | Observe global key presses and modifier changes. |
-| Accessibility | Install and recover the global event tap used by the control layer. |
+| Accessibility | Observe global key presses and install, suppress, and recover the event tap used by the control layer. |
 
 These permissions are powerful. Only run builds you trust, and review source
 changes involving the event tap, app launch behavior, or renderer evaluation.
 
 ## Removing local data
 
-Quit KeySwitch, remove the app, and clear its macOS privacy entries if you no
-longer want it to monitor input. The defaults domain is
+Quit KeySwitch, remove the app, and clear its Accessibility privacy entry if
+you no longer want it to monitor input. The defaults domain is
 `com.mohitpatil.keyswitch` unless a fork changes the bundle identifier.
 
 Privacy concerns that may be security vulnerabilities should follow the

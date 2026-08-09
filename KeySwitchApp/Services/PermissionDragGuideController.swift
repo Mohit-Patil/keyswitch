@@ -1,9 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// A native file-URL drag source for the running KeySwitch.app bundle.
-/// System Settings accepts this pasteboard payload in its permission lists,
-/// just as it accepts an app dragged from Finder.
+/// A native file-URL drag source for the installed KeySwitch app bundle.
+/// System Settings accepts the same payload as an app dragged from Finder.
 private struct AppBundleDragSource: NSViewRepresentable {
     let fileURL: URL
     let onAcceptedDrop: () -> Void
@@ -36,10 +35,10 @@ private final class AppBundleDragView: NSView, NSDraggingSource {
     }
 
     override func mouseDown(with event: NSEvent) {
-        let draggingItem = NSDraggingItem(pasteboardWriter: fileURL as NSURL)
+        let item = NSDraggingItem(pasteboardWriter: fileURL as NSURL)
         let icon = NSWorkspace.shared.icon(forFile: fileURL.path)
         let iconSize: CGFloat = 44
-        draggingItem.setDraggingFrame(
+        item.setDraggingFrame(
             NSRect(
                 x: bounds.midX - iconSize / 2,
                 y: bounds.midY - iconSize / 2,
@@ -48,7 +47,7 @@ private final class AppBundleDragView: NSView, NSDraggingSource {
             ),
             contents: icon
         )
-        beginDraggingSession(with: [draggingItem], event: event, source: self)
+        beginDraggingSession(with: [item], event: event, source: self)
     }
 
     func draggingSession(
@@ -113,15 +112,14 @@ final class PermissionDragGuideController {
     private let model = PermissionDragGuideModel()
     private var panel: NSPanel?
     private var trackingTimer: Timer?
-    private var awaitingGrant = false
+    private var acceptedDrop = false
     private var settingsSeenAt: Date?
 
-    func present(_ kind: KeyboardPermissionKind) {
-        model.kind = kind
-        awaitingGrant = false
+    func present() {
+        acceptedDrop = false
         settingsSeenAt = nil
         _ = ensurePanel()
-        startTracking(kind)
+        startTracking()
     }
 
     func dismiss() {
@@ -132,33 +130,26 @@ final class PermissionDragGuideController {
     }
 
     private func notifyAcceptedDrop() {
-        awaitingGrant = true
+        acceptedDrop = true
         panel?.orderOut(nil)
     }
 
-    private func startTracking(_ kind: KeyboardPermissionKind) {
+    private func startTracking() {
         trackingTimer?.invalidate()
-        let timer = Timer(timeInterval: 0.08, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
-                self?.updatePanel(for: kind)
+                self?.updatePanel()
             }
         }
         trackingTimer = timer
         RunLoop.main.add(timer, forMode: .common)
     }
 
-    private func updatePanel(for kind: KeyboardPermissionKind) {
+    private func updatePanel() {
         guard let panel else { return }
 
-        if kind.isGranted(in: PermissionService.snapshot()) {
-            dismiss()
-            return
-        }
-
-        if awaitingGrant {
-            if panel.isVisible {
-                panel.orderOut(nil)
-            }
+        if acceptedDrop {
+            panel.orderOut(nil)
             return
         }
 
@@ -167,10 +158,8 @@ final class PermissionDragGuideController {
             || frontmostName == "System Preferences"
         guard settingsIsFrontmost, systemSettingsWindowFrame() != nil else {
             settingsSeenAt = nil
-            if panel.isVisible {
-                panel.orderOut(nil)
-                panel.alphaValue = 0
-            }
+            panel.orderOut(nil)
+            panel.alphaValue = 0
             return
         }
 
@@ -178,7 +167,7 @@ final class PermissionDragGuideController {
             settingsSeenAt = Date()
         }
         guard panel.isVisible
-            || Date().timeIntervalSince(settingsSeenAt ?? .distantFuture) > 0.45 else {
+            || Date().timeIntervalSince(settingsSeenAt ?? .distantFuture) > 0.35 else {
             return
         }
 
@@ -187,7 +176,7 @@ final class PermissionDragGuideController {
         panel.alphaValue = 0
         panel.orderFrontRegardless()
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.2
+            context.duration = 0.15
             panel.animator().alphaValue = 1
         }
     }
@@ -196,13 +185,16 @@ final class PermissionDragGuideController {
         guard let settingsFrame = systemSettingsWindowFrame() else { return }
 
         let sidebarWidth: CGFloat = 215
-        let contentInset: CGFloat = 20
-        let width = max(330, settingsFrame.width - sidebarWidth - contentInset * 2)
-        let x = settingsFrame.minX + sidebarWidth + contentInset
+        let inset: CGFloat = 20
+        let width = max(330, settingsFrame.width - sidebarWidth - inset * 2)
         let height = cardHeight(panel, width: width)
-        let y = settingsFrame.minY + 18
         panel.setFrame(
-            NSRect(x: x, y: y, width: width, height: height),
+            NSRect(
+                x: settingsFrame.minX + sidebarWidth + inset,
+                y: settingsFrame.minY + 18,
+                width: width,
+                height: height
+            ),
             display: true
         )
     }
@@ -212,14 +204,14 @@ final class PermissionDragGuideController {
             model.cardWidth = width
         }
         panel.contentView?.layoutSubtreeIfNeeded()
-        return max(92, panel.contentView?.fittingSize.height ?? 0)
+        return max(82, panel.contentView?.fittingSize.height ?? 0)
     }
 
     private func ensurePanel() -> NSPanel {
         if let panel { return panel }
 
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 380, height: 116),
+            contentRect: NSRect(x: 0, y: 0, width: 380, height: 96),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -249,7 +241,6 @@ final class PermissionDragGuideController {
 }
 
 private final class PermissionDragGuideModel: ObservableObject {
-    @Published var kind: KeyboardPermissionKind = .inputMonitoring
     @Published var cardWidth: CGFloat = 360
 }
 
@@ -258,84 +249,52 @@ private struct PermissionDragGuideCard: View {
     let onClose: () -> Void
     let onAcceptedDrop: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var arrowIsRaised = false
-
     private var appURL: URL { Bundle.main.bundleURL }
     private var appIcon: NSImage { NSWorkspace.shared.icon(forFile: appURL.path) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 8) {
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(Color(red: 0.58, green: 0.48, blue: 0.94))
-                    .offset(y: arrowIsRaised ? -3 : 2)
-                    .opacity(arrowIsRaised ? 0.4 : 1)
-                    .animation(
-                        reduceMotion
-                            ? nil
-                            : .easeInOut(duration: 0.7).repeatForever(autoreverses: true),
-                        value: arrowIsRaised
-                    )
+        HStack(spacing: 11) {
+            Image(systemName: "arrow.up")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(Color.accentColor)
 
-                VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 9) {
+                Image(nsImage: appIcon)
+                    .resizable()
+                    .frame(width: 30, height: 30)
+
+                VStack(alignment: .leading, spacing: 1) {
                     Text("Drag KeySwitch into the list above")
-                        .font(.system(size: 13, weight: .semibold))
-                    Text("Then turn it on to allow \(model.kind.title).")
-                        .font(.system(size: 11.5))
+                        .font(.system(size: 12.5, weight: .semibold))
+                    Text("Then turn its switch on")
+                        .font(.system(size: 10.5))
                         .foregroundStyle(.secondary)
                 }
 
                 Spacer(minLength: 4)
 
-                Button(action: onClose) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 14))
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .help("Dismiss")
-            }
-
-            HStack(spacing: 10) {
-                Image(nsImage: appIcon)
-                    .resizable()
-                    .frame(width: 34, height: 34)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("KeySwitch")
-                        .font(.system(size: 13, weight: .semibold))
-                    Text("Drag this app into the permission list")
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(.secondary)
-                }
-                Spacer(minLength: 0)
                 Image(systemName: "line.3.horizontal")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.tertiary)
             }
-            .padding(9)
-            .background(.white.opacity(0.055), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .strokeBorder(.white.opacity(0.1), lineWidth: 1)
+            .contentShape(Rectangle())
+            .overlay(AppBundleDragSource(fileURL: appURL, onAcceptedDrop: onAcceptedDrop))
+
+            Button(action: onClose) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 14))
             }
-            .overlay(
-                AppBundleDragSource(fileURL: appURL, onAcceptedDrop: onAcceptedDrop)
-            )
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .help("Dismiss")
         }
         .padding(12)
-        .frame(width: model.cardWidth, alignment: .topLeading)
+        .frame(width: model.cardWidth)
         .fixedSize(horizontal: false, vertical: true)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .strokeBorder(.white.opacity(0.14), lineWidth: 1)
-        }
-        .onAppear {
-            if !reduceMotion {
-                arrowIsRaised = true
-            }
         }
     }
 }

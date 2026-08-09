@@ -39,7 +39,7 @@ See the interactive showcase at
   non-focus-stealing frosted HUD with four sizes for the active keyboard layer.
 - Automatic synchronization of keycaps and slot actions from Codex Micro
   settings.
-- Input Monitoring and Accessibility health checks with direct links to macOS
+- Accessibility and keyboard-capture health checks with a direct link to macOS
   System Settings.
 - Automatic inactivity exit, Escape safety exit, and optional blocking of
   unmapped keys while the layer is active.
@@ -61,8 +61,8 @@ Macs. A
 [ZIP archive](https://github.com/Mohit-Patil/keyswitch/releases/latest/download/KeySwitch-macOS-universal.zip)
 is also available for managed or command-line installation.
 
-On first launch, KeySwitch guides you through Input Monitoring, Accessibility,
-and the optional Codex connection. Release checksums and notes are available on
+On first launch, KeySwitch guides you through Accessibility and the optional
+Codex connection. Release checksums and notes are available on
 the [GitHub Releases page](https://github.com/Mohit-Patil/keyswitch/releases/latest).
 
 ## Requirements
@@ -70,7 +70,8 @@ the [GitHub Releases page](https://github.com/Mohit-Patil/keyswitch/releases/lat
 - macOS 14 Sonoma or later.
 - A compatible Codex desktop app installation for Codex Micro integration.
 - Xcode 16 or later to build from source.
-- Input Monitoring and Accessibility permission for global keyboard capture.
+- Accessibility permission for global keyboard capture and temporary key
+  suppression while the layer is active.
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) only when regenerating the
   committed Xcode project from `project.yml`.
 
@@ -118,7 +119,7 @@ Commit both `project.yml` and the regenerated `KeySwitch.xcodeproj` changes.
 KeySwitch presents a three-step setup assistant:
 
 1. Review the keyboard layer and activation shortcut.
-2. Grant Input Monitoring and Accessibility permission.
+2. Grant Accessibility permission.
 3. Connect the installed Codex desktop app and open its Micro setup.
 
 The connection step can restart the original Codex app once with a Chromium

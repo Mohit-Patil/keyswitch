@@ -2,20 +2,11 @@ import XCTest
 @testable import KeySwitch
 
 final class ProductionHardeningTests: XCTestCase {
-    func testPermissionSetupSelectsInputMonitoringBeforeAccessibility() {
+    func testPermissionSetupRequiresOnlyAccessibility() {
+        XCTAssertEqual(KeyboardPermissionKind.allCases, [.accessibility])
         XCTAssertEqual(
             PermissionService.nextRequiredPermission(
                 in: PermissionSnapshot(
-                    inputMonitoringGranted: false,
-                    accessibilityGranted: false
-                )
-            ),
-            .inputMonitoring
-        )
-        XCTAssertEqual(
-            PermissionService.nextRequiredPermission(
-                in: PermissionSnapshot(
-                    inputMonitoringGranted: true,
                     accessibilityGranted: false
                 )
             ),
@@ -24,18 +15,46 @@ final class ProductionHardeningTests: XCTestCase {
         XCTAssertNil(
             PermissionService.nextRequiredPermission(
                 in: PermissionSnapshot(
-                    inputMonitoringGranted: true,
                     accessibilityGranted: true
                 )
             )
         )
     }
 
-    func testPermissionSettingsAnchorsMatchMacOSPrivacyPanes() {
-        XCTAssertEqual(
-            KeyboardPermissionKind.inputMonitoring.settingsAnchor,
-            "Privacy_ListenEvent"
+    func testKeyboardReadinessRequiresCurrentGrantAndActiveTap() {
+        XCTAssertFalse(
+            PermissionSnapshot(accessibilityGranted: false)
+                .keyboardAccessIsReady(eventTapIsActive: true),
+            "A lingering event tap must not mask a revoked Accessibility grant"
         )
+        XCTAssertFalse(
+            PermissionSnapshot(accessibilityGranted: true)
+                .keyboardAccessIsReady(eventTapIsActive: false)
+        )
+        XCTAssertTrue(
+            PermissionSnapshot(accessibilityGranted: true)
+                .keyboardAccessIsReady(eventTapIsActive: true)
+        )
+    }
+
+    func testLiveEventTapProbeOverridesStaleAccessibilityCache() {
+        XCTAssertTrue(
+            PermissionService.resolveAccessibilityGrant(
+                cachedAPIValue: false,
+                eventTapProbeSucceeded: true
+            ),
+            "A live tap must recognize a grant even when AXIsProcessTrusted is stale false"
+        )
+        XCTAssertFalse(
+            PermissionService.resolveAccessibilityGrant(
+                cachedAPIValue: true,
+                eventTapProbeSucceeded: false
+            ),
+            "A failed live tap must recognize revocation even when AXIsProcessTrusted is stale true"
+        )
+    }
+
+    func testPermissionSettingsAnchorsMatchMacOSPrivacyPanes() {
         XCTAssertEqual(
             KeyboardPermissionKind.accessibility.settingsAnchor,
             "Privacy_Accessibility"

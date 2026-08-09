@@ -22,8 +22,6 @@
 	<string>public.app-category.productivity</string>
 	<key>LSUIElement</key>
 	<true/>
-	<key>NSInputMonitoringUsageDescription</key>
-	<string>KeySwitch needs Input Monitoring to turn the keyboard into your editable accessibility control layer while its shortcut is active.</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUAutomaticallyUpdate</key>

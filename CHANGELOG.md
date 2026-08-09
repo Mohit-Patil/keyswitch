@@ -7,6 +7,25 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-08-09
+
+### Changed
+
+- Use the single Accessibility grant that macOS provides for both listening to
+  and suppressing keyboard events, instead of also requesting Input Monitoring.
+- Show one compact native drag tile beside the Accessibility list so the exact
+  installed KeySwitch bundle can be added, then enabled with its system switch.
+
+### Fixed
+
+- Avoid the unnecessary Input Monitoring quit-and-reopen prompt during setup.
+- Use a live keyboard event-tap probe so the running app sees Accessibility
+  changes even when macOS keeps `AXIsProcessTrusted()` cached and stale.
+- Register the running bundle with TCC before opening System Settings, while
+  keeping the drag tile as a fallback for stale or missing list entries.
+- Reflect Accessibility revocation immediately and stop any event tap that
+  briefly survives after the user turns the permission off in System Settings.
+
 ## [0.2.6] - 2026-08-09
 
 ### Added

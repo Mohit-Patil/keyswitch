@@ -77,7 +77,7 @@ struct FirstRunSetupView: View {
     }
 
     private var keyboardAccessIsReady: Bool {
-        model.permissions.allGranted && model.eventTapIsActive
+        model.keyboardAccessIsReady
     }
 
     private var primaryButtonTitle: String {
@@ -274,7 +274,7 @@ private struct SetupSidebar: View {
         case .welcome:
             step.rawValue > item.rawValue
         case .permissions:
-            model.permissions.allGranted && model.eventTapIsActive
+            model.keyboardAccessIsReady
         case .codex:
             model.bridgeStatus == .connected
         }
@@ -436,22 +436,14 @@ private struct PermissionsSetupPage: View {
             SetupPageTitle(
                 icon: "lock.shield.fill",
                 title: "Allow keyboard access",
-                detail: "KeySwitch needs two macOS permissions to listen for your activation shortcut and temporarily remap keys."
+                detail: "KeySwitch needs macOS Accessibility permission to listen for your activation shortcut and temporarily remap keys."
             )
 
             VStack(spacing: 10) {
                 PermissionSetupRow(
-                    icon: "keyboard",
-                    title: "Input Monitoring",
-                    detail: "Recognizes your shortcut and mapped key presses.",
-                    granted: model.permissions.inputMonitoringGranted,
-                    openSettings: PermissionService.openInputMonitoringSettings
-                )
-
-                PermissionSetupRow(
                     icon: "accessibility",
                     title: "Accessibility",
-                    detail: "Suppresses normal typing while the layer is active.",
+                    detail: "Recognizes global key presses and suppresses normal typing only while the layer is active.",
                     granted: model.permissions.accessibilityGranted,
                     openSettings: PermissionService.openAccessibilitySettings
                 )
@@ -460,7 +452,7 @@ private struct PermissionsSetupPage: View {
             if model.permissions.allGranted && !model.eventTapIsActive {
                 SetupNotice(
                     icon: "arrow.clockwise",
-                    text: "Access is granted. Choose Retry Keyboard Access below to start keyboard capture.",
+                    text: "Accessibility is on. Choose Retry Keyboard Access below if capture has not started yet.",
                     color: .orange
                 )
             } else {

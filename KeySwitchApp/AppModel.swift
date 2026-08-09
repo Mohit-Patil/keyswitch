@@ -80,6 +80,13 @@ final class AppModel {
     var launchAtLoginState = LaunchAtLoginService.currentState
     var launchAtLoginErrorMessage: String?
 
+    /// Readiness requires both the current macOS grant and a live event tap.
+    /// A tap can briefly survive after its permission is manually revoked, so
+    /// it must never be used as a substitute for the grant itself.
+    var keyboardAccessIsReady: Bool {
+        permissions.keyboardAccessIsReady(eventTapIsActive: eventTapIsActive)
+    }
+
     @ObservationIgnored private var hasStarted = false
     @ObservationIgnored private var permissionRefreshTimer: Timer?
     @ObservationIgnored private var autoDimTimer: Timer?
@@ -158,8 +165,14 @@ final class AppModel {
         }
         engine.onTapStatusChanged = { [weak self] active in
             Task { @MainActor [weak self] in
-                self?.eventTapIsActive = active
-                self?.permissions = PermissionService.snapshot()
+                guard let self else { return }
+                let snapshot = PermissionService.snapshot()
+                self.permissions = snapshot
+                self.eventTapIsActive = active && snapshot.accessibilityGranted
+
+                if active, !snapshot.accessibilityGranted {
+                    self.keyboardEngine.stop()
+                }
             }
         }
         return engine
@@ -189,12 +202,11 @@ final class AppModel {
         hasStarted = true
         permissions = PermissionService.snapshot()
         refreshLaunchAtLoginState()
-        eventTapIsActive = keyboardEngine.start()
+        eventTapIsActive = permissions.accessibilityGranted
+            ? keyboardEngine.start()
+            : false
         bridge.connect()
-
-        if !permissions.allGranted || !eventTapIsActive {
-            startPermissionRefreshTimer()
-        }
+        startPermissionRefreshTimer()
 
         #if DEBUG
         let shouldForceSetup = ProcessInfo.processInfo.environment["KEYSWITCH_SHOW_SETUP"] == "1"
@@ -238,12 +250,12 @@ final class AppModel {
 
     func retryKeyboardAccess() {
         PermissionService.request()
-        keyboardEngine.stop()
-        eventTapIsActive = keyboardEngine.start()
         permissions = PermissionService.snapshot()
-        if !permissions.allGranted || !eventTapIsActive {
-            startPermissionRefreshTimer()
-        }
+        keyboardEngine.stop()
+        eventTapIsActive = permissions.accessibilityGranted
+            ? keyboardEngine.start()
+            : false
+        startPermissionRefreshTimer()
     }
 
     func openNextRequiredKeyboardPermission() {
@@ -675,16 +687,27 @@ final class AppModel {
     }
 
     private func refreshPermissionState(retryIfGranted: Bool) {
+        let previouslyGranted = permissions.accessibilityGranted
         let snapshot = PermissionService.snapshot()
         permissions = snapshot
 
-        if retryIfGranted, snapshot.allGranted, !eventTapIsActive {
+        // TCC can leave an already-created tap alive briefly after the user
+        // revokes Accessibility. Stop it ourselves and make the UI reflect the
+        // current grant rather than the stale tap.
+        if !snapshot.accessibilityGranted {
+            if previouslyGranted || eventTapIsActive {
+                keyboardEngine.stop()
+            }
+            eventTapIsActive = false
+            return
+        }
+
+        PermissionService.dismissPermissionGuide()
+
+        if retryIfGranted, !eventTapIsActive {
             eventTapIsActive = keyboardEngine.start()
         }
 
-        if snapshot.allGranted, eventTapIsActive {
-            stopPermissionRefreshTimer()
-        }
     }
 
     private func saveConfiguration() {
