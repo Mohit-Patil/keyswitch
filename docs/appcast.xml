@@ -9,6 +9,23 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
         <item>
+            <title>0.2.4</title>
+            <pubDate>Sun, 09 Aug 2026 04:27:10 +0000</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.2.4</sparkle:fullReleaseNotesLink>
+            <sparkle:version>7</sparkle:version>
+            <sparkle:shortVersionString>0.2.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.2.4</h2>
+<h3>Changed</h3>
+<ul>
+<li>Keep the KeySwitch Codex Micro settings focused on mapping Mac keys to the fixed Micro controls, while Codex remains the source of truth for keycaps, actions, agent selection, control behavior, and lighting.</li>
+<li>Use Codex&#x27;s brightness and inactivity timing directly for the virtual Micro lighting, and keep KeySwitch&#x27;s optional animation preference under General settings.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.4/KeySwitch-v0.2.4-macOS-universal.zip" length="3139983" type="application/octet-stream" sparkle:edSignature="xEaGdMu9AfioKf1SvCpamw9rQFARL9ue6srHgYEHhNwX1TA7eBXdgr0gceFsug7NWLi8dD329q4+KDZf56gBAQ=="/>
+        </item>
+        <item>
             <title>0.2.3</title>
             <pubDate>Sun, 09 Aug 2026 03:14:37 +0000</pubDate>
             <link>https://mohit-patil.github.io/keyswitch/</link>
@@ -108,6 +125,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: gxX9l5d7qpVi4PCH35C13njphedilqV+zaI7FRDVn8gqIJXLMQQT7doz6k4boRbcXqtnZywcQjktf5mPHqSoCg==
-length: 7276
+edSignature: lT3uzaPAeMdB9AJ/N/pRRUVD2nvg8E8+SkOAr9ncrH9nuOCbkjU8+eW0WuGRvz80LRsW/plmRS4onORUNY9BAA==
+length: 8601
 -->
