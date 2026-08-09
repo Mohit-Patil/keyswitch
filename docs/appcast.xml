@@ -9,6 +9,29 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
         <item>
+            <title>0.2.3</title>
+            <pubDate>Sun, 09 Aug 2026 03:14:37 +0000</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.2.3</sparkle:fullReleaseNotesLink>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>0.2.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.2.3</h2>
+<h3>Fixed</h3>
+<ul>
+<li>Keep the keyboard layer active for as long as the activation shortcut is held in Hold mode, regardless of the configured inactivity timeout.</li>
+<li>Render every active menu-bar agent indicator as a consistent, solid color circle, including error states, while inactive slots use a neutral ring.</li>
+<li>Keep the menu-bar legend in Settings synchronized with the rendered indicator shapes.</li>
+<li>Sign Sparkle update feeds from an ephemeral key file so headless release runners do not stall on a Keychain permission prompt.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>Add a feed-only recovery path for an existing release whose public Sparkle feed still needs to be published.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.3/KeySwitch-v0.2.3-macOS-universal.zip" length="3174271" type="application/octet-stream" sparkle:edSignature="MOamb9ZgXilMEmNtXiLhC5tK7GhwCVlSyKVkksJoaSd3mnFF6RnWv85MZXfvdrsJqBP8XJsWAKYffJ7u4IzPBQ=="/>
+        </item>
+        <item>
             <title>0.2.2</title>
             <pubDate>Sat, 08 Aug 2026 02:07:24 +0000</pubDate>
             <link>https://mohit-patil.github.io/keyswitch/</link>
@@ -85,6 +108,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: okW7ZNvF9p2Aa/R8Zq4RsNlpoGC/XhtQW3KPn78VuCTVbSlCcG113x5h4edoD4Q6qCdG+2S+LggyrX+wgod/AA==
-length: 5667
+edSignature: gxX9l5d7qpVi4PCH35C13njphedilqV+zaI7FRDVn8gqIJXLMQQT7doz6k4boRbcXqtnZywcQjktf5mPHqSoCg==
+length: 7276
 -->
