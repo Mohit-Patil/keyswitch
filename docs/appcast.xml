@@ -9,6 +9,37 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
         <item>
+            <title>0.2.7</title>
+            <pubDate>Sun, 09 Aug 2026 17:55:20 +0000</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.2.7</sparkle:fullReleaseNotesLink>
+            <sparkle:version>10</sparkle:version>
+            <sparkle:shortVersionString>0.2.7</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.2.7</h2>
+<h3>Changed</h3>
+<ul>
+<li>Allow any single modifier to activate KeySwitch while keeping Fn + Control as the recommended default shortcut.</li>
+<li>Map the six agent slots to 1–6 and the four primary command controls to Q–R for clearer slot numbering and a compact command row.</li>
+<li>Use the single Accessibility grant that macOS provides for both listening to and suppressing keyboard events, instead of also requesting Input Monitoring.</li>
+<li>Show one compact native drag tile beside the Accessibility list so the exact installed KeySwitch bundle can be added, then enabled with its system switch.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Verify the Codex renderer, live Micro state, and official onboarding response before reporting a connection or completing first-run setup.</li>
+<li>Keep KeySwitch in front while Codex restarts for first-run connection, return to a clear final setup action, and surface a retry if reconnection times out.</li>
+<li>Cancel pending Codex setup work when onboarding is dismissed so it cannot reopen unexpectedly after a delayed connection.</li>
+<li>Suppress the macOS Globe/emoji action when Fn alone is selected as the activation shortcut.</li>
+<li>Stop the permission drag guide&#x27;s tracking timer after a completed drag and keep its overlay inside the correct display on multi-monitor Macs.</li>
+<li>Avoid the unnecessary Input Monitoring quit-and-reopen prompt during setup.</li>
+<li>Use a live keyboard event-tap probe so the running app sees Accessibility changes even when macOS keeps <code>AXIsProcessTrusted()</code> cached and stale.</li>
+<li>Register the running bundle with TCC before opening System Settings, while keeping the drag tile as a fallback for stale or missing list entries.</li>
+<li>Reflect Accessibility revocation immediately and stop any event tap that briefly survives after the user turns the permission off in System Settings.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.7/KeySwitch-v0.2.7-macOS-universal.zip" length="3192221" type="application/octet-stream" sparkle:edSignature="BLTBZsirPSnVBxSIlApnL4VN6L0xi3TFKldaZCID6bmlITqB9hf+UDsiUfhHmD84Q2jKkAi+PK//98QVbJmmDw=="/>
+        </item>
+        <item>
             <title>0.2.6</title>
             <pubDate>Sun, 09 Aug 2026 12:19:05 +0000</pubDate>
             <link>https://mohit-patil.github.io/keyswitch/</link>
@@ -165,6 +196,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: k1pMQLtNHlxvj4o3V/ntrTV9+my30ANtddZ3Mj+5dPnrDIzuK/+WSbx8FXpUksZpBHTDD1g897Dn1JWLu5qbAA==
-length: 11171
+edSignature: yk6KpLA6OPs8OC2ZV3DhvfAx+6mb9RoJ68JuGD6RNL8BY1w4waoEW0iYmh1PWIXZaos7lHIDj8MRjwgeUioLBg==
+length: 13983
 -->
