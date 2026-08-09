@@ -34,7 +34,7 @@ struct ActivationShortcutEditor: View {
             VStack(spacing: 6) {
                 Text("Choose an activation shortcut")
                     .font(.title2.bold())
-                Text("Select at least two modifier keys. Modifier-only chords avoid typing a character or triggering an app command.")
+                Text("Select one or more modifier keys. Single modifiers are allowed; Fn + Control remains the recommended default.")
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 430)
@@ -52,7 +52,7 @@ struct ActivationShortcutEditor: View {
             }
 
             VStack(spacing: 9) {
-                Text(shortcut.isValid ? "Your shortcut" : "Choose one more modifier")
+                Text(shortcut.isValid ? "Your shortcut" : "Choose a modifier")
                     .font(.caption)
                     .foregroundStyle(shortcut.isValid ? Color.secondary : Color.orange)
 

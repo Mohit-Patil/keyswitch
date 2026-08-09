@@ -16,6 +16,58 @@ enum BridgeStatus: String {
 
 }
 
+enum CodexBridgeCommandError: Error, Equatable, LocalizedError {
+    case notConnected
+    case timedOut
+    case protocolError(String)
+    case runtimeException(String)
+    case invalidResponse
+
+    var errorDescription: String? {
+        switch self {
+        case .notConnected:
+            "The Codex connection is not ready."
+        case .timedOut:
+            "Codex did not respond in time."
+        case .protocolError(let message):
+            "Codex rejected the request: \(message)"
+        case .runtimeException(let message):
+            "Codex could not complete the action: \(message)"
+        case .invalidResponse:
+            "Codex returned an invalid response."
+        }
+    }
+}
+
+enum CodexProtocolResponseParser {
+    static func result(
+        from object: [String: Any]
+    ) -> Result<Any?, CodexBridgeCommandError> {
+        if let error = object["error"] as? [String: Any] {
+            let message = error["message"] as? String
+                ?? "Unknown protocol error"
+            return .failure(.protocolError(message))
+        }
+
+        guard let commandResult = object["result"] as? [String: Any] else {
+            return .failure(.invalidResponse)
+        }
+
+        if let exception = commandResult["exceptionDetails"] as? [String: Any] {
+            let exceptionObject = exception["exception"] as? [String: Any]
+            let message = exceptionObject?["description"] as? String
+                ?? exception["text"] as? String
+                ?? "Unknown JavaScript exception"
+            return .failure(.runtimeException(message))
+        }
+
+        guard let runtimeResult = commandResult["result"] as? [String: Any] else {
+            return .failure(.invalidResponse)
+        }
+        return .success(runtimeResult["value"])
+    }
+}
+
 private struct CodexDebugTarget: Decodable {
     let url: String
     let webSocketDebuggerUrl: String
@@ -278,14 +330,21 @@ enum CodexMicroOutboundEvent: Equatable {
 // makes that explicit to Swift's strict-concurrency diagnostics while the
 // public callbacks continue to publish on the main queue.
 final class CodexMicroBridge: @unchecked Sendable {
-    private typealias ProtocolCompletion = (Any?) -> Void
+    private typealias ProtocolCompletion = (
+        Result<Any?, CodexBridgeCommandError>
+    ) -> Void
+
+    private struct PendingProtocolResponse {
+        let completion: ProtocolCompletion
+        let timeoutWorkItem: DispatchWorkItem
+    }
 
     private let queue = DispatchQueue(label: "com.keyswitch.codex-bridge")
     private let webSocketSession: URLSession
     private var discoveryRequest: BoundedDiscoveryRequest?
     private var socket: URLSessionWebSocketTask?
     private var nextRequestID = 1
-    private var pendingResponses: [Int: ProtocolCompletion] = [:]
+    private var pendingResponses: [Int: PendingProtocolResponse] = [:]
     private var lightingPollTimer: DispatchSourceTimer?
     private var lightingPollIsInFlight = false
     private var layoutPollIsInFlight = false
@@ -416,7 +475,8 @@ final class CodexMicroBridge: @unchecked Sendable {
 
     func openMicroSettings() {
         queue.async { [weak self] in
-            self?.sendRuntimeExpression(
+            guard let self, self.isReady else { return }
+            self.sendRuntimeExpression(
                 """
                 (async () => {
                   await window.electronBridge.sendMessageFromView({
@@ -438,10 +498,17 @@ final class CodexMicroBridge: @unchecked Sendable {
         }
     }
 
-    func openMicroOnboarding() {
+    func openMicroOnboarding(
+        completion: @escaping @Sendable (Result<Void, CodexBridgeCommandError>) -> Void
+    ) {
         queue.async { [weak self] in
-            guard let self, self.isReady else { return }
-            self.sendRuntimeExpression(
+            guard let self, self.isReady else {
+                DispatchQueue.main.async {
+                    completion(.failure(.notConnected))
+                }
+                return
+            }
+            let sent = self.sendRuntimeExpression(
                 """
                 (async () => {
                   const store = window.__keySwitchAppStore;
@@ -503,14 +570,36 @@ final class CodexMicroBridge: @unchecked Sendable {
                 })()
                 """,
                 awaitPromise: true
-            )
-            self.focusCodexWindow()
+            ) { [weak self] result in
+                let onboardingResult: Result<Void, CodexBridgeCommandError>
+                switch result {
+                case .success(let value) where value as? Bool == true:
+                    onboardingResult = .success(())
+                case .success:
+                    onboardingResult = .failure(.invalidResponse)
+                case .failure(let error):
+                    onboardingResult = .failure(error)
+                }
+
+                if case .success = onboardingResult {
+                    self?.focusCodexWindow()
+                }
+                DispatchQueue.main.async {
+                    completion(onboardingResult)
+                }
+            }
+            if !sent {
+                DispatchQueue.main.async {
+                    completion(.failure(.notConnected))
+                }
+            }
         }
     }
 
     func setSingleTapAgentKeys(_ enabled: Bool) {
         queue.async { [weak self] in
-            self?.sendRuntimeExpression(
+            guard let self, self.isReady else { return }
+            self.sendRuntimeExpression(
                 """
                 (async () => {
                   const store = window.__keySwitchAppStore;
@@ -645,12 +734,77 @@ final class CodexMicroBridge: @unchecked Sendable {
         let task = webSocketSession.webSocketTask(with: url)
         socket = task
         task.resume()
-        isReady = true
-        cancelScheduledReconnect()
+        isReady = false
         receiveMessages(on: task)
-        sendConnectedState()
-        startLightingPolling()
-        publishStatus(.connected)
+        verifyRendererCompatibility(attempt: attempt)
+    }
+
+    private func verifyRendererCompatibility(attempt: Int) {
+        let sent = sendRuntimeExpression(
+            Self.agentLightingExpression,
+            awaitPromise: true,
+            userGesture: false
+        ) { [weak self] result in
+            guard let self,
+                  attempt == self.connectionAttempt,
+                  self.shouldReconnect else { return }
+
+            if case .failure(.notConnected) = result {
+                return
+            }
+            guard case .success(let value) = result,
+                  let lighting = Self.decodeLightingSnapshot(value) else {
+                self.handleConnectionFailure(attempt: attempt)
+                return
+            }
+
+            self.verifyLayoutCompatibility(
+                attempt: attempt,
+                lighting: lighting
+            )
+        }
+
+        if !sent {
+            handleConnectionFailure(attempt: attempt)
+        }
+    }
+
+    private func verifyLayoutCompatibility(
+        attempt: Int,
+        lighting: CodexLightingSnapshot
+    ) {
+        let sent = sendRuntimeExpression(
+            Self.microLayoutExpression,
+            awaitPromise: true,
+            userGesture: false
+        ) { [weak self] result in
+            guard let self,
+                  attempt == self.connectionAttempt,
+                  self.shouldReconnect else { return }
+
+            if case .failure(.notConnected) = result {
+                return
+            }
+            guard case .success(let value) = result,
+                  let layout = Self.decodeLayoutSnapshot(value) else {
+                self.handleConnectionFailure(attempt: attempt)
+                return
+            }
+
+            self.cancelScheduledReconnect()
+            self.isReady = true
+            self.lightingSnapshot = lighting
+            self.layoutSnapshot = layout
+            self.publishLighting(lighting)
+            self.publishLayout(layout)
+            self.sendConnectedState()
+            self.startLightingPolling()
+            self.publishStatus(.connected)
+        }
+
+        if !sent {
+            handleConnectionFailure(attempt: attempt)
+        }
     }
 
     private func receiveMessages(on task: URLSessionWebSocketTask) {
@@ -697,7 +851,7 @@ final class CodexMicroBridge: @unchecked Sendable {
     private func disconnectInternal(updateStatus: Bool) {
         isReady = false
         stopLightingPolling()
-        pendingResponses.removeAll()
+        failPendingResponses(with: .notConnected)
         layoutSnapshot = nil
         discoveryRequest?.cancel()
         discoveryRequest = nil
@@ -724,13 +878,11 @@ final class CodexMicroBridge: @unchecked Sendable {
 
         guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let id = object["id"] as? Int,
-              let completion = pendingResponses.removeValue(forKey: id) else {
+              let pending = pendingResponses.removeValue(forKey: id) else {
             return
         }
-
-        let commandResult = object["result"] as? [String: Any]
-        let runtimeResult = commandResult?["result"] as? [String: Any]
-        completion(runtimeResult?["value"])
+        pending.timeoutWorkItem.cancel()
+        pending.completion(CodexProtocolResponseParser.result(from: object))
     }
 
     private func startLightingPolling() {
@@ -772,13 +924,11 @@ final class CodexMicroBridge: @unchecked Sendable {
             Self.agentLightingExpression,
             awaitPromise: true,
             userGesture: false
-        ) { [weak self] value in
+        ) { [weak self] result in
             guard let self else { return }
             self.lightingPollIsInFlight = false
-            guard let value, !(value is NSNull),
-                  JSONSerialization.isValidJSONObject(value),
-                  let data = try? JSONSerialization.data(withJSONObject: value),
-                  let snapshot = try? JSONDecoder().decode(CodexLightingSnapshot.self, from: data) else {
+            guard case .success(let value) = result,
+                  let snapshot = Self.decodeLightingSnapshot(value) else {
                 return
             }
             guard snapshot != self.lightingSnapshot else { return }
@@ -799,16 +949,11 @@ final class CodexMicroBridge: @unchecked Sendable {
             Self.microLayoutExpression,
             awaitPromise: true,
             userGesture: false
-        ) { [weak self] value in
+        ) { [weak self] result in
             guard let self else { return }
             self.layoutPollIsInFlight = false
-            guard let value, !(value is NSNull),
-                  JSONSerialization.isValidJSONObject(value),
-                  let data = try? JSONSerialization.data(withJSONObject: value),
-                  let snapshot = try? JSONDecoder().decode(
-                    CodexMicroLayoutSnapshot.self,
-                    from: data
-                  ) else {
+            guard case .success(let value) = result,
+                  let snapshot = Self.decodeLayoutSnapshot(value) else {
                 return
             }
             guard snapshot != self.layoutSnapshot else { return }
@@ -938,7 +1083,7 @@ final class CodexMicroBridge: @unchecked Sendable {
         params: [String: Any],
         completion: ProtocolCompletion? = nil
     ) -> Bool {
-        guard isReady, let socket else { return false }
+        guard let socket else { return false }
 
         let requestID = nextRequestID
         nextRequestID += 1
@@ -950,13 +1095,24 @@ final class CodexMicroBridge: @unchecked Sendable {
         ]
 
         if let completion {
-            pendingResponses[requestID] = completion
+            let timeoutWorkItem = DispatchWorkItem { [weak self] in
+                guard let self,
+                      let pending = self.pendingResponses.removeValue(forKey: requestID) else {
+                    return
+                }
+                pending.completion(.failure(.timedOut))
+            }
+            pendingResponses[requestID] = PendingProtocolResponse(
+                completion: completion,
+                timeoutWorkItem: timeoutWorkItem
+            )
+            queue.asyncAfter(deadline: .now() + 8, execute: timeoutWorkItem)
         }
 
         do {
             let data = try JSONSerialization.data(withJSONObject: message)
             guard let json = String(data: data, encoding: .utf8) else {
-                pendingResponses.removeValue(forKey: requestID)
+                discardPendingResponse(requestID)
                 return false
             }
             socket.send(.string(json)) { [weak self] error in
@@ -968,11 +1124,47 @@ final class CodexMicroBridge: @unchecked Sendable {
             }
             return true
         } catch {
-            pendingResponses.removeValue(forKey: requestID)
+            discardPendingResponse(requestID)
             disconnectInternal(updateStatus: true)
             scheduleReconnect()
             return false
         }
+    }
+
+    private func discardPendingResponse(_ requestID: Int) {
+        guard let pending = pendingResponses.removeValue(forKey: requestID) else {
+            return
+        }
+        pending.timeoutWorkItem.cancel()
+    }
+
+    private func failPendingResponses(with error: CodexBridgeCommandError) {
+        let responses = Array(pendingResponses.values)
+        pendingResponses.removeAll()
+        for pending in responses {
+            pending.timeoutWorkItem.cancel()
+            pending.completion(.failure(error))
+        }
+    }
+
+    private static func decodeLightingSnapshot(_ value: Any?) -> CodexLightingSnapshot? {
+        guard let value,
+              !(value is NSNull),
+              JSONSerialization.isValidJSONObject(value),
+              let data = try? JSONSerialization.data(withJSONObject: value) else {
+            return nil
+        }
+        return try? JSONDecoder().decode(CodexLightingSnapshot.self, from: data)
+    }
+
+    private static func decodeLayoutSnapshot(_ value: Any?) -> CodexMicroLayoutSnapshot? {
+        guard let value,
+              !(value is NSNull),
+              JSONSerialization.isValidJSONObject(value),
+              let data = try? JSONSerialization.data(withJSONObject: value) else {
+            return nil
+        }
+        return try? JSONDecoder().decode(CodexMicroLayoutSnapshot.self, from: data)
     }
 
     private func publishStatus(_ status: BridgeStatus) {

@@ -113,8 +113,17 @@ final class KeyboardEngine {
             let shortcutIsDown = configuration.activationShortcut.isPressed(in: event.flags)
             handleActivationShortcutChange(isDown: shortcutIsDown)
 
-            // Activation modifiers pass through to macOS. In particular, this
-            // lets Fn work normally as the Globe/emoji key when pressed alone.
+            // Fn-only activation owns both transitions so macOS does not also
+            // open the Globe/emoji action. Multi-modifier shortcuts continue
+            // to pass their modifier events through normally.
+            if configuration.activationShortcut.isFunctionOnly,
+               configuration.activationShortcut.contains(keyCode: keyCode) {
+                return nil
+            }
+
+            // Chord activation modifiers pass through to macOS. In particular,
+            // this lets Fn keep its Globe/emoji behavior when it is only one
+            // part of a multi-modifier activation shortcut.
             if configuration.activationShortcut.contains(keyCode: keyCode) {
                 return Unmanaged.passUnretained(event)
             }

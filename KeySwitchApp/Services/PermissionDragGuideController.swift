@@ -68,8 +68,48 @@ private final class AppBundleDragView: NSView, NSDraggingSource {
     }
 }
 
-/// Returns the visible System Settings window in Cocoa screen coordinates.
-/// Window bounds do not require Screen Recording access.
+enum PermissionGuideGeometry {
+    /// Quartz window bounds use a top-left origin rooted at the main display;
+    /// AppKit uses a bottom-left origin. This global conversion remains valid
+    /// for windows on displays arranged above, below, or beside the main one.
+    static func cocoaFrame(
+        quartzFrame: CGRect,
+        mainScreenFrame: CGRect
+    ) -> CGRect {
+        CGRect(
+            x: quartzFrame.minX,
+            y: mainScreenFrame.maxY - quartzFrame.minY - quartzFrame.height,
+            width: quartzFrame.width,
+            height: quartzFrame.height
+        )
+    }
+
+    static func clampedPanelFrame(
+        settingsFrame: CGRect,
+        visibleScreenFrame: CGRect,
+        contentHeight: CGFloat
+    ) -> CGRect {
+        let sidebarWidth: CGFloat = 215
+        let settingsInset: CGFloat = 20
+        let screenInset: CGFloat = 12
+        let desiredWidth = max(
+            330,
+            settingsFrame.width - sidebarWidth - settingsInset * 2
+        )
+        let maximumWidth = max(1, visibleScreenFrame.width - screenInset * 2)
+        let width = min(desiredWidth, maximumWidth)
+        let proposedX = settingsFrame.minX + sidebarWidth + settingsInset
+        let maximumX = visibleScreenFrame.maxX - width - screenInset
+        let x = min(max(proposedX, visibleScreenFrame.minX + screenInset), maximumX)
+        let proposedY = settingsFrame.minY + 18
+        let maximumY = visibleScreenFrame.maxY - contentHeight - screenInset
+        let y = min(max(proposedY, visibleScreenFrame.minY + screenInset), maximumY)
+        return CGRect(x: x, y: y, width: width, height: contentHeight)
+    }
+}
+
+/// Returns the largest visible System Settings window in Cocoa screen
+/// coordinates. Window bounds do not require Screen Recording access.
 private func systemSettingsWindowFrame() -> CGRect? {
     let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
     guard let windows = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
@@ -77,32 +117,33 @@ private func systemSettingsWindowFrame() -> CGRect? {
         return nil
     }
 
-    let primaryHeight = NSScreen.screens.first(where: { $0.frame.origin == .zero })?.frame.height
-        ?? NSScreen.main?.frame.height
-        ?? 900
+    guard let mainScreenFrame = NSScreen.screens.first?.frame
+        ?? NSScreen.main?.frame else {
+        return nil
+    }
 
-    for window in windows {
+    return windows.compactMap { window -> CGRect? in
         let ownerName = window[kCGWindowOwnerName as String] as? String
         guard ownerName == "System Settings" || ownerName == "System Preferences" else {
-            continue
+            return nil
         }
+        let layer = window[kCGWindowLayer as String] as? Int ?? 0
+        guard layer == 0 else { return nil }
         guard let bounds = window[kCGWindowBounds as String] as? [String: CGFloat],
               let x = bounds["X"],
               let y = bounds["Y"],
               let width = bounds["Width"],
               let height = bounds["Height"],
               width > 300 else {
-            continue
+            return nil
         }
-        return CGRect(
-            x: x,
-            y: primaryHeight - y - height,
-            width: width,
-            height: height
+        return PermissionGuideGeometry.cocoaFrame(
+            quartzFrame: CGRect(x: x, y: y, width: width, height: height),
+            mainScreenFrame: mainScreenFrame
         )
+    }.max { lhs, rhs in
+        lhs.width * lhs.height < rhs.width * rhs.height
     }
-
-    return nil
 }
 
 @MainActor
@@ -123,15 +164,16 @@ final class PermissionDragGuideController {
     }
 
     func dismiss() {
-        trackingTimer?.invalidate()
-        trackingTimer = nil
+        stopTracking()
         panel?.orderOut(nil)
         panel?.alphaValue = 0
     }
 
     private func notifyAcceptedDrop() {
         acceptedDrop = true
+        stopTracking()
         panel?.orderOut(nil)
+        panel?.alphaValue = 0
     }
 
     private func startTracking() {
@@ -143,6 +185,11 @@ final class PermissionDragGuideController {
         }
         trackingTimer = timer
         RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func stopTracking() {
+        trackingTimer?.invalidate()
+        trackingTimer = nil
     }
 
     private func updatePanel() {
@@ -184,19 +231,22 @@ final class PermissionDragGuideController {
     private func position(_ panel: NSPanel) {
         guard let settingsFrame = systemSettingsWindowFrame() else { return }
 
-        let sidebarWidth: CGFloat = 215
-        let inset: CGFloat = 20
-        let width = max(330, settingsFrame.width - sidebarWidth - inset * 2)
-        let height = cardHeight(panel, width: width)
-        panel.setFrame(
-            NSRect(
-                x: settingsFrame.minX + sidebarWidth + inset,
-                y: settingsFrame.minY + 18,
-                width: width,
-                height: height
-            ),
-            display: true
+        let screen = NSScreen.screens.max { lhs, rhs in
+            lhs.frame.intersection(settingsFrame).area
+                < rhs.frame.intersection(settingsFrame).area
+        } ?? NSScreen.main
+        guard let visibleScreenFrame = screen?.visibleFrame else { return }
+        let width = min(
+            max(330, settingsFrame.width - 215 - 40),
+            max(1, visibleScreenFrame.width - 24)
         )
+        let height = cardHeight(panel, width: width)
+        let frame = PermissionGuideGeometry.clampedPanelFrame(
+            settingsFrame: settingsFrame,
+            visibleScreenFrame: visibleScreenFrame,
+            contentHeight: height
+        )
+        panel.setFrame(frame, display: true)
     }
 
     private func cardHeight(_ panel: NSPanel, width: CGFloat) -> CGFloat {
@@ -237,6 +287,13 @@ final class PermissionDragGuideController {
         )
         self.panel = panel
         return panel
+    }
+}
+
+private extension CGRect {
+    var area: CGFloat {
+        guard !isNull, !isInfinite else { return 0 }
+        return max(0, width) * max(0, height)
     }
 }
 

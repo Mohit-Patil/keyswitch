@@ -150,8 +150,8 @@ final class KeyboardEngineTests: XCTestCase {
         engine.onControlEvent = { controlEvents.append(($0, $1)) }
 
         pressDefaultShortcut(on: engine)
-        XCTAssertNil(engine.handle(type: .keyDown, event: try keyEvent(code: PhysicalKey.q.keyCode, isDown: true)))
-        XCTAssertNil(engine.handle(type: .keyUp, event: try keyEvent(code: PhysicalKey.q.keyCode, isDown: false)))
+        XCTAssertNil(engine.handle(type: .keyDown, event: try keyEvent(code: PhysicalKey.one.keyCode, isDown: true)))
+        XCTAssertNil(engine.handle(type: .keyUp, event: try keyEvent(code: PhysicalKey.one.keyCode, isDown: false)))
         releaseDefaultShortcut(on: engine)
 
         XCTAssertEqual(layerStates, [true, false])
@@ -196,6 +196,40 @@ final class KeyboardEngineTests: XCTestCase {
             type: .flagsChanged,
             event: try modifierEvent(code: 55, flags: .maskAlternate)
         )
+
+        XCTAssertEqual(layerStates, [true, false])
+    }
+
+    func testSingleControlShortcutActivatesAndReleasesHoldLayer() throws {
+        let shortcut = ActivationShortcut(modifiers: [.control])
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        let controlDown = try modifierEvent(code: 59, flags: .maskControl)
+        XCTAssertNotNil(engine.handle(type: .flagsChanged, event: controlDown))
+        withExtendedLifetime(controlDown) {}
+
+        let controlUp = try modifierEvent(code: 59, flags: [])
+        XCTAssertNotNil(engine.handle(type: .flagsChanged, event: controlUp))
+        withExtendedLifetime(controlUp) {}
+
+        XCTAssertEqual(layerStates, [true, false])
+    }
+
+    func testFnOnlyShortcutSuppressesGlobeAndActivatesLayer() throws {
+        let shortcut = ActivationShortcut(modifiers: [.function])
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        let fnDown = try modifierEvent(code: 63, flags: .maskSecondaryFn)
+        XCTAssertNil(engine.handle(type: .flagsChanged, event: fnDown))
+        withExtendedLifetime(fnDown) {}
+
+        let fnUp = try modifierEvent(code: 63, flags: [])
+        XCTAssertNil(engine.handle(type: .flagsChanged, event: fnUp))
+        withExtendedLifetime(fnUp) {}
 
         XCTAssertEqual(layerStates, [true, false])
     }
@@ -414,6 +448,85 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertEqual(bindings[.stickLeft], .j)
         XCTAssertEqual(bindings[.stickDown], .k)
         XCTAssertEqual(bindings[.stickRight], .l)
+    }
+
+    func testDefaultAgentsUseNumberRowAndCommandsUseQWER() {
+        let bindings = Dictionary(
+            uniqueKeysWithValues: KeyBinding.defaults.compactMap { binding in
+                binding.physicalKey.map { (binding.control, $0) }
+            }
+        )
+
+        XCTAssertEqual(bindings[.agent0], .one)
+        XCTAssertEqual(bindings[.agent1], .two)
+        XCTAssertEqual(bindings[.agent2], .three)
+        XCTAssertEqual(bindings[.agent3], .four)
+        XCTAssertEqual(bindings[.agent4], .five)
+        XCTAssertEqual(bindings[.agent5], .six)
+        XCTAssertEqual(bindings[.fastMode], .q)
+        XCTAssertEqual(bindings[.approve], .w)
+        XCTAssertEqual(bindings[.reject], .e)
+        XCTAssertEqual(bindings[.fork], .r)
+    }
+
+    func testFormerShippingAgentAndCommandDefaultsMigrateToNewLayout() throws {
+        var legacyBindings = KeyBinding.defaults
+        let legacyKeys: [MicroControl: PhysicalKey] = [
+            .agent0: .q, .agent1: .w, .agent2: .e,
+            .agent3: .r, .agent4: .t, .agent5: .y,
+            .fastMode: .a, .approve: .s, .reject: .d, .fork: .f,
+        ]
+        for index in legacyBindings.indices {
+            if let legacyKey = legacyKeys[legacyBindings[index].control] {
+                legacyBindings[index].physicalKey = legacyKey
+            }
+        }
+
+        let configuration = AppConfiguration(
+            activationMode: .hold,
+            activationShortcut: .standard,
+            showHUD: true,
+            blockUnmappedKeys: true,
+            debugPort: 9348,
+            bindings: legacyBindings
+        )
+        let decoded = try JSONDecoder().decode(
+            AppConfiguration.self,
+            from: JSONEncoder().encode(configuration)
+        )
+
+        XCTAssertEqual(decoded.bindings, KeyBinding.defaults)
+    }
+
+    func testCustomizedFormerAgentClusterIsNotMigrated() throws {
+        var legacyBindings = KeyBinding.defaults
+        let legacyKeys: [MicroControl: PhysicalKey] = [
+            .agent0: .g, .agent1: .w, .agent2: .e,
+            .agent3: .r, .agent4: .t, .agent5: .y,
+            .fastMode: .a, .approve: .s, .reject: .d, .fork: .f,
+        ]
+        for index in legacyBindings.indices {
+            if let legacyKey = legacyKeys[legacyBindings[index].control] {
+                legacyBindings[index].physicalKey = legacyKey
+            }
+        }
+
+        let configuration = AppConfiguration(
+            activationMode: .hold,
+            activationShortcut: .standard,
+            showHUD: true,
+            blockUnmappedKeys: true,
+            debugPort: 9348,
+            bindings: legacyBindings
+        )
+        let decoded = try JSONDecoder().decode(
+            AppConfiguration.self,
+            from: JSONEncoder().encode(configuration)
+        )
+
+        XCTAssertEqual(decoded.bindings.first(where: { $0.control == .agent0 })?.physicalKey, .g)
+        XCTAssertEqual(decoded.bindings.first(where: { $0.control == .agent1 })?.physicalKey, .w)
+        XCTAssertEqual(decoded.bindings.first(where: { $0.control == .fastMode })?.physicalKey, .a)
     }
 
     func testLegacyArrowStickDefaultsMigrateToIJKL() throws {

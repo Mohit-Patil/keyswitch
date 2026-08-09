@@ -7,16 +7,16 @@ struct KeyBinding: Codable, Hashable, Identifiable {
     var id: MicroControl { control }
 
     static let defaults: [KeyBinding] = [
-        KeyBinding(control: .agent0, physicalKey: .q),
-        KeyBinding(control: .agent1, physicalKey: .w),
-        KeyBinding(control: .agent2, physicalKey: .e),
-        KeyBinding(control: .agent3, physicalKey: .r),
-        KeyBinding(control: .agent4, physicalKey: .t),
-        KeyBinding(control: .agent5, physicalKey: .y),
-        KeyBinding(control: .fastMode, physicalKey: .a),
-        KeyBinding(control: .approve, physicalKey: .s),
-        KeyBinding(control: .reject, physicalKey: .d),
-        KeyBinding(control: .fork, physicalKey: .f),
+        KeyBinding(control: .agent0, physicalKey: .one),
+        KeyBinding(control: .agent1, physicalKey: .two),
+        KeyBinding(control: .agent2, physicalKey: .three),
+        KeyBinding(control: .agent3, physicalKey: .four),
+        KeyBinding(control: .agent4, physicalKey: .five),
+        KeyBinding(control: .agent5, physicalKey: .six),
+        KeyBinding(control: .fastMode, physicalKey: .q),
+        KeyBinding(control: .approve, physicalKey: .w),
+        KeyBinding(control: .reject, physicalKey: .e),
+        KeyBinding(control: .fork, physicalKey: .r),
         KeyBinding(control: .pushToTalk, physicalKey: .space),
         KeyBinding(control: .pushToTalkSecondary, physicalKey: nil),
         KeyBinding(control: .submit, physicalKey: .rightCommand),
@@ -30,7 +30,8 @@ struct KeyBinding: Codable, Hashable, Identifiable {
     ]
 
     static func mergingDefaults(into savedBindings: [KeyBinding]) -> [KeyBinding] {
-        let stickMigratedBindings = migratingLegacyStickDefaults(in: savedBindings)
+        let layoutMigratedBindings = migratingLegacyAgentAndCommandDefaults(in: savedBindings)
+        let stickMigratedBindings = migratingLegacyStickDefaults(in: layoutMigratedBindings)
         let legacyDialMigratedBindings = migratingLegacyDialDefaults(in: stickMigratedBindings)
         let migratedBindings = migratingCapsLockDialDefault(in: legacyDialMigratedBindings)
         var usedKeyIDs = Set(migratedBindings.compactMap { $0.physicalKey?.id })
@@ -47,6 +48,36 @@ struct KeyBinding: Codable, Hashable, Identifiable {
 
             usedKeyIDs.insert(defaultKey.id)
             return defaultBinding
+        }
+    }
+
+    /// Move only the complete former shipping layout. If the user changed any
+    /// agent or command key, preserve their entire custom cluster as-is.
+    private static func migratingLegacyAgentAndCommandDefaults(
+        in savedBindings: [KeyBinding]
+    ) -> [KeyBinding] {
+        let stillUsesCompleteLegacyCluster = legacyAgentAndCommandDefaults.allSatisfy { entry in
+            savedBindings.first(where: { $0.control == entry.key })?.physicalKey == entry.value
+        }
+        guard stillUsesCompleteLegacyCluster else { return savedBindings }
+
+        let migratedControls = Set(newAgentAndCommandDefaults.keys)
+        let keysUsedOutsideCluster = Set(
+            savedBindings
+                .filter { !migratedControls.contains($0.control) }
+                .compactMap { $0.physicalKey?.id }
+        )
+        guard newAgentAndCommandDefaults.values.allSatisfy({
+            !keysUsedOutsideCluster.contains($0.id)
+        }) else {
+            return savedBindings
+        }
+
+        return savedBindings.map { binding in
+            guard let replacement = newAgentAndCommandDefaults[binding.control] else {
+                return binding
+            }
+            return KeyBinding(control: binding.control, physicalKey: replacement)
         }
     }
 
@@ -151,5 +182,31 @@ struct KeyBinding: Codable, Hashable, Identifiable {
         .stickRight: .l,
         .stickDown: .k,
         .stickLeft: .j,
+    ]
+
+    private static let legacyAgentAndCommandDefaults: [MicroControl: PhysicalKey] = [
+        .agent0: .q,
+        .agent1: .w,
+        .agent2: .e,
+        .agent3: .r,
+        .agent4: .t,
+        .agent5: .y,
+        .fastMode: .a,
+        .approve: .s,
+        .reject: .d,
+        .fork: .f,
+    ]
+
+    private static let newAgentAndCommandDefaults: [MicroControl: PhysicalKey] = [
+        .agent0: .one,
+        .agent1: .two,
+        .agent2: .three,
+        .agent3: .four,
+        .agent4: .five,
+        .agent5: .six,
+        .fastMode: .q,
+        .approve: .w,
+        .reject: .e,
+        .fork: .r,
     ]
 }

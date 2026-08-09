@@ -101,6 +101,12 @@ struct PhysicalKey: Codable, Hashable, Identifiable {
         126: "Up Arrow",
     ]
 
+    static let one = PhysicalKey(keyCode: 18, displayName: "1", isModifier: false)
+    static let two = PhysicalKey(keyCode: 19, displayName: "2", isModifier: false)
+    static let three = PhysicalKey(keyCode: 20, displayName: "3", isModifier: false)
+    static let four = PhysicalKey(keyCode: 21, displayName: "4", isModifier: false)
+    static let five = PhysicalKey(keyCode: 23, displayName: "5", isModifier: false)
+    static let six = PhysicalKey(keyCode: 22, displayName: "6", isModifier: false)
     static let q = PhysicalKey(keyCode: 12, displayName: "Q", isModifier: false)
     static let w = PhysicalKey(keyCode: 13, displayName: "W", isModifier: false)
     static let e = PhysicalKey(keyCode: 14, displayName: "E", isModifier: false)

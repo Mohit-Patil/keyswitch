@@ -97,10 +97,12 @@ struct FirstRunSetupView: View {
             return "Allow Keyboard Access"
         case .codex:
             if model.codexRelaunchIsInProgress {
-                return "Reopening Codex…"
+                return model.bridgeStatus == .connected
+                    ? "Opening Codex Setup…"
+                    : "Connecting to Codex…"
             }
             return model.bridgeStatus == .connected
-                ? "Open Codex Micro Setup"
+                ? "Continue to Codex Micro Setup"
                 : "Connect Codex"
         }
     }
@@ -529,8 +531,8 @@ private struct CodexSetupPage: View {
                 iconColor: model.bridgeStatus == .connected ? .green : Color.setupPurple,
                 title: model.bridgeStatus == .connected ? "Codex is connected" : "Connect the Codex app",
                 detail: model.bridgeStatus == .connected
-                    ? "KeySwitch can now open the official Codex Micro setup, where Codex owns your actions, agents, and keycaps."
-                    : "The current compatibility connection must be enabled when Codex launches. KeySwitch can safely reopen your installed Codex app with it enabled."
+                    ? "Connection is complete. One final step remains in Codex, where you will finish the official Micro setup."
+                    : "KeySwitch will start your installed Codex app with the compatibility connection enabled, then bring you back here for the final setup step."
             )
 
             CodexConnectionCard(model: model)
@@ -543,14 +545,14 @@ private struct CodexSetupPage: View {
                 )
             } else if model.bridgeStatus == .connected {
                 SetupNotice(
-                    icon: "checkmark.seal.fill",
-                    text: "Connected to your normal Codex profile. No duplicate app or separate profile was created.",
-                    color: .green
+                    icon: "arrow.right.circle.fill",
+                    text: "Connection complete. Choose Continue to Codex Micro Setup below to finish the official setup.",
+                    color: Color.setupPurple
                 )
             } else {
                 SetupNotice(
                     icon: "info.circle.fill",
-                    text: "Codex will close and reopen once. Your account, tasks, and settings are preserved.",
+                    text: "Codex will close and start once in the background. KeySwitch stays on this step; your account, tasks, and settings are preserved.",
                     color: Color.setupPurple
                 )
             }
@@ -624,7 +626,11 @@ private struct CodexConnectionCard: View {
     }
 
     private var statusTitle: String {
-        if model.codexRelaunchIsInProgress { return "Reopening Codex…" }
+        if model.codexRelaunchIsInProgress {
+            return model.bridgeStatus == .connected
+                ? "Opening the official Micro setup…"
+                : "Starting Codex in the background…"
+        }
         return switch model.bridgeStatus {
         case .connected: "Connected"
         case .connecting: "Looking for Codex…"
@@ -633,9 +639,13 @@ private struct CodexConnectionCard: View {
     }
 
     private var statusDetail: String {
-        if model.codexRelaunchIsInProgress { return "Waiting for the Codex window to become available" }
+        if model.codexRelaunchIsInProgress {
+            return model.bridgeStatus == .connected
+                ? "KeySwitch is waiting for Codex to confirm the setup screen"
+                : "KeySwitch will return here when the connection is verified"
+        }
         return switch model.bridgeStatus {
-        case .connected: "Official Micro setup is ready to open"
+        case .connected: "One final setup step remains in Codex"
         case .connecting: "Checking the local Codex connection"
         case .disconnected: "Codex will reopen with local integration enabled"
         }
