@@ -7,12 +7,23 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
-## [0.2.3] - 2026-08-08
+## [0.2.3] - 2026-08-09
 
 ### Fixed
 
 - Keep the keyboard layer active for as long as the activation shortcut is
   held in Hold mode, regardless of the configured inactivity timeout.
+- Render every active menu-bar agent indicator as a consistent, solid color
+  circle, including error states, while inactive slots use a neutral ring.
+- Keep the menu-bar legend in Settings synchronized with the rendered
+  indicator shapes.
+- Sign Sparkle update feeds from an ephemeral key file so headless release
+  runners do not stall on a Keychain permission prompt.
+
+### Changed
+
+- Add a feed-only recovery path for an existing release whose public Sparkle
+  feed still needs to be published.
 
 ## [0.2.2] - 2026-08-08
 
