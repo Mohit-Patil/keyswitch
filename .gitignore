@@ -13,6 +13,8 @@ xcuserdata/
 *.dSYM
 *.dSYM.zip
 *.xcresult
+*.xcarchive/
+*.app/
 .swiftpm/
 __pycache__/
 *.pyc
@@ -52,6 +54,8 @@ secrets*.json
 # Local release, profiling, and design-review artifacts
 /Release/
 /Profiles/
+*.dmg
+*.pkg
 /.codex-audit/
 /design-qa*
 *.trace

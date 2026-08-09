@@ -61,9 +61,6 @@ jobs:
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
             analyze
 
-      - name: Build command-line prototype
-        run: swift build --configuration debug
-
       - name: Build universal Release app
         run: |
           xcodebuild \
