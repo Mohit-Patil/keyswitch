@@ -7,6 +7,13 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-08-09
+
+### Fixed
+
+- Highlight the full menu-bar action row on pointer hover and press so every
+  option has clear, consistent interaction feedback in the custom panel.
+
 ## [0.2.4] - 2026-08-09
 
 ### Changed
@@ -147,7 +154,8 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 - Local release artifacts, profiling traces, signing identities, and private
   design-review captures are excluded from the repository.
 
-[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.1...v0.2.2
