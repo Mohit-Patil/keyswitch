@@ -51,55 +51,57 @@ struct MenuBarContentView: View {
 
             Divider()
 
-            Button {
-                model.toggleLayerFromMenu()
-            } label: {
-                Label(
-                    model.layerIsActive ? "Turn Layer Off" : "Turn Layer On",
-                    systemImage: model.layerIsActive ? "pause.circle" : "play.circle"
-                )
-            }
-
-            if !model.eventTapIsActive {
+            VStack(spacing: 4) {
                 Button {
-                    model.retryKeyboardAccess()
+                    model.toggleLayerFromMenu()
                 } label: {
-                    Label("Retry Keyboard Access", systemImage: "lock.open")
+                    Label(
+                        model.layerIsActive ? "Turn Layer Off" : "Turn Layer On",
+                        systemImage: model.layerIsActive ? "pause.circle" : "play.circle"
+                    )
                 }
-            }
 
-            Button {
-                model.showFirstRunSetup()
-            } label: {
-                Label("Codex Micro Setup…", systemImage: "keyboard.badge.ellipsis")
-            }
-
-            if model.updater.updateStatus.isUpdateReady {
-                Divider()
+                if !model.eventTapIsActive {
+                    Button {
+                        model.retryKeyboardAccess()
+                    } label: {
+                        Label("Retry Keyboard Access", systemImage: "lock.open")
+                    }
+                }
 
                 Button {
-                    model.updater.installUpdate()
+                    model.showFirstRunSetup()
                 } label: {
-                    Label(restartUpdateTitle, systemImage: "arrow.triangle.2.circlepath")
-                        .foregroundStyle(Color.accentColor)
+                    Label("Codex Micro Setup…", systemImage: "keyboard.badge.ellipsis")
                 }
-                .help("Install the downloaded update and relaunch KeySwitch")
-            }
 
-            Button {
-                presentSettings()
-            } label: {
-                Label("Settings…", systemImage: "gearshape")
-            }
+                if model.updater.updateStatus.isUpdateReady {
+                    Divider()
+                        .padding(.vertical, 4)
 
-            Button {
-                NSApplication.shared.terminate(nil)
-            } label: {
-                Label("Quit KeySwitch", systemImage: "power")
+                    Button {
+                        model.updater.installUpdate()
+                    } label: {
+                        Label(restartUpdateTitle, systemImage: "arrow.triangle.2.circlepath")
+                    }
+                    .help("Install the downloaded update and relaunch KeySwitch")
+                }
+
+                Button {
+                    presentSettings()
+                } label: {
+                    Label("Settings…", systemImage: "gearshape")
+                }
+
+                Button {
+                    NSApplication.shared.terminate(nil)
+                } label: {
+                    Label("Quit KeySwitch", systemImage: "power")
+                }
+                .keyboardShortcut("q")
             }
-            .keyboardShortcut("q")
+            .buttonStyle(MenuBarActionButtonStyle())
         }
-        .buttonStyle(.plain)
         .padding(16)
         .frame(width: 310)
     }
@@ -126,6 +128,51 @@ struct MenuBarContentView: View {
             return "Restart to Update"
         }
         return "Restart to Update \(version)"
+    }
+}
+
+private struct MenuBarActionButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        MenuBarActionButtonBody(configuration: configuration)
+    }
+}
+
+private struct MenuBarActionButtonBody: View {
+    let configuration: ButtonStyle.Configuration
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var isHovered = false
+
+    private var isHighlighted: Bool {
+        isEnabled && (isHovered || configuration.isPressed)
+    }
+
+    var body: some View {
+        configuration.label
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10)
+            .frame(height: 36)
+            .foregroundStyle(isHighlighted ? Color.white : Color.primary)
+            .background {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(
+                        isHighlighted
+                            ? Color.accentColor.opacity(configuration.isPressed ? 0.92 : 0.76)
+                            : Color.clear
+                    )
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .opacity(isEnabled ? 1 : 0.45)
+            .onHover { hovering in
+                if reduceMotion {
+                    isHovered = hovering
+                } else {
+                    withAnimation(.easeOut(duration: 0.1)) {
+                        isHovered = hovering
+                    }
+                }
+            }
     }
 }
 
