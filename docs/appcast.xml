@@ -9,6 +9,23 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
         <item>
+            <title>0.3.0</title>
+            <pubDate>Sun, 09 Aug 2026 18:30:10 +0000</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.3.0</sparkle:fullReleaseNotesLink>
+            <sparkle:version>11</sparkle:version>
+            <sparkle:shortVersionString>0.3.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.3.0</h2>
+<h3>Fixed</h3>
+<ul>
+<li>Restore unfinished onboarding to the foreground after Accessibility is granted, so menu-bar-only users are not stranded in System Settings.</li>
+<li>Limit the permission handoff to the newly granted transition so periodic permission checks and completed onboarding never steal focus.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.3.0/KeySwitch-v0.3.0-macOS-universal.zip" length="3192634" type="application/octet-stream" sparkle:edSignature="ciAQn/ql+f+05mcu9X66qflFZN3ZXPu8R9wOJoBPD4lPat7/u7VeifwR/2du28/6foFL5PtkRJX2FUz/fj8jAA=="/>
+        </item>
+        <item>
             <title>0.2.7</title>
             <pubDate>Sun, 09 Aug 2026 17:55:20 +0000</pubDate>
             <link>https://mohit-patil.github.io/keyswitch/</link>
@@ -196,6 +213,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: yk6KpLA6OPs8OC2ZV3DhvfAx+6mb9RoJ68JuGD6RNL8BY1w4waoEW0iYmh1PWIXZaos7lHIDj8MRjwgeUioLBg==
-length: 13983
+edSignature: 5f8d/5nFBM81oBROxB0QH2K696TdTlMLsfNRI5u5S+J4GDEy5dKCmBPhcH+3D0ypihLjg8phw9I2gSM81+ZhAQ==
+length: 15203
 -->
