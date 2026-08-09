@@ -134,6 +134,18 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
 
                 Toggle(
+                    "Animate agent lighting",
+                    isOn: Binding(
+                        get: { model.configuration.animatedAgentLighting },
+                        set: { model.configuration.animatedAgentLighting = $0 }
+                    )
+                )
+
+                Text("Adds an orbiting rim and pulse to selected or working agents. This only changes KeySwitch's HUD animation; colors and lighting state remain controlled by Codex.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Toggle(
                     "Block unmapped keys while the layer is active",
                     isOn: Binding(
                         get: { model.configuration.blockUnmappedKeys },

@@ -327,11 +327,6 @@ final class AppModel {
         waitForCodexToTerminate(runningCodexApps, attemptsRemaining: 40)
     }
 
-    func setFocusCodexOnSingleTap(_ enabled: Bool) {
-        configuration.focusCodexOnSingleTap = enabled
-        bridge.setSingleTapAgentKeys(enabled)
-    }
-
     func binding(for control: MicroControl) -> KeyBinding {
         configuration.bindings.first(where: { $0.control == control })
             ?? KeyBinding(control: control, physicalKey: nil)
@@ -343,8 +338,7 @@ final class AppModel {
 
     var effectiveLightingBrightness: Double {
         guard !hudLightingIsDimmed else { return 0 }
-        return min(max(configuration.lightingBrightness, 0), 1)
-            * min(max(lightingSnapshot.brightness, 0), 1)
+        return min(max(lightingSnapshot.brightness, 0), 1)
     }
 
     var effectiveHUDAppearance: HUDAppearance {
@@ -552,9 +546,6 @@ final class AppModel {
             hudController.updateSize()
             presentHUDPreview()
         }
-        if configuration.autoDimTimeout != previous.autoDimTimeout {
-            noteLightingActivity()
-        }
         if configuration.activationMode != previous.activationMode
             || configuration.layerAutoExitTimeout != previous.layerAutoExitTimeout {
             updateLayerAutoExitTimerForControlState()
@@ -612,7 +603,7 @@ final class AppModel {
     private func noteLightingActivity() {
         hudLightingIsDimmed = false
         stopAutoDimTimer()
-        guard let interval = configuration.autoDimTimeout.interval else { return }
+        guard let interval = lightingSnapshot.inactivityInterval else { return }
 
         let timer = Timer(timeInterval: interval, repeats: false) { [weak self] _ in
             Task { @MainActor [weak self] in
