@@ -9,6 +9,30 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
         <item>
+            <title>0.2.6</title>
+            <pubDate>Sun, 09 Aug 2026 12:19:05 +0000</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.2.6</sparkle:fullReleaseNotesLink>
+            <sparkle:version>9</sparkle:version>
+            <sparkle:shortVersionString>0.2.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.2.6</h2>
+<h3>Added</h3>
+<ul>
+<li>Show a Soren-style floating permission guide containing the real KeySwitch app bundle, which users can drag directly into the macOS Input Monitoring or Accessibility list.</li>
+</ul>
+<h3>Changed</h3>
+<ul>
+<li>Guide first-run permission setup through Input Monitoring and Accessibility one at a time, automatically hiding the drag guide after an accepted drop or completed grant.</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Prevent onboarding permission actions from opening a System Settings list with no KeySwitch entry and no way to understand what to do next.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.6/KeySwitch-v0.2.6-macOS-universal.zip" length="3184409" type="application/octet-stream" sparkle:edSignature="jw8NLJCx9wg2A+7dHgrdxLmW1pcE6M6EQCW259IGhjsLipME9sR43EL/steqzj2WsQMGtZrkbM06Enrq2I0VDg=="/>
+        </item>
+        <item>
             <title>0.2.5</title>
             <pubDate>Sun, 09 Aug 2026 04:42:18 +0000</pubDate>
             <link>https://mohit-patil.github.io/keyswitch/</link>
@@ -141,6 +165,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: AKjF9SyW5rkXtkR/ximY4Y0Z12Q8gBqyS9HcFYg0O3+dAK8/X6zy6PjtcMquLnnfQklMZAlOTp82N3PU4LUKDQ==
-length: 9682
+edSignature: k1pMQLtNHlxvj4o3V/ntrTV9+my30ANtddZ3Mj+5dPnrDIzuK/+WSbx8FXpUksZpBHTDD1g897Dn1JWLu5qbAA==
+length: 11171
 -->
