@@ -7,6 +7,15 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-09
+
+### Fixed
+
+- Restore unfinished onboarding to the foreground after Accessibility is
+  granted, so menu-bar-only users are not stranded in System Settings.
+- Limit the permission handoff to the newly granted transition so periodic
+  permission checks and completed onboarding never steal focus.
+
 ## [0.2.7] - 2026-08-09
 
 ### Changed

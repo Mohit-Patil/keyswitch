@@ -70,6 +70,18 @@ struct CodexSetupRelaunchPolicy {
     }
 }
 
+struct PermissionOnboardingPolicy {
+    static func shouldRestoreSetup(
+        previouslyGranted: Bool,
+        currentlyGranted: Bool,
+        hasCompletedFirstRunSetup: Bool
+    ) -> Bool {
+        !previouslyGranted
+            && currentlyGranted
+            && !hasCompletedFirstRunSetup
+    }
+}
+
 @MainActor
 @Observable
 final class AppModel {
@@ -803,6 +815,11 @@ final class AppModel {
     private func refreshPermissionState(retryIfGranted: Bool) {
         let previouslyGranted = permissions.accessibilityGranted
         let snapshot = PermissionService.snapshot()
+        let shouldRestoreSetup = PermissionOnboardingPolicy.shouldRestoreSetup(
+            previouslyGranted: previouslyGranted,
+            currentlyGranted: snapshot.accessibilityGranted,
+            hasCompletedFirstRunSetup: configuration.hasCompletedFirstRunSetup
+        )
         permissions = snapshot
 
         // TCC can leave an already-created tap alive briefly after the user
@@ -822,6 +839,12 @@ final class AppModel {
             eventTapIsActive = keyboardEngine.start()
         }
 
+        // System Settings remains frontmost while the user grants Accessibility.
+        // Return an unfinished setup to the foreground once the live TCC probe
+        // observes that transition, instead of leaving only the menu-bar item.
+        if shouldRestoreSetup {
+            setupWindowController.show()
+        }
     }
 
     private func saveConfiguration() {

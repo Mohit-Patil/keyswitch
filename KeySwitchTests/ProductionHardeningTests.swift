@@ -66,6 +66,39 @@ final class ProductionHardeningTests: XCTestCase {
         )
     }
 
+    func testNewAccessibilityGrantRestoresOnlyUnfinishedOnboarding() {
+        XCTAssertTrue(
+            PermissionOnboardingPolicy.shouldRestoreSetup(
+                previouslyGranted: false,
+                currentlyGranted: true,
+                hasCompletedFirstRunSetup: false
+            )
+        )
+        XCTAssertFalse(
+            PermissionOnboardingPolicy.shouldRestoreSetup(
+                previouslyGranted: true,
+                currentlyGranted: true,
+                hasCompletedFirstRunSetup: false
+            ),
+            "Repeated permission polling must not keep stealing focus"
+        )
+        XCTAssertFalse(
+            PermissionOnboardingPolicy.shouldRestoreSetup(
+                previouslyGranted: false,
+                currentlyGranted: true,
+                hasCompletedFirstRunSetup: true
+            ),
+            "Completed onboarding must not reopen when permission changes later"
+        )
+        XCTAssertFalse(
+            PermissionOnboardingPolicy.shouldRestoreSetup(
+                previouslyGranted: true,
+                currentlyGranted: false,
+                hasCompletedFirstRunSetup: false
+            )
+        )
+    }
+
     func testCodexSetupRelaunchReturnsToKeySwitchBeforeFinalMicroStep() {
         XCTAssertFalse(CodexSetupRelaunchPolicy.activatesCodexOnLaunch)
         XCTAssertEqual(
