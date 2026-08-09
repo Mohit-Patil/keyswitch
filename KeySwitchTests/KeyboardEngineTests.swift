@@ -910,6 +910,7 @@ final class KeyboardEngineTests: XCTestCase {
         )
 
         XCTAssertEqual(snapshot.brightness, 0.8)
+        XCTAssertEqual(snapshot.inactivityInterval, 180)
         XCTAssertEqual(snapshot.slots.map(\.status), [
             .idle,
             .working,
@@ -920,6 +921,16 @@ final class KeyboardEngineTests: XCTestCase {
         ])
         XCTAssertTrue(snapshot.light(for: 1).selected)
         XCTAssertEqual(snapshot.light(for: 1).threadKey, "local:1")
+    }
+
+    func testCodexLightingCanDisableInactivityDimming() {
+        let snapshot = CodexLightingSnapshot(
+            brightness: 1,
+            inactivityTimeoutMs: 0,
+            slots: []
+        )
+
+        XCTAssertNil(snapshot.inactivityInterval)
     }
 
     func testMissingAgentSlotFallsBackToUnassignedLight() {

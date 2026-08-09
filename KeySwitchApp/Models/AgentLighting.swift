@@ -57,6 +57,11 @@ struct CodexLightingSnapshot: Codable, Equatable {
     let inactivityTimeoutMs: Int
     let slots: [AgentLightState]
 
+    var inactivityInterval: TimeInterval? {
+        guard inactivityTimeoutMs > 0 else { return nil }
+        return TimeInterval(inactivityTimeoutMs) / 1_000
+    }
+
     static let off = CodexLightingSnapshot(
         brightness: 1,
         inactivityTimeoutMs: 180_000,
