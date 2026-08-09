@@ -9,6 +9,22 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
         <item>
+            <title>0.2.5</title>
+            <pubDate>Sun, 09 Aug 2026 04:42:18 +0000</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.2.5</sparkle:fullReleaseNotesLink>
+            <sparkle:version>8</sparkle:version>
+            <sparkle:shortVersionString>0.2.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.2.5</h2>
+<h3>Fixed</h3>
+<ul>
+<li>Highlight the full menu-bar action row on pointer hover and press so every option has clear, consistent interaction feedback in the custom panel.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.5/KeySwitch-v0.2.5-macOS-universal.zip" length="3146806" type="application/octet-stream" sparkle:edSignature="HmNV0dFDdkT2Vh4aguKvlmNMBPGnmKqDCzuBoYAcOfk0OVzp8EztRMm7ByrbzYtOxYt4DekhQp8/va5Xw3kbCQ=="/>
+        </item>
+        <item>
             <title>0.2.4</title>
             <pubDate>Sun, 09 Aug 2026 04:27:10 +0000</pubDate>
             <link>https://mohit-patil.github.io/keyswitch/</link>
@@ -125,6 +141,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: lT3uzaPAeMdB9AJ/N/pRRUVD2nvg8E8+SkOAr9ncrH9nuOCbkjU8+eW0WuGRvz80LRsW/plmRS4onORUNY9BAA==
-length: 8601
+edSignature: AKjF9SyW5rkXtkR/ximY4Y0Z12Q8gBqyS9HcFYg0O3+dAK8/X6zy6PjtcMquLnnfQklMZAlOTp82N3PU4LUKDQ==
+length: 9682
 -->
