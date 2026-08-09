@@ -68,7 +68,11 @@ struct ActivationShortcut: Codable, Hashable, Identifiable {
     }
 
     var isValid: Bool {
-        modifiers.count >= 2
+        !modifiers.isEmpty
+    }
+
+    var isFunctionOnly: Bool {
+        modifiers == [.function]
     }
 
     static let standard = ActivationShortcut(modifiers: [.function, .control])

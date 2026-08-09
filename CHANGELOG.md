@@ -7,6 +7,39 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-08-09
+
+### Changed
+
+- Allow any single modifier to activate KeySwitch while keeping Fn + Control
+  as the recommended default shortcut.
+- Map the six agent slots to 1–6 and the four primary command controls to Q–R
+  for clearer slot numbering and a compact command row.
+- Use the single Accessibility grant that macOS provides for both listening to
+  and suppressing keyboard events, instead of also requesting Input Monitoring.
+- Show one compact native drag tile beside the Accessibility list so the exact
+  installed KeySwitch bundle can be added, then enabled with its system switch.
+
+### Fixed
+
+- Verify the Codex renderer, live Micro state, and official onboarding response
+  before reporting a connection or completing first-run setup.
+- Keep KeySwitch in front while Codex restarts for first-run connection, return
+  to a clear final setup action, and surface a retry if reconnection times out.
+- Cancel pending Codex setup work when onboarding is dismissed so it cannot
+  reopen unexpectedly after a delayed connection.
+- Suppress the macOS Globe/emoji action when Fn alone is selected as the
+  activation shortcut.
+- Stop the permission drag guide's tracking timer after a completed drag and
+  keep its overlay inside the correct display on multi-monitor Macs.
+- Avoid the unnecessary Input Monitoring quit-and-reopen prompt during setup.
+- Use a live keyboard event-tap probe so the running app sees Accessibility
+  changes even when macOS keeps `AXIsProcessTrusted()` cached and stale.
+- Register the running bundle with TCC before opening System Settings, while
+  keeping the drag tile as a fallback for stale or missing list entries.
+- Reflect Accessibility revocation immediately and stop any event tap that
+  briefly survives after the user turns the permission off in System Settings.
+
 ## [0.2.6] - 2026-08-09
 
 ### Added

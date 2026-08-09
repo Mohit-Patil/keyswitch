@@ -33,13 +33,15 @@ See the interactive showcase at
 ## Highlights
 
 - Editable Hold or Toggle activation, with `Fn + Control` as the safe default.
+- Any single modifier can be selected; Fn-only activation suppresses the
+  macOS Globe/emoji action for that press.
 - A persistent mapping for every supported agent, command, stick, and dial
   control.
 - A configurable six-agent status strip in the menu bar, plus a
   non-focus-stealing frosted HUD with four sizes for the active keyboard layer.
 - Automatic synchronization of keycaps and slot actions from Codex Micro
   settings.
-- Input Monitoring and Accessibility health checks with direct links to macOS
+- Accessibility and keyboard-capture health checks with a direct link to macOS
   System Settings.
 - Automatic inactivity exit, Escape safety exit, and optional blocking of
   unmapped keys while the layer is active.
@@ -61,8 +63,8 @@ Macs. A
 [ZIP archive](https://github.com/Mohit-Patil/keyswitch/releases/latest/download/KeySwitch-macOS-universal.zip)
 is also available for managed or command-line installation.
 
-On first launch, KeySwitch guides you through Input Monitoring, Accessibility,
-and the optional Codex connection. Release checksums and notes are available on
+On first launch, KeySwitch guides you through Accessibility and the optional
+Codex connection. Release checksums and notes are available on
 the [GitHub Releases page](https://github.com/Mohit-Patil/keyswitch/releases/latest).
 
 ## Requirements
@@ -70,7 +72,8 @@ the [GitHub Releases page](https://github.com/Mohit-Patil/keyswitch/releases/lat
 - macOS 14 Sonoma or later.
 - A compatible Codex desktop app installation for Codex Micro integration.
 - Xcode 16 or later to build from source.
-- Input Monitoring and Accessibility permission for global keyboard capture.
+- Accessibility permission for global keyboard capture and temporary key
+  suppression while the layer is active.
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) only when regenerating the
   committed Xcode project from `project.yml`.
 
@@ -118,13 +121,16 @@ Commit both `project.yml` and the regenerated `KeySwitch.xcodeproj` changes.
 KeySwitch presents a three-step setup assistant:
 
 1. Review the keyboard layer and activation shortcut.
-2. Grant Input Monitoring and Accessibility permission.
+2. Grant Accessibility permission.
 3. Connect the installed Codex desktop app and open its Micro setup.
 
 The connection step can restart the original Codex app once with a Chromium
 debugging port enabled. It does not create another app bundle or an isolated
-profile. KeySwitch then reconnects to that loopback port when the renderer
-changes or Codex relaunches.
+profile. Codex starts without taking over the setup flow; after KeySwitch
+verifies the renderer and live Micro state, it presents the final action that
+opens Codex's official Micro setup. Onboarding completes only after Codex
+confirms that action. KeySwitch then reconnects to that loopback port when the
+renderer changes or Codex relaunches.
 
 ## Default mapping
 
@@ -133,16 +139,16 @@ continues to come from Codex.
 
 | Mac key | Micro control | Event |
 | --- | --- | --- |
-| `Q` | Agent 1 | `AG00` |
-| `W` | Agent 2 | `AG01` |
-| `E` | Agent 3 | `AG02` |
-| `R` | Agent 4 | `AG03` |
-| `T` | Agent 5 | `AG04` |
-| `Y` | Agent 6 | `AG05` |
-| `A` | Fast mode | `ACT06` |
-| `S` | Approve | `ACT07` |
-| `D` | Reject | `ACT08` |
-| `F` | Fork | `ACT09` |
+| `1` | Agent 1 | `AG00` |
+| `2` | Agent 2 | `AG01` |
+| `3` | Agent 3 | `AG02` |
+| `4` | Agent 4 | `AG03` |
+| `5` | Agent 5 | `AG04` |
+| `6` | Agent 6 | `AG05` |
+| `Q` | Fast mode | `ACT06` |
+| `W` | Approve | `ACT07` |
+| `E` | Reject | `ACT08` |
+| `R` | Fork | `ACT09` |
 | `Space` | Push to talk | `ACT10` |
 | `Right Command` | Codex / Submit | `ACT12` |
 | `I` | Stick up | Codex-configured action |

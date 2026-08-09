@@ -42,10 +42,6 @@ struct ConnectionSettingsView: View {
             }
 
             Section("Input health") {
-                LabeledContent("Input Monitoring") {
-                    Text(model.permissions.inputMonitoringGranted ? "Granted" : "Required")
-                        .foregroundStyle(model.permissions.inputMonitoringGranted ? .green : .orange)
-                }
                 LabeledContent("Accessibility") {
                     Text(model.permissions.accessibilityGranted ? "Granted" : "Required")
                         .foregroundStyle(model.permissions.accessibilityGranted ? .green : .orange)

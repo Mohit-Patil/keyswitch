@@ -58,6 +58,19 @@ final class AppConfigurationTests: XCTestCase {
         XCTAssertEqual(decoded.debugPort, 12_345)
     }
 
+    func testSingleModifierActivationShortcutRoundTrips() throws {
+        var configuration = AppConfiguration.default
+        configuration.activationShortcut = ActivationShortcut(modifiers: [.function])
+
+        let data = try JSONEncoder().encode(configuration)
+        let decoded = try JSONDecoder().decode(AppConfiguration.self, from: data)
+
+        XCTAssertEqual(
+            decoded.activationShortcut,
+            ActivationShortcut(modifiers: [.function])
+        )
+    }
+
     private func configurationData(debugPort: Any) throws -> Data {
         let encoded = try JSONEncoder().encode(AppConfiguration.default)
         var object = try XCTUnwrap(

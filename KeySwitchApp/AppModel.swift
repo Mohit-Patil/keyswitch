@@ -52,6 +52,24 @@ struct KeyboardEngineConfigurationSignature: Equatable {
     }
 }
 
+enum CodexSetupReconnectAction: Equatable {
+    case none
+    case showKeySwitch
+    case openMicroOnboarding
+}
+
+struct CodexSetupRelaunchPolicy {
+    /// Codex starts without taking focus while KeySwitch shows connection
+    /// progress. The official Micro onboarding receives focus only after the
+    /// user explicitly chooses the final setup action.
+    static let activatesCodexOnLaunch = false
+    static let reconnectTimeoutNanoseconds: UInt64 = 20_000_000_000
+
+    static func reconnectAction(openMicroOnboarding: Bool) -> CodexSetupReconnectAction {
+        openMicroOnboarding ? .openMicroOnboarding : .showKeySwitch
+    }
+}
+
 @MainActor
 @Observable
 final class AppModel {
@@ -80,13 +98,22 @@ final class AppModel {
     var launchAtLoginState = LaunchAtLoginService.currentState
     var launchAtLoginErrorMessage: String?
 
+    /// Readiness requires both the current macOS grant and a live event tap.
+    /// A tap can briefly survive after its permission is manually revoked, so
+    /// it must never be used as a substitute for the grant itself.
+    var keyboardAccessIsReady: Bool {
+        permissions.keyboardAccessIsReady(eventTapIsActive: eventTapIsActive)
+    }
+
     @ObservationIgnored private var hasStarted = false
     @ObservationIgnored private var permissionRefreshTimer: Timer?
     @ObservationIgnored private var autoDimTimer: Timer?
     @ObservationIgnored private var layerAutoExitTimer: Timer?
     @ObservationIgnored private var hudPreviewDismissTask: Task<Void, Never>?
     @ObservationIgnored private var agentTapTracker = AgentTapTracker()
-    @ObservationIgnored private var shouldBeginSetupAfterReconnect = false
+    @ObservationIgnored private var codexSetupReconnectAction = CodexSetupReconnectAction.none
+    @ObservationIgnored private var codexSetupTimeoutTask: Task<Void, Never>?
+    @ObservationIgnored private var codexSetupSessionID = 0
 
     @ObservationIgnored
     private lazy var bridge: CodexMicroBridge = {
@@ -97,9 +124,17 @@ final class AppModel {
             if status != .connected {
                 self.hasLiveCodexMicroLayout = false
             } else {
-                self.codexRelaunchIsInProgress = false
-                if self.shouldBeginSetupAfterReconnect {
-                    self.shouldBeginSetupAfterReconnect = false
+                let reconnectAction = self.codexSetupReconnectAction
+                self.codexSetupReconnectAction = .none
+                self.cancelCodexSetupTimeout()
+                switch reconnectAction {
+                case .none:
+                    break
+                case .showKeySwitch:
+                    self.codexRelaunchIsInProgress = false
+                    self.setupWindowController.show()
+                case .openMicroOnboarding:
+                    self.codexRelaunchIsInProgress = false
                     self.beginCodexMicroSetup()
                 }
             }
@@ -158,8 +193,14 @@ final class AppModel {
         }
         engine.onTapStatusChanged = { [weak self] active in
             Task { @MainActor [weak self] in
-                self?.eventTapIsActive = active
-                self?.permissions = PermissionService.snapshot()
+                guard let self else { return }
+                let snapshot = PermissionService.snapshot()
+                self.permissions = snapshot
+                self.eventTapIsActive = active && snapshot.accessibilityGranted
+
+                if active, !snapshot.accessibilityGranted {
+                    self.keyboardEngine.stop()
+                }
             }
         }
         return engine
@@ -189,12 +230,11 @@ final class AppModel {
         hasStarted = true
         permissions = PermissionService.snapshot()
         refreshLaunchAtLoginState()
-        eventTapIsActive = keyboardEngine.start()
+        eventTapIsActive = permissions.accessibilityGranted
+            ? keyboardEngine.start()
+            : false
         bridge.connect()
-
-        if !permissions.allGranted || !eventTapIsActive {
-            startPermissionRefreshTimer()
-        }
+        startPermissionRefreshTimer()
 
         #if DEBUG
         let shouldForceSetup = ProcessInfo.processInfo.environment["KEYSWITCH_SHOW_SETUP"] == "1"
@@ -225,6 +265,7 @@ final class AppModel {
         stopAutoDimTimer()
         stopLayerAutoExitTimer()
         stopHUDPreview()
+        cancelPendingCodexSetup(clearError: false)
         hasStarted = false
     }
 
@@ -238,12 +279,12 @@ final class AppModel {
 
     func retryKeyboardAccess() {
         PermissionService.request()
-        keyboardEngine.stop()
-        eventTapIsActive = keyboardEngine.start()
         permissions = PermissionService.snapshot()
-        if !permissions.allGranted || !eventTapIsActive {
-            startPermissionRefreshTimer()
-        }
+        keyboardEngine.stop()
+        eventTapIsActive = permissions.accessibilityGranted
+            ? keyboardEngine.start()
+            : false
+        startPermissionRefreshTimer()
     }
 
     func openNextRequiredKeyboardPermission() {
@@ -291,11 +332,18 @@ final class AppModel {
 
     func deferFirstRunSetup() {
         PermissionService.dismissPermissionGuide()
+        cancelPendingCodexSetup(clearError: true)
         setupWindowController.hide()
+    }
+
+    func firstRunSetupWindowDidClose() {
+        PermissionService.dismissPermissionGuide()
+        cancelPendingCodexSetup(clearError: true)
     }
 
     func completeFirstRunSetup() {
         PermissionService.dismissPermissionGuide()
+        cancelPendingCodexSetup(clearError: true)
         configuration.hasCompletedFirstRunSetup = true
         setupWindowController.hide()
     }
@@ -307,8 +355,22 @@ final class AppModel {
         }
 
         setupErrorMessage = nil
-        bridge.openMicroOnboarding()
-        completeFirstRunSetup()
+        codexSetupSessionID += 1
+        let sessionID = codexSetupSessionID
+        codexRelaunchIsInProgress = true
+        bridge.openMicroOnboarding { [weak self] result in
+            Task { @MainActor [weak self] in
+                guard let self, sessionID == self.codexSetupSessionID else { return }
+                self.codexRelaunchIsInProgress = false
+                switch result {
+                case .success:
+                    self.completeFirstRunSetup()
+                case .failure(let error):
+                    self.setupErrorMessage = error.localizedDescription
+                    self.setupWindowController.show()
+                }
+            }
+        }
     }
 
     func restartCodexAndBeginSetup() {
@@ -322,9 +384,14 @@ final class AppModel {
     private func restartCodex(openSetupAfterReconnect: Bool) {
         guard !codexRelaunchIsInProgress else { return }
 
+        cancelCodexSetupTimeout()
+        codexSetupSessionID += 1
+        let sessionID = codexSetupSessionID
         setupErrorMessage = nil
         codexRelaunchIsInProgress = true
-        shouldBeginSetupAfterReconnect = openSetupAfterReconnect
+        codexSetupReconnectAction = CodexSetupRelaunchPolicy.reconnectAction(
+            openMicroOnboarding: openSetupAfterReconnect
+        )
 
         let runningCodexApps = NSRunningApplication.runningApplications(
             withBundleIdentifier: "com.openai.codex"
@@ -334,7 +401,11 @@ final class AppModel {
             _ = application.terminate()
         }
 
-        waitForCodexToTerminate(runningCodexApps, attemptsRemaining: 40)
+        waitForCodexToTerminate(
+            runningCodexApps,
+            attemptsRemaining: 40,
+            sessionID: sessionID
+        )
     }
 
     func binding(for control: MicroControl) -> KeyBinding {
@@ -466,29 +537,34 @@ final class AppModel {
 
     private func waitForCodexToTerminate(
         _ applications: [NSRunningApplication],
-        attemptsRemaining: Int
+        attemptsRemaining: Int,
+        sessionID: Int
     ) {
+        guard sessionID == codexSetupSessionID else { return }
         if applications.allSatisfy(\.isTerminated) {
-            launchOriginalCodexForBridge()
+            launchOriginalCodexForBridge(sessionID: sessionID)
             return
         }
 
         guard attemptsRemaining > 0 else {
-            codexRelaunchIsInProgress = false
-            shouldBeginSetupAfterReconnect = false
-            setupErrorMessage = "Codex did not quit. Quit it manually, then choose Set Up again."
+            failCodexSetup(
+                sessionID: sessionID,
+                message: "Codex did not quit. Quit it manually, then choose Set Up again."
+            )
             return
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
             self?.waitForCodexToTerminate(
                 applications,
-                attemptsRemaining: attemptsRemaining - 1
+                attemptsRemaining: attemptsRemaining - 1,
+                sessionID: sessionID
             )
         }
     }
 
-    private func launchOriginalCodexForBridge() {
+    private func launchOriginalCodexForBridge(sessionID: Int) {
+        guard sessionID == codexSetupSessionID else { return }
         let workspace = NSWorkspace.shared
         let fallbackURL = URL(fileURLWithPath: "/Applications/ChatGPT.app", isDirectory: true)
         let applicationURL = workspace.urlForApplication(
@@ -496,9 +572,10 @@ final class AppModel {
         ) ?? fallbackURL
 
         guard FileManager.default.fileExists(atPath: applicationURL.path) else {
-            codexRelaunchIsInProgress = false
-            shouldBeginSetupAfterReconnect = false
-            setupErrorMessage = "The Codex desktop app was not found in Applications."
+            failCodexSetup(
+                sessionID: sessionID,
+                message: "The Codex desktop app was not found in Applications."
+            )
             return
         }
 
@@ -508,7 +585,7 @@ final class AppModel {
             "--remote-debugging-port=\(configuration.debugPort)",
             "--no-first-run",
         ]
-        launchConfiguration.activates = true
+        launchConfiguration.activates = CodexSetupRelaunchPolicy.activatesCodexOnLaunch
 
         workspace.openApplication(
             at: applicationURL,
@@ -516,16 +593,65 @@ final class AppModel {
         ) { [weak self] _, error in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                self.codexRelaunchIsInProgress = false
+                guard sessionID == self.codexSetupSessionID else { return }
                 if let error {
-                    self.shouldBeginSetupAfterReconnect = false
-                    self.setupErrorMessage = "Codex could not be reopened: \(error.localizedDescription)"
+                    self.failCodexSetup(
+                        sessionID: sessionID,
+                        message: "Codex could not be reopened: \(error.localizedDescription)"
+                    )
                     return
                 }
 
                 self.bridge.reconnect(debugPort: self.configuration.debugPort)
+                self.scheduleCodexSetupTimeout(sessionID: sessionID)
             }
         }
+    }
+
+    private func scheduleCodexSetupTimeout(sessionID: Int) {
+        cancelCodexSetupTimeout()
+        codexSetupTimeoutTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(
+                    nanoseconds: CodexSetupRelaunchPolicy.reconnectTimeoutNanoseconds
+                )
+            } catch {
+                return
+            }
+            guard let self,
+                  sessionID == self.codexSetupSessionID,
+                  self.codexSetupReconnectAction != .none else {
+                return
+            }
+            self.failCodexSetup(
+                sessionID: sessionID,
+                message: "Codex opened, but KeySwitch could not verify the local connection. Check that port \(self.configuration.debugPort) is available, then try again."
+            )
+        }
+    }
+
+    private func failCodexSetup(sessionID: Int, message: String) {
+        guard sessionID == codexSetupSessionID else { return }
+        cancelCodexSetupTimeout()
+        codexSetupReconnectAction = .none
+        codexRelaunchIsInProgress = false
+        setupErrorMessage = message
+        setupWindowController.show()
+    }
+
+    private func cancelPendingCodexSetup(clearError: Bool) {
+        codexSetupSessionID += 1
+        cancelCodexSetupTimeout()
+        codexSetupReconnectAction = .none
+        codexRelaunchIsInProgress = false
+        if clearError {
+            setupErrorMessage = nil
+        }
+    }
+
+    private func cancelCodexSetupTimeout() {
+        codexSetupTimeoutTask?.cancel()
+        codexSetupTimeoutTask = nil
     }
 
     private func configurationDidChange(from previous: AppConfiguration) {
@@ -675,16 +801,27 @@ final class AppModel {
     }
 
     private func refreshPermissionState(retryIfGranted: Bool) {
+        let previouslyGranted = permissions.accessibilityGranted
         let snapshot = PermissionService.snapshot()
         permissions = snapshot
 
-        if retryIfGranted, snapshot.allGranted, !eventTapIsActive {
+        // TCC can leave an already-created tap alive briefly after the user
+        // revokes Accessibility. Stop it ourselves and make the UI reflect the
+        // current grant rather than the stale tap.
+        if !snapshot.accessibilityGranted {
+            if previouslyGranted || eventTapIsActive {
+                keyboardEngine.stop()
+            }
+            eventTapIsActive = false
+            return
+        }
+
+        PermissionService.dismissPermissionGuide()
+
+        if retryIfGranted, !eventTapIsActive {
             eventTapIsActive = keyboardEngine.start()
         }
 
-        if snapshot.allGranted, eventTapIsActive {
-            stopPermissionRefreshTimer()
-        }
     }
 
     private func saveConfiguration() {

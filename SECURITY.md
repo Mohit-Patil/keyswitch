@@ -29,8 +29,8 @@ publishing details.
 
 ## Security-sensitive behavior
 
-KeySwitch requests Input Monitoring and Accessibility permission to implement
-global keyboard control. It can also restart Codex with a local Chromium
+KeySwitch requests Accessibility permission to implement global keyboard
+control. It can also restart Codex with a local Chromium
 debugging port and evaluate code inside the renderer to use existing Micro
 contracts. Reports involving permission misuse, event interception, renderer
 evaluation, local-port exposure, unintended app control, or persistence are

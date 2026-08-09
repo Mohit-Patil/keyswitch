@@ -20,7 +20,7 @@ struct GeneralSettingsView: View {
                     .help("Change activation shortcut")
                 }
 
-                Text("Fn by itself continues to work as the macOS Globe/emoji key. Only the complete shortcut activates KeySwitch.")
+                Text("Choose one or more modifier keys. When Fn alone is selected, KeySwitch suppresses the macOS Globe/emoji action while activating the layer.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -232,11 +232,6 @@ struct GeneralSettingsView: View {
             }
 
             Section("Permissions") {
-                PermissionRow(
-                    title: "Input Monitoring",
-                    granted: model.permissions.inputMonitoringGranted,
-                    action: PermissionService.openInputMonitoringSettings
-                )
                 PermissionRow(
                     title: "Accessibility",
                     granted: model.permissions.accessibilityGranted,

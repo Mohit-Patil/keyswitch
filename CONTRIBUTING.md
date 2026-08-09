@@ -80,7 +80,7 @@ pull request:
 
 - event-tap suppression and modifier handling;
 - activation and automatic-exit state machines;
-- Accessibility or Input Monitoring behavior;
+- Accessibility behavior;
 - Codex renderer evaluation or remote-debugging behavior;
 - commands that launch, terminate, or focus another app; and
 - persistence or configuration migrations.

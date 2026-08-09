@@ -21,6 +21,10 @@ final class FirstRunSetupWindowController: NSObject, NSWindowDelegate {
         window?.orderOut(nil)
     }
 
+    func windowWillClose(_ notification: Notification) {
+        model.firstRunSetupWindowDidClose()
+    }
+
     private func makeWindow() -> NSWindow {
         let size = NSSize(width: 760, height: 610)
         let window = NSWindow(
