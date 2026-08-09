@@ -71,6 +71,9 @@ struct FirstRunSetupView: View {
         .onAppear {
             model.refreshPermissions()
         }
+        .onDisappear {
+            PermissionService.dismissPermissionGuide()
+        }
     }
 
     private var keyboardAccessIsReady: Bool {
@@ -87,6 +90,9 @@ struct FirstRunSetupView: View {
             }
             if model.permissions.allGranted {
                 return "Retry Keyboard Access"
+            }
+            if let kind = PermissionService.nextRequiredPermission(in: model.permissions) {
+                return "Set Up \(kind.title)"
             }
             return "Allow Keyboard Access"
         case .codex:
@@ -106,8 +112,10 @@ struct FirstRunSetupView: View {
         case .permissions:
             if keyboardAccessIsReady {
                 move(to: .codex)
-            } else {
+            } else if model.permissions.allGranted {
                 model.retryKeyboardAccess()
+            } else {
+                model.openNextRequiredKeyboardPermission()
             }
         case .codex:
             if model.bridgeStatus == .connected {
@@ -124,6 +132,9 @@ struct FirstRunSetupView: View {
     }
 
     private func move(to newStep: SetupStep) {
+        if newStep != .permissions {
+            PermissionService.dismissPermissionGuide()
+        }
         withAnimation(.easeInOut(duration: 0.24)) {
             step = newStep
         }

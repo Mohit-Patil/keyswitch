@@ -246,6 +246,14 @@ final class AppModel {
         }
     }
 
+    func openNextRequiredKeyboardPermission() {
+        guard let kind = PermissionService.nextRequiredPermission(in: permissions) else {
+            retryKeyboardAccess()
+            return
+        }
+        PermissionService.openSettings(for: kind)
+    }
+
     func refreshPermissions() {
         refreshPermissionState(retryIfGranted: true)
     }
@@ -282,10 +290,12 @@ final class AppModel {
     }
 
     func deferFirstRunSetup() {
+        PermissionService.dismissPermissionGuide()
         setupWindowController.hide()
     }
 
     func completeFirstRunSetup() {
+        PermissionService.dismissPermissionGuide()
         configuration.hasCompletedFirstRunSetup = true
         setupWindowController.hide()
     }
