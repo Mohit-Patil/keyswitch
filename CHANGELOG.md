@@ -7,6 +7,24 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-08-09
+
+### Fixed
+
+- Keep the keyboard layer active for as long as the activation shortcut is
+  held in Hold mode, regardless of the configured inactivity timeout.
+- Render every active menu-bar agent indicator as a consistent, solid color
+  circle, including error states, while inactive slots use a neutral ring.
+- Keep the menu-bar legend in Settings synchronized with the rendered
+  indicator shapes.
+- Sign Sparkle update feeds from an ephemeral key file so headless release
+  runners do not stall on a Keychain permission prompt.
+
+### Changed
+
+- Add a feed-only recovery path for an existing release whose public Sparkle
+  feed still needs to be published.
+
 ## [0.2.2] - 2026-08-08
 
 ### Added
@@ -118,7 +136,8 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 - Local release artifacts, profiling traces, signing identities, and private
   design-review captures are excluded from the repository.
 
-[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Mohit-Patil/keyswitch/compare/v0.1.1...v0.2.0
