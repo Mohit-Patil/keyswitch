@@ -9,6 +9,25 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
         <item>
+            <title>0.3.1</title>
+            <pubDate>Mon, 10 Aug 2026 02:29:30 +0000</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.3.1</sparkle:fullReleaseNotesLink>
+            <sparkle:version>12</sparkle:version>
+            <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.3.1</h2>
+<h3>Fixed</h3>
+<ul>
+<li>Keep Launch at Login actionable when macOS loses the app&#x27;s existing service registration, allowing the signed app to register itself again instead of disabling the setting.</li>
+<li>Require a successful <code>main</code> CI run for the exact source commit across automatic, tag-triggered, and manually dispatched releases.</li>
+<li>Treat the protected Sparkle feed PR&#x27;s expected maintainer approval as a successful release handoff while preserving failures for unexpected feed errors.</li>
+<li>Expose editable Micro key surfaces as buttons to macOS accessibility clients.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.3.1/KeySwitch-v0.3.1-macOS-universal.zip" length="3192689" type="application/octet-stream" sparkle:edSignature="aQBdoh5p46vpoaq4w6ptXFKfcPxifIYQsDgQJxRK/riOZ9wgs3JDrKZvMvuRHflMMI8GpVn+ug4xnvxL4p6SBQ=="/>
+        </item>
+        <item>
             <title>0.3.0</title>
             <pubDate>Sun, 09 Aug 2026 18:30:10 +0000</pubDate>
             <link>https://mohit-patil.github.io/keyswitch/</link>
@@ -213,6 +232,6 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: 5f8d/5nFBM81oBROxB0QH2K696TdTlMLsfNRI5u5S+J4GDEy5dKCmBPhcH+3D0ypihLjg8phw9I2gSM81+ZhAQ==
-length: 15203
+edSignature: Af2xMYPISI8UKMZ3+iScCesX2MC7ltvt1R5zP4hhgNzgH27CQRouPw0GE40/qsAPaGFcy6Ea5hy9VvZApnsODQ==
+length: 16721
 -->
