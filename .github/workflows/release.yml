@@ -17,6 +17,7 @@ on:
         type: string
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -65,6 +66,44 @@ jobs:
           test "$(git rev-parse HEAD)" = "$TESTED_SHA"
           git fetch origin main
           git merge-base --is-ancestor "$TESTED_SHA" origin/main
+
+      - name: Require successful main CI for the exact source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          source_sha="$(git rev-parse HEAD)"
+          git fetch origin main
+          git merge-base --is-ancestor "$source_sha" origin/main
+
+          successful_run_count=0
+          for ci_lookup_attempt in {1..6}; do
+            successful_run_count="$(
+              gh api --method GET \
+                "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" \
+                -f head_sha="$source_sha" \
+                -f event=push \
+                -f status=success \
+                -f per_page=100 \
+                --jq "[.workflow_runs[] | select(
+                  .head_sha == \"$source_sha\" and
+                  .head_branch == \"main\" and
+                  .event == \"push\" and
+                  .conclusion == \"success\"
+                )] | length"
+            )"
+            if [[ "$successful_run_count" -ge 1 ]]; then
+              break
+            fi
+            if [[ "$ci_lookup_attempt" -lt 6 ]]; then
+              sleep 5
+            fi
+          done
+          if [[ "$successful_run_count" -lt 1 ]]; then
+            echo "No successful main CI run exists for $source_sha." >&2
+            exit 1
+          fi
 
       - name: Validate release metadata
         id: metadata
@@ -464,9 +503,21 @@ jobs:
           unset SPARKLE_PRIVATE_KEY
           export SPARKLE_PRIVATE_KEY_PATH="$sparkle_key_path"
 
+          feed_status=0
           Scripts/publish_update_feed.sh \
             "$RELEASE_ZIP_PATH" \
-            "$RELEASE_VERSION"
+            "$RELEASE_VERSION" || feed_status=$?
+          if [[ "$feed_status" -eq 75 ]]; then
+            {
+              echo "### Sparkle feed approval required"
+              echo
+              echo "The signed release is published. Approve the protected feed PR check, then run the Publish update feed workflow for $RELEASE_VERSION."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [[ "$feed_status" -ne 0 ]]; then
+            exit "$feed_status"
+          fi
           gh workflow run pages.yml --ref main
 
       - name: Remove ephemeral credentials

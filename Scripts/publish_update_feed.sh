@@ -134,9 +134,9 @@ wait_for_test_check() {
         if [[ -z "$check_status" ]]; then
             approval_url="$(approval_required_run_url "$commit_sha")"
             if [[ -n "$approval_url" ]]; then
-                echo "error: protected PR Test check requires maintainer approval: $approval_url" >&2
+                echo "Protected PR Test check requires maintainer approval: $approval_url" >&2
                 echo "Approve that run, then rerun the Publish update feed workflow for $version." >&2
-                exit 1
+                return 75
             fi
         fi
         sleep 10

@@ -162,7 +162,6 @@ struct GeneralSettingsView: View {
                         set: { model.setLaunchAtLogin($0) }
                     )
                 )
-                .disabled(model.launchAtLoginState == .unavailable)
 
                 Text(model.launchAtLoginState.detail)
                     .font(.caption)

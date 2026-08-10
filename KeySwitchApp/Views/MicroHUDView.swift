@@ -546,6 +546,7 @@ private struct HUDKeyView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(control.title)
         .accessibilityValue(accessibilityValue)
+        .accessibilityAddTraits(onSelect == nil ? [] : .isButton)
     }
 
     private var accessibilityValue: String {
