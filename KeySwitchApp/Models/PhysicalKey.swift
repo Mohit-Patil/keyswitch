@@ -18,6 +18,11 @@ struct PhysicalKey: Codable, Hashable, Identifiable {
         )
     }
 
+    static func from(event: CGEvent) -> PhysicalKey? {
+        guard let event = NSEvent(cgEvent: event) else { return nil }
+        return from(event: event)
+    }
+
     static func displayName(for keyCode: UInt16, characters: String? = nil) -> String {
         if let special = specialKeyNames[keyCode] {
             return special

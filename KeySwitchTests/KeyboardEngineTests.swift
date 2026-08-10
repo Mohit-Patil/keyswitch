@@ -234,6 +234,490 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertEqual(layerStates, [true, false])
     }
 
+    func testSingleRegularKeyActivatesHoldLayerAndConsumesBothTransitions() throws {
+        let shortcut = ActivationShortcut(modifiers: [], key: .g)
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: false)
+            )
+        )
+
+        XCTAssertEqual(layerStates, [true, false])
+    }
+
+    func testRegularKeyToggleIgnoresAutoRepeat() throws {
+        let shortcut = ActivationShortcut(modifiers: [], key: .g)
+        let engine = makeEngine(mode: .toggle, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+            )
+        )
+
+        let repeatedEvent = try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+        repeatedEvent.setIntegerValueField(.keyboardEventAutorepeat, value: 1)
+        XCTAssertNil(engine.handle(type: .keyDown, event: repeatedEvent))
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: false)
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+            )
+        )
+
+        XCTAssertEqual(layerStates, [true, false])
+    }
+
+    func testModifiedRegularKeyRequiresTheRecordedModifiers() throws {
+        let shortcut = ActivationShortcut(modifiers: [.control], key: .g)
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        let unmatchedDown = try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+        XCTAssertNotNil(engine.handle(type: .keyDown, event: unmatchedDown))
+        withExtendedLifetime(unmatchedDown) {}
+
+        let unmatchedUp = try keyEvent(code: PhysicalKey.g.keyCode, isDown: false)
+        XCTAssertNotNil(engine.handle(type: .keyUp, event: unmatchedUp))
+        withExtendedLifetime(unmatchedUp) {}
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(
+                    code: PhysicalKey.g.keyCode,
+                    isDown: true,
+                    flags: .maskControl
+                )
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: false)
+            )
+        )
+
+        XCTAssertEqual(layerStates, [true, false])
+    }
+
+    func testFnKeyChordOwnsFnSoGlobeDoesNotReceiveAnOrphanPress() throws {
+        let shortcut = ActivationShortcut(modifiers: [.function], key: .g)
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: 63, flags: .maskSecondaryFn)
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(
+                    code: PhysicalKey.g.keyCode,
+                    isDown: true,
+                    flags: .maskSecondaryFn
+                )
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(
+                    code: PhysicalKey.g.keyCode,
+                    isDown: false,
+                    flags: .maskSecondaryFn
+                )
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: 63, flags: [])
+            )
+        )
+
+        XCTAssertEqual(layerStates, [true, false])
+    }
+
+    func testModifiedRegularKeyDoesNotMatchAnUnrecordedExtraModifier() throws {
+        let shortcut = ActivationShortcut(modifiers: [.control], key: .g)
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        let event = try keyEvent(
+            code: PhysicalKey.g.keyCode,
+            isDown: true,
+            flags: [.maskControl, .maskShift]
+        )
+        XCTAssertNotNil(engine.handle(type: .keyDown, event: event))
+        withExtendedLifetime(event) {}
+        XCTAssertTrue(layerStates.isEmpty)
+    }
+
+    func testNonMatchingActivationKeyStillUsesNormalActiveLayerHandling() throws {
+        let unmappedShortcut = ActivationShortcut(modifiers: [.control], key: .g)
+        let blockingEngine = makeEngine(
+            mode: .hold,
+            blockUnmapped: true,
+            shortcut: unmappedShortcut
+        )
+        blockingEngine.toggleLayerFromMenu()
+        XCTAssertNil(
+            blockingEngine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+            )
+        )
+
+        let mappedShortcut = ActivationShortcut(modifiers: [.control], key: .q)
+        let mappedEngine = makeEngine(
+            mode: .hold,
+            blockUnmapped: true,
+            shortcut: mappedShortcut
+        )
+        var controlEvents: [(MicroControl, Int)] = []
+        mappedEngine.onControlEvent = { controlEvents.append(($0, $1)) }
+        mappedEngine.toggleLayerFromMenu()
+
+        XCTAssertNil(
+            mappedEngine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.q.keyCode, isDown: true)
+            )
+        )
+        XCTAssertNil(
+            mappedEngine.handle(
+                type: .keyUp,
+                event: try keyEvent(code: PhysicalKey.q.keyCode, isDown: false)
+            )
+        )
+        XCTAssertEqual(controlEvents.map(\.0), [.fastMode, .fastMode])
+        XCTAssertEqual(controlEvents.map(\.1), [1, 0])
+    }
+
+    func testReleasingARequiredModifierEndsHoldAndStillConsumesTriggerKeyUp() throws {
+        let shortcut = ActivationShortcut(modifiers: [.control], key: .g)
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(
+                    code: PhysicalKey.g.keyCode,
+                    isDown: true,
+                    flags: .maskControl
+                )
+            )
+        )
+
+        let controlUp = try modifierEvent(code: 59, flags: [])
+        XCTAssertNotNil(engine.handle(type: .flagsChanged, event: controlUp))
+        withExtendedLifetime(controlUp) {}
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: false)
+            )
+        )
+        XCTAssertEqual(layerStates, [true, false])
+    }
+
+    func testTriggerKeyPressedBeforeModifierDoesNotActivate() throws {
+        let shortcut = ActivationShortcut(modifiers: [.control], key: .g)
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        let keyDown = try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+        XCTAssertNotNil(engine.handle(type: .keyDown, event: keyDown))
+        withExtendedLifetime(keyDown) {}
+
+        _ = engine.handle(
+            type: .flagsChanged,
+            event: try modifierEvent(code: 59, flags: .maskControl)
+        )
+
+        let keyUp = try keyEvent(code: PhysicalKey.g.keyCode, isDown: false)
+        XCTAssertNotNil(engine.handle(type: .keyUp, event: keyUp))
+        withExtendedLifetime(keyUp) {}
+        XCTAssertTrue(layerStates.isEmpty)
+    }
+
+    func testActivationKeyTakesPriorityOverAConflictingMapping() throws {
+        let shortcut = ActivationShortcut(modifiers: [], key: .q)
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        var controlEvents: [(MicroControl, Int)] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+        engine.onControlEvent = { controlEvents.append(($0, $1)) }
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.q.keyCode, isDown: true)
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(code: PhysicalKey.q.keyCode, isDown: false)
+            )
+        )
+
+        XCTAssertEqual(layerStates, [true, false])
+        XCTAssertTrue(controlEvents.isEmpty)
+    }
+
+    func testEscapeCanBeUsedAsTheActivationKey() throws {
+        let escape = PhysicalKey(keyCode: 53, displayName: "Escape", isModifier: false)
+        let shortcut = ActivationShortcut(modifiers: [], key: escape)
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        XCTAssertNil(
+            engine.handle(type: .keyDown, event: try keyEvent(code: 53, isDown: true))
+        )
+        XCTAssertNil(
+            engine.handle(type: .keyUp, event: try keyEvent(code: 53, isDown: false))
+        )
+
+        XCTAssertEqual(layerStates, [true, false])
+    }
+
+    func testShortcutRecorderCapturesChordWithoutActivatingTheLayer() throws {
+        let engine = makeEngine(mode: .hold, blockUnmapped: true)
+        var layerStates: [Bool] = []
+        var capturedShortcut: (PhysicalKey, Set<ActivationModifier>)?
+        engine.onLayerStateChanged = { layerStates.append($0) }
+        engine.beginShortcutCapture(
+            onCapture: { key, modifiers in
+                capturedShortcut = (key, modifiers)
+            },
+            onCancel: {}
+        )
+
+        let fnDown = try modifierEvent(code: 63, flags: .maskSecondaryFn)
+        XCTAssertNil(engine.handle(type: .flagsChanged, event: fnDown))
+        withExtendedLifetime(fnDown) {}
+
+        let controlDown = try modifierEvent(
+            code: 59,
+            flags: [.maskSecondaryFn, .maskControl]
+        )
+        XCTAssertNil(engine.handle(type: .flagsChanged, event: controlDown))
+        withExtendedLifetime(controlDown) {}
+
+        let qDown = try keyEvent(
+            code: PhysicalKey.q.keyCode,
+            isDown: true,
+            flags: [.maskSecondaryFn, .maskControl]
+        )
+        XCTAssertNil(engine.handle(type: .keyDown, event: qDown))
+        withExtendedLifetime(qDown) {}
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(
+                    code: PhysicalKey.q.keyCode,
+                    isDown: false,
+                    flags: [.maskSecondaryFn, .maskControl]
+                )
+            )
+        )
+
+        XCTAssertEqual(capturedShortcut?.0.keyCode, PhysicalKey.q.keyCode)
+        XCTAssertEqual(capturedShortcut?.1, [.function, .control])
+        XCTAssertTrue(layerStates.isEmpty)
+
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: 59, flags: .maskSecondaryFn)
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: 63, flags: [])
+            )
+        )
+        pressDefaultShortcut(on: engine)
+        XCTAssertEqual(layerStates, [true])
+    }
+
+    func testShortcutRecorderRefusesToWaitWithoutAnActiveEventTap() throws {
+        let engine = KeyboardEngine(
+            configuration: KeyboardEngineConfiguration(
+                activationMode: .hold,
+                activationShortcut: .standard,
+                blockUnmappedKeys: true,
+                bindings: KeyBinding.defaults
+            )
+        )
+        var capturedKey: PhysicalKey?
+
+        XCTAssertFalse(
+            engine.beginShortcutCapture(
+                onCapture: { key, _ in capturedKey = key },
+                onCancel: {}
+            )
+        )
+
+        let keyDown = try keyEvent(code: PhysicalKey.q.keyCode, isDown: true)
+        XCTAssertNotNil(engine.handle(type: .keyDown, event: keyDown))
+        withExtendedLifetime(keyDown) {}
+        XCTAssertNil(capturedKey)
+    }
+
+    func testShortcutRecorderOwnsACommandSpaceSystemChord() throws {
+        let engine = makeEngine(mode: .hold, blockUnmapped: true)
+        var capturedShortcut: (PhysicalKey, Set<ActivationModifier>)?
+        engine.beginShortcutCapture(
+            onCapture: { key, modifiers in
+                capturedShortcut = (key, modifiers)
+            },
+            onCancel: {}
+        )
+
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: 55, flags: .maskCommand)
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.space.keyCode, isDown: true, flags: .maskCommand)
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(code: PhysicalKey.space.keyCode, isDown: false, flags: .maskCommand)
+            )
+        )
+
+        XCTAssertEqual(capturedShortcut?.0, PhysicalKey.space)
+        XCTAssertEqual(capturedShortcut?.1, [.command])
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: 55, flags: [])
+            )
+        )
+    }
+
+    func testTapTimeoutCancelsShortcutRecording() throws {
+        let engine = makeEngine(mode: .hold, blockUnmapped: true)
+        var cancellationCount = 0
+        engine.beginShortcutCapture(
+            onCapture: { _, _ in XCTFail("A disabled tap must not complete capture") },
+            onCancel: { cancellationCount += 1 }
+        )
+
+        let timeoutEvent = try keyEvent(code: PhysicalKey.q.keyCode, isDown: true)
+        XCTAssertNotNil(engine.handle(type: .tapDisabledByTimeout, event: timeoutEvent))
+        withExtendedLifetime(timeoutEvent) {}
+        XCTAssertEqual(cancellationCount, 1)
+
+        let nextKeyDown = try keyEvent(code: PhysicalKey.q.keyCode, isDown: true)
+        XCTAssertNotNil(engine.handle(type: .keyDown, event: nextKeyDown))
+        withExtendedLifetime(nextKeyDown) {}
+    }
+
+    func testShortcutRecorderFinishesAPreviouslyCapturedKey() throws {
+        let shortcut = ActivationShortcut(modifiers: [], key: .g)
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+            )
+        )
+        engine.beginShortcutCapture(onCapture: { _, _ in }, onCancel: {})
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: false)
+            )
+        )
+        engine.cancelShortcutCapture()
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+            )
+        )
+        XCTAssertEqual(layerStates, [true, false, true])
+    }
+
+    func testCapturedActivationKeyUpIsSuppressedAfterConfigurationChanges() throws {
+        let shortcut = ActivationShortcut(modifiers: [], key: .g)
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+            )
+        )
+        engine.update(
+            configuration: KeyboardEngineConfiguration(
+                activationMode: .hold,
+                activationShortcut: .standard,
+                blockUnmappedKeys: true,
+                bindings: KeyBinding.defaults
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(code: PhysicalKey.g.keyCode, isDown: false)
+            )
+        )
+
+        let nextKeyDown = try keyEvent(code: PhysicalKey.g.keyCode, isDown: true)
+        XCTAssertNotNil(engine.handle(type: .keyDown, event: nextKeyDown))
+        withExtendedLifetime(nextKeyDown) {}
+    }
+
     func testRightCommandCanBeUsedAsSubmit() throws {
         let engine = makeEngine(mode: .hold, blockUnmapped: true)
         var controlEvents: [(MicroControl, Int)] = []
@@ -274,6 +758,176 @@ final class KeyboardEngineTests: XCTestCase {
         let result = passingEngine.handle(type: .keyDown, event: passingEvent)
         XCTAssertNotNil(result)
         withExtendedLifetime(passingEvent) {}
+    }
+
+    func testBlockedRegularKeyReleaseStaysSuppressedAfterLayerDeactivation() throws {
+        let engine = makeEngine(mode: .hold, blockUnmapped: true)
+        pressDefaultShortcut(on: engine)
+
+        XCTAssertNil(
+            engine.handle(type: .keyDown, event: try keyEvent(code: 6, isDown: true))
+        )
+        releaseDefaultShortcut(on: engine)
+        XCTAssertNil(
+            engine.handle(type: .keyUp, event: try keyEvent(code: 6, isDown: false))
+        )
+
+        let nextKeyDown = try keyEvent(code: 6, isDown: true)
+        XCTAssertNotNil(engine.handle(type: .keyDown, event: nextKeyDown))
+        withExtendedLifetime(nextKeyDown) {}
+    }
+
+    func testMappedRegularKeyReleaseStaysSuppressedAfterLayerDeactivation() throws {
+        let engine = makeEngine(mode: .hold, blockUnmapped: true)
+        var controlEvents: [(MicroControl, Int)] = []
+        engine.onControlEvent = { controlEvents.append(($0, $1)) }
+        pressDefaultShortcut(on: engine)
+
+        XCTAssertNil(
+            engine.handle(
+                type: .keyDown,
+                event: try keyEvent(code: PhysicalKey.q.keyCode, isDown: true)
+            )
+        )
+        releaseDefaultShortcut(on: engine)
+        XCTAssertNil(
+            engine.handle(
+                type: .keyUp,
+                event: try keyEvent(code: PhysicalKey.q.keyCode, isDown: false)
+            )
+        )
+
+        XCTAssertEqual(controlEvents.map(\.0), [.fastMode, .fastMode])
+        XCTAssertEqual(controlEvents.map(\.1), [1, 0])
+    }
+
+    func testEscapeReleaseStaysSuppressedAfterItDeactivatesLayer() throws {
+        let engine = makeEngine(mode: .toggle, blockUnmapped: true)
+        engine.toggleLayerFromMenu()
+
+        XCTAssertNil(
+            engine.handle(type: .keyDown, event: try keyEvent(code: 53, isDown: true))
+        )
+        XCTAssertNil(
+            engine.handle(type: .keyUp, event: try keyEvent(code: 53, isDown: false))
+        )
+
+        let nextEscapeDown = try keyEvent(code: 53, isDown: true)
+        XCTAssertNotNil(engine.handle(type: .keyDown, event: nextEscapeDown))
+        withExtendedLifetime(nextEscapeDown) {}
+    }
+
+    func testMappedModifierReleaseStaysSuppressedAcrossConfigurationUpdate() throws {
+        let engine = makeEngine(mode: .hold, blockUnmapped: true)
+        pressDefaultShortcut(on: engine)
+
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(
+                    code: PhysicalKey.leftShift.keyCode,
+                    flags: [.maskSecondaryFn, .maskControl, .maskShift]
+                )
+            )
+        )
+        engine.update(
+            configuration: KeyboardEngineConfiguration(
+                activationMode: .hold,
+                activationShortcut: ActivationShortcut(modifiers: [.shift]),
+                blockUnmappedKeys: true,
+                bindings: KeyBinding.defaults
+            )
+        )
+
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: PhysicalKey.leftShift.keyCode, flags: [])
+            )
+        )
+    }
+
+    func testMappedModifierReleaseUsesPhysicalKeyWhenBothShiftsAreHeld() throws {
+        let engine = makeEngine(mode: .hold, blockUnmapped: true)
+        var controlEvents: [(MicroControl, Int)] = []
+        engine.onControlEvent = { controlEvents.append(($0, $1)) }
+        pressDefaultShortcut(on: engine)
+
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(
+                    code: 56,
+                    flags: [.maskSecondaryFn, .maskControl, .maskShift]
+                )
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(
+                    code: 60,
+                    flags: [.maskSecondaryFn, .maskControl, .maskShift]
+                )
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(
+                    code: 56,
+                    flags: [.maskSecondaryFn, .maskControl, .maskShift]
+                )
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(
+                    code: 60,
+                    flags: [.maskSecondaryFn, .maskControl]
+                )
+            )
+        )
+
+        XCTAssertEqual(controlEvents.map(\.0), [.dialPress, .dialPress])
+        XCTAssertEqual(controlEvents.map(\.1), [1, 0])
+    }
+
+    func testFnOnlyReleaseStaysSuppressedWhenCaptureStartsWhileFnIsHeld() throws {
+        let shortcut = ActivationShortcut(modifiers: [.function])
+        let engine = makeEngine(mode: .hold, blockUnmapped: true, shortcut: shortcut)
+        var layerStates: [Bool] = []
+        engine.onLayerStateChanged = { layerStates.append($0) }
+
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: 63, flags: .maskSecondaryFn)
+            )
+        )
+        engine.beginShortcutCapture(onCapture: { _, _ in }, onCancel: {})
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: 63, flags: [])
+            )
+        )
+        engine.cancelShortcutCapture()
+
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: 63, flags: .maskSecondaryFn)
+            )
+        )
+        XCTAssertNil(
+            engine.handle(
+                type: .flagsChanged,
+                event: try modifierEvent(code: 63, flags: [])
+            )
+        )
+        XCTAssertEqual(layerStates, [true, false, true, false])
     }
 
     func testUnmappedModifierIsSuppressedThroughItsRelease() throws {
@@ -1268,7 +1922,8 @@ final class KeyboardEngineTests: XCTestCase {
                 activationShortcut: shortcut,
                 blockUnmappedKeys: blockUnmapped,
                 bindings: KeyBinding.defaults
-            )
+            ),
+            captureEventTapIsReady: { _ in true }
         )
     }
 
@@ -1297,8 +1952,16 @@ final class KeyboardEngineTests: XCTestCase {
         )
     }
 
-    private func keyEvent(code: UInt16, isDown: Bool) throws -> CGEvent {
-        try XCTUnwrap(CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: isDown))
+    private func keyEvent(
+        code: UInt16,
+        isDown: Bool,
+        flags: CGEventFlags = []
+    ) throws -> CGEvent {
+        let event = try XCTUnwrap(
+            CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: isDown)
+        )
+        event.flags = flags
+        return event
     }
 
     private func modifierEvent(code: UInt16, flags: CGEventFlags) throws -> CGEvent {

@@ -57,35 +57,85 @@ enum ActivationModifier: String, Codable, CaseIterable, Hashable, Identifiable {
 }
 
 struct ActivationShortcut: Codable, Hashable, Identifiable {
+    private enum CodingKeys: String, CodingKey {
+        case modifiers
+        case key
+    }
+
     let modifiers: Set<ActivationModifier>
+    let key: PhysicalKey?
+
+    init(modifiers: Set<ActivationModifier>, key: PhysicalKey? = nil) {
+        self.modifiers = modifiers
+        self.key = Self.supportedKey(key)
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        modifiers = try container.decodeIfPresent(
+            Set<ActivationModifier>.self,
+            forKey: .modifiers
+        ) ?? []
+        key = Self.supportedKey(
+            try container.decodeIfPresent(PhysicalKey.self, forKey: .key)
+        )
+    }
 
     var id: String {
-        orderedModifiers.map(\.rawValue).joined(separator: "-")
+        let components = orderedModifiers.map(\.rawValue) + (key.map { ["key-\($0.keyCode)"] } ?? [])
+        return components.joined(separator: "-")
     }
 
     var displayName: String {
-        orderedModifiers.map(\.title).joined(separator: " + ")
+        let components = orderedModifiers.map(\.title) + (key.map { [$0.displayName] } ?? [])
+        return components.joined(separator: " + ")
     }
 
     var isValid: Bool {
-        !modifiers.isEmpty
+        !modifiers.isEmpty || key != nil
+    }
+
+    var isModifierOnly: Bool {
+        key == nil && !modifiers.isEmpty
     }
 
     var isFunctionOnly: Bool {
-        modifiers == [.function]
+        key == nil && modifiers == [.function]
     }
 
     static let standard = ActivationShortcut(modifiers: [.function, .control])
 
     func isPressed(in flags: CGEventFlags) -> Bool {
-        isValid && modifiers.allSatisfy { $0.isPressed(in: flags) }
+        isModifierOnly && modifiersArePressed(in: flags)
+    }
+
+    func modifiersArePressed(in flags: CGEventFlags) -> Bool {
+        modifiers.allSatisfy { $0.isPressed(in: flags) }
+    }
+
+    func modifiersMatchExactly(in flags: CGEventFlags) -> Bool {
+        ActivationModifier.allCases.allSatisfy { modifier in
+            modifiers.contains(modifier) == modifier.isPressed(in: flags)
+        }
     }
 
     func contains(keyCode: UInt16) -> Bool {
+        containsModifier(keyCode: keyCode) || key?.keyCode == keyCode
+    }
+
+    func containsModifier(keyCode: UInt16) -> Bool {
         modifiers.contains { $0.keyCodes.contains(keyCode) }
     }
 
     var orderedModifiers: [ActivationModifier] {
         ActivationModifier.allCases.filter(modifiers.contains)
+    }
+
+    private static func supportedKey(_ key: PhysicalKey?) -> PhysicalKey? {
+        guard let key,
+              !key.isModifier,
+              key.keyCode != 63,
+              !PhysicalKey.modifierKeyCodes.contains(key.keyCode) else { return nil }
+        return key
     }
 }

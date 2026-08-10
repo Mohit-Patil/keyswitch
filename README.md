@@ -32,7 +32,7 @@ See the interactive showcase at
 
 ## Highlights
 
-- Editable Hold or Toggle activation, with `Fn + Control` as the safe default.
+- Editable Hold or Toggle activation using any standard key, modifier, or key combination, with `Fn + Control` as the safe default.
 - Any single modifier can be selected; Fn-only activation suppresses the
   macOS Globe/emoji action for that press.
 - A persistent mapping for every supported agent, command, stick, and dial
@@ -43,7 +43,7 @@ See the interactive showcase at
   settings.
 - Accessibility and keyboard-capture health checks with a direct link to macOS
   System Settings.
-- Automatic inactivity exit, Escape safety exit, and optional blocking of
+- Automatic inactivity exit, Escape safety exit when it is not the activator, and optional blocking of
   unmapped keys while the layer is active.
 - Optional native Launch at Login registration, managed through macOS Login
   Items without starting or controlling Codex.
