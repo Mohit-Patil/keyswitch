@@ -20,7 +20,7 @@ struct GeneralSettingsView: View {
                     .help("Change activation shortcut")
                 }
 
-                Text("Choose one or more modifier keys. When Fn alone is selected, KeySwitch suppresses the macOS Globe/emoji action while activating the layer.")
+                Text("Use any standard key, modifier, or key combination. Fn + Control remains the recommended default.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -248,7 +248,7 @@ struct GeneralSettingsView: View {
             }
 
             Section("Safety") {
-                Text("Escape immediately turns off the keyboard layer. Releasing a held shortcut, the toggle-mode inactivity timer, and the menu-bar control can also disable it.")
+                Text("Unless Escape is your activation key, it immediately turns off the keyboard layer. Releasing a held shortcut, the toggle-mode inactivity timer, and the menu-bar control can also disable it.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

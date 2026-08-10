@@ -460,7 +460,7 @@ private struct PermissionsSetupPage: View {
             } else {
                 SetupNotice(
                     icon: "hand.raised.fill",
-                    text: "KeySwitch only remaps input while your activation shortcut is held or toggled on. Escape always turns the layer off.",
+                    text: "KeySwitch only remaps input while your activation shortcut is held or toggled on. Escape turns the layer off unless you assign Escape itself as the activator.",
                     color: Color.setupPurple
                 )
             }

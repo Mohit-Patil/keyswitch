@@ -71,6 +71,49 @@ final class AppConfigurationTests: XCTestCase {
         )
     }
 
+    func testKeyActivationShortcutsRoundTrip() throws {
+        for shortcut in [
+            ActivationShortcut(modifiers: [], key: .g),
+            ActivationShortcut(modifiers: [.control, .command], key: .g),
+        ] {
+            var configuration = AppConfiguration.default
+            configuration.activationShortcut = shortcut
+
+            let data = try JSONEncoder().encode(configuration)
+            let decoded = try JSONDecoder().decode(AppConfiguration.self, from: data)
+
+            XCTAssertEqual(decoded.activationShortcut, shortcut)
+        }
+    }
+
+    func testLegacyModifierOnlyActivationShortcutStillDecodes() throws {
+        let data = Data(#"{"modifiers":["control"]}"#.utf8)
+        let shortcut = try JSONDecoder().decode(ActivationShortcut.self, from: data)
+
+        XCTAssertEqual(shortcut, ActivationShortcut(modifiers: [.control]))
+        XCTAssertNil(shortcut.key)
+    }
+
+    func testImpossibleModifierTriggerKeyFallsBackToStandardShortcut() throws {
+        let encoded = try JSONEncoder().encode(AppConfiguration.default)
+        var object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        )
+        object["activationShortcut"] = [
+            "modifiers": [],
+            "key": [
+                "keyCode": 54,
+                "displayName": "Forged Right Command",
+                "isModifier": false,
+            ],
+        ]
+
+        let data = try JSONSerialization.data(withJSONObject: object)
+        let decoded = try JSONDecoder().decode(AppConfiguration.self, from: data)
+
+        XCTAssertEqual(decoded.activationShortcut, .standard)
+    }
+
     private func configurationData(debugPort: Any) throws -> Data {
         let encoded = try JSONEncoder().encode(AppConfiguration.default)
         var object = try XCTUnwrap(

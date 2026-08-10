@@ -289,6 +289,31 @@ final class AppModel {
         keyboardEngine.deactivateLayer()
     }
 
+    @discardableResult
+    func beginActivationShortcutCapture(
+        onCapture: @escaping (PhysicalKey, Set<ActivationModifier>) -> Void,
+        onCancel: @escaping () -> Void
+    ) -> Bool {
+        guard keyboardAccessIsReady else { return false }
+
+        return keyboardEngine.beginShortcutCapture(
+            onCapture: { key, modifiers in
+                Task { @MainActor in
+                    onCapture(key, modifiers)
+                }
+            },
+            onCancel: {
+                Task { @MainActor in
+                    onCancel()
+                }
+            }
+        )
+    }
+
+    func endActivationShortcutCapture() {
+        keyboardEngine.cancelShortcutCapture()
+    }
+
     func retryKeyboardAccess() {
         PermissionService.request()
         permissions = PermissionService.snapshot()
