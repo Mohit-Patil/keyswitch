@@ -18,14 +18,21 @@ final class LaunchAtLoginServiceTests: XCTestCase {
         )
         XCTAssertEqual(
             LaunchAtLoginService.state(for: .notFound),
-            .unavailable
+            .registrationMissing
         )
     }
 
-    func testOnlyRegisteredStatesKeepTheToggleEnabled() {
+    func testOnlyRegisteredStatesAppearRequested() {
         XCTAssertFalse(LaunchAtLoginState.disabled.isRequested)
         XCTAssertTrue(LaunchAtLoginState.enabled.isRequested)
         XCTAssertTrue(LaunchAtLoginState.requiresApproval.isRequested)
-        XCTAssertFalse(LaunchAtLoginState.unavailable.isRequested)
+        XCTAssertFalse(LaunchAtLoginState.registrationMissing.isRequested)
+    }
+
+    func testMissingRegistrationExplainsTheRecoveryAction() {
+        XCTAssertEqual(
+            LaunchAtLoginState.registrationMissing.detail,
+            "macOS could not find an existing login-item registration. Keep KeySwitch in Applications, then turn this on to register it again."
+        )
     }
 }

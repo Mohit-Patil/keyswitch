@@ -53,6 +53,21 @@ class ReleaseWorkflowContractTests(unittest.TestCase):
             self.workflow,
         )
 
+    def test_every_release_entry_point_requires_successful_main_ci(self) -> None:
+        self.assertIn("actions: read", self.workflow)
+        self.assertIn(
+            "Require successful main CI for the exact source",
+            self.workflow,
+        )
+        self.assertIn(
+            '"repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs"',
+            self.workflow,
+        )
+        self.assertIn('-f head_sha="$source_sha"', self.workflow)
+        self.assertIn('.head_branch == \\"main\\"', self.workflow)
+        self.assertIn('.conclusion == \\"success\\"', self.workflow)
+        self.assertIn("for ci_lookup_attempt in {1..6}", self.workflow)
+
     def test_release_resigns_nested_sparkle_components(self) -> None:
         self.assertIn("Scripts/sign_release_app.sh", self.workflow)
         self.assertIn('"$DEVELOPER_IDENTITY"', self.workflow)
@@ -109,6 +124,12 @@ class ReleaseWorkflowContractTests(unittest.TestCase):
         self.assertIn("ascii_downcase", self.publish_script)
         self.assertIn('conclusion == \\"action_required\\"', self.publish_script)
         self.assertNotIn("gh workflow run ci.yml", self.publish_script)
+
+    def test_release_treats_protected_feed_approval_as_a_handoff(self) -> None:
+        self.assertIn("return 75", self.publish_script)
+        self.assertIn('if [[ "$feed_status" -eq 75 ]]', self.workflow)
+        self.assertIn("Sparkle feed approval required", self.workflow)
+        self.assertNotIn('if [[ "$feed_status" -eq 75 ]]', self.feed_workflow)
 
     def test_sparkle_secret_is_only_written_to_an_ephemeral_file(self) -> None:
         for workflow in (self.workflow, self.feed_workflow):

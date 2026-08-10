@@ -7,6 +7,20 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-10
+
+### Fixed
+
+- Keep Launch at Login actionable when macOS loses the app's existing service
+  registration, allowing the signed app to register itself again instead of
+  disabling the setting.
+- Require a successful `main` CI run for the exact source commit across
+  automatic, tag-triggered, and manually dispatched releases.
+- Treat the protected Sparkle feed PR's expected maintainer approval as a
+  successful release handoff while preserving failures for unexpected feed
+  errors.
+- Expose editable Micro key surfaces as buttons to macOS accessibility clients.
+
 ## [0.3.0] - 2026-08-09
 
 ### Fixed

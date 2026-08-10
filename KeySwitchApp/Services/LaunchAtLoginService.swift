@@ -4,7 +4,7 @@ enum LaunchAtLoginState: Equatable {
     case disabled
     case enabled
     case requiresApproval
-    case unavailable
+    case registrationMissing
 
     var isRequested: Bool {
         self == .enabled || self == .requiresApproval
@@ -18,8 +18,8 @@ enum LaunchAtLoginState: Equatable {
             "KeySwitch will open automatically when you sign in to your Mac."
         case .requiresApproval:
             "Allow KeySwitch in System Settings → General → Login Items to finish enabling it."
-        case .unavailable:
-            "Launch at Login is unavailable for this copy of KeySwitch. Move a signed build to Applications and try again."
+        case .registrationMissing:
+            "macOS could not find an existing login-item registration. Keep KeySwitch in Applications, then turn this on to register it again."
         }
     }
 }
@@ -58,9 +58,9 @@ enum LaunchAtLoginService {
         case .requiresApproval:
             .requiresApproval
         case .notFound:
-            .unavailable
+            .registrationMissing
         @unknown default:
-            .unavailable
+            .registrationMissing
         }
     }
 }
