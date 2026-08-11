@@ -10,10 +10,10 @@
       content="KeySwitch turns your Mac keyboard into a configurable Codex Micro-style control layer with live agent status."
     >
     <meta property="og:type" content="website">
-    <meta property="og:title" content="KeySwitch — Your keyboard, reprogrammed for agents">
+    <meta property="og:title" content="KeySwitch — Codex Micro controls on your Mac keyboard">
     <meta
       property="og:description"
-      content="A native macOS keyboard layer and live status surface for Codex Micro controls."
+      content="Use Codex Micro controls from your Mac keyboard, with editable mappings and live agent status."
     >
     <meta
       property="og:image"
@@ -21,7 +21,7 @@
     >
     <meta property="og:url" content="https://mohit-patil.github.io/keyswitch/">
     <meta name="twitter:card" content="summary_large_image">
-    <title>KeySwitch — Your keyboard, reprogrammed for agents</title>
+    <title>KeySwitch — Codex Micro controls on your Mac keyboard</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
     <script src="site.js" defer></script>
@@ -49,12 +49,11 @@
     <main id="main">
       <section class="hero section" id="top">
         <div class="hero-copy reveal">
-          <div class="eyebrow"><span></span> Native macOS control layer</div>
-          <h1>Your keyboard,<br><em>reprogrammed for agents.</em></h1>
+          <div class="eyebrow"><span></span> macOS keyboard layer</div>
+          <h1>Control Codex<br><em>from your keyboard.</em></h1>
           <p class="hero-lede">
-            Hold <kbd>Fn</kbd> + <kbd>Control</kbd> and your Mac keyboard becomes
-            a configurable Codex Micro-style control surface. Release it, and
-            every key is yours again.
+            Hold <kbd>Fn</kbd> + <kbd>Control</kbd> to use the Codex Micro controls
+            from your Mac keyboard. Release the shortcut to return to normal typing.
           </p>
           <div class="hero-actions">
             <a class="button primary" href="https://github.com/Mohit-Patil/keyswitch/releases/latest/download/KeySwitch-macOS-universal.dmg">
@@ -85,14 +84,14 @@
             <img
               class="hero-micro dark-capture"
               src="images/keyswitch-micro-dark.png"
-              alt="Dark KeySwitch Codex Micro-style keyboard overlay"
+              alt="Dark KeySwitch HUD showing agents on 1–6 and commands on Q–R"
               width="768"
               height="768"
             >
             <img
               class="hero-micro light-capture"
               src="images/keyswitch-micro-light.png"
-              alt="Light KeySwitch Codex Micro-style keyboard overlay"
+              alt="Light KeySwitch HUD showing agents on 1–6 and commands on Q–R"
               width="768"
               height="768"
             >
@@ -105,17 +104,17 @@
       </section>
 
       <section class="trust-strip" aria-label="KeySwitch qualities">
-        <div><span>⌨</span> Native Swift</div>
-        <div><span>◎</span> Local-first</div>
-        <div><span>◇</span> Fully editable</div>
-        <div><span>↯</span> Instant activation</div>
-        <div><span>◌</span> Open source</div>
+        <div>Native macOS app</div>
+        <div>Runs locally</div>
+        <div>Editable mappings</div>
+        <div>Automatic updates</div>
+        <div>Open source</div>
       </section>
 
       <section class="section intro" id="features">
         <div class="section-heading reveal">
-          <div class="eyebrow"><span></span> Built for flow</div>
-          <h2>Agent control without<br>another piece of hardware.</h2>
+          <div class="eyebrow"><span></span> How it works</div>
+          <h2>Codex Micro controls<br>without extra hardware.</h2>
           <p>
             KeySwitch maps the physical controls Codex already understands to
             the keyboard already under your hands.
@@ -128,7 +127,7 @@
               <div class="feature-icon agent-icon" aria-hidden="true">
                 <i></i><i></i><i></i><i></i><i></i><i></i>
               </div>
-              <h3>Six agents. One glance.</h3>
+              <h3>See all six agents.</h3>
               <p>
                 Live menu-bar indicators show idle, thinking, complete,
                 input-needed, and error states without opening another window.
@@ -146,10 +145,10 @@
 
           <article class="feature-card reveal">
             <div class="feature-icon shortcut-icon" aria-hidden="true">⌘</div>
-            <h3>A layer, not a takeover.</h3>
+            <h3>Use it only when needed.</h3>
             <p>
-              Hold or toggle your shortcut. Automatic inactivity exit and
-              <kbd>Esc</kbd> provide a fast route back to normal typing.
+              Hold or toggle your activation shortcut. The layer can close
+              automatically after inactivity, and <kbd>Esc</kbd> closes it immediately.
             </p>
             <div class="shortcut-demo" aria-hidden="true">
               <kbd>fn</kbd><span>+</span><kbd>⌃</kbd><span>→</span><strong>ON</strong>
@@ -158,10 +157,10 @@
 
           <article class="feature-card reveal">
             <div class="feature-icon sync-icon" aria-hidden="true">↻</div>
-            <h3>Codex stays in charge.</h3>
+            <h3>Actions stay in Codex.</h3>
             <p>
-              Change a Micro keycap or action inside Codex and KeySwitch mirrors
-              the layout. Your Mac keys map to slots, not hard-coded commands.
+              Change a Micro keycap or action in Codex and KeySwitch updates its
+              HUD. KeySwitch maps Mac keys to the corresponding Micro controls.
             </p>
             <div class="sync-demo" aria-hidden="true">
               <span>Codex</span><i>→</i><span>KeySwitch</span>
@@ -171,17 +170,16 @@
           <article class="feature-card feature-wide safety-card reveal">
             <div class="feature-copy">
               <div class="feature-icon privacy-icon" aria-hidden="true">◉</div>
-              <h3>Designed to stay out of the way.</h3>
+              <h3>Private by default.</h3>
               <p>
-                No account, analytics, telemetry, or hosted app backend. The
-                HUD never steals focus, respects Reduce Motion, and disappears
-                when the layer exits.
+                KeySwitch has no account, analytics, or telemetry. The HUD does
+                not take keyboard focus and closes when the layer exits.
               </p>
             </div>
             <div class="privacy-list">
               <span><i>✓</i> Input stays on your Mac</span>
-              <span><i>✓</i> Loopback-only Codex bridge</span>
-              <span><i>✓</i> Native Launch at Login</span>
+              <span><i>✓</i> Connects only to Codex on this Mac</span>
+              <span><i>✓</i> Optional launch at login</span>
               <span><i>✓</i> Signed in-app updates</span>
             </div>
           </article>
@@ -190,9 +188,9 @@
 
       <section class="section demo-section" id="demo">
         <div class="section-heading centered reveal">
-          <div class="eyebrow"><span></span> Make it yours</div>
-          <h2>As subtle—or as visible—as you want.</h2>
-          <p>Preview the four HUD sizes and both appearances.</p>
+          <div class="eyebrow"><span></span> HUD preview</div>
+          <h2>Choose the HUD size and appearance.</h2>
+          <p>Try the four sizes in light or dark mode.</p>
         </div>
 
         <div class="interactive-demo reveal">
@@ -241,8 +239,8 @@
 
       <section class="section controls-section" id="controls">
         <div class="section-heading reveal">
-          <div class="eyebrow"><span></span> Sensible defaults</div>
-          <h2>Mapped for muscle memory.<br>Editable down to every key.</h2>
+          <div class="eyebrow"><span></span> Default mapping</div>
+          <h2>Start with these keys.<br>Change any of them later.</h2>
         </div>
         <div class="control-layout reveal">
           <div class="keyboard-map" aria-label="Default KeySwitch keyboard mapping">
@@ -262,22 +260,23 @@
             </div>
             <div class="key-row utility">
               <div class="wide"><kbd>Space</kbd><span>Push to talk</span></div>
-              <div><kbd>J K I L</kbd><span>Stick</span></div>
-              <div><kbd>⇧ ` ⇥</kbd><span>Dial</span></div>
+              <div><kbd>Right Command</kbd><span>Submit</span></div>
+              <div><kbd>I J K L</kbd><span>Stick directions</span></div>
+              <div><kbd>Tab / Backtick / Left Shift</kbd><span>Dial controls</span></div>
             </div>
           </div>
           <div class="control-copy">
             <div>
               <strong>01</strong>
-              <span><b>Activate</b> with a shortcut that does not steal your emoji key.</span>
+              <span><b>Activate</b> with <kbd>Fn</kbd> + <kbd>Control</kbd>, or choose another shortcut.</span>
             </div>
             <div>
               <strong>02</strong>
-              <span><b>Control</b> agents, commands, stick, dial, and push-to-talk.</span>
+              <span><b>Control</b> agents, commands, the stick, the dial, and push-to-talk.</span>
             </div>
             <div>
               <strong>03</strong>
-              <span><b>Exit</b> automatically after your chosen inactivity interval.</span>
+              <span><b>Exit</b> by releasing the shortcut, pressing <kbd>Esc</kbd>, or waiting for auto-exit.</span>
             </div>
           </div>
         </div>
@@ -286,12 +285,11 @@
       <section class="section open-source-section">
         <div class="source-card reveal">
           <div>
-            <div class="eyebrow"><span></span> Open source · MIT</div>
-            <h2>Inspect it. Change it.<br>Make it yours.</h2>
+            <div class="eyebrow"><span></span> Open source under MIT</div>
+            <h2>Read the code.<br>Contribute a change.</h2>
             <p>
-              KeySwitch is built in public. Read the architecture, audit the
-              privacy boundaries, propose a mapping, or help make the Codex
-              bridge more resilient.
+              The source code, architecture notes, privacy details, and issue
+              tracker are available on GitHub.
             </p>
             <div class="hero-actions">
               <a class="button primary" href="https://github.com/Mohit-Patil/keyswitch">
@@ -304,14 +302,9 @@
           </div>
           <div class="code-window" aria-label="KeySwitch architecture overview">
             <div class="window-bar"><i></i><i></i><i></i><span>architecture</span></div>
-            <pre><code><span class="muted">// your keyboard</span>
-Global event tap
-        <span class="blue">│</span>
-        <span class="blue">▼</span>
-KeyboardEngine <span class="green">────►</span> Frosted HUD
-        <span class="blue">│</span>
-        <span class="blue">▼</span>
-CodexMicroBridge <span class="green">──►</span> <span class="amber">127.0.0.1</span></code></pre>
+            <pre><code><span class="blue">1.</span> Press a mapped key
+<span class="blue">2.</span> KeySwitch sends the matching Micro control
+<span class="blue">3.</span> Codex performs the selected action</code></pre>
           </div>
         </div>
       </section>
@@ -321,8 +314,8 @@ CodexMicroBridge <span class="green">──►</span> <span class="amber">127.0.
         <div class="brand-mark large" aria-hidden="true">
           <img src="brand/keyswitch-mark.svg" alt="" width="58" height="58">
         </div>
-        <h2>Keep your hands on the keyboard.</h2>
-        <p>Turn the Mac you already own into the agent controller you wanted.</p>
+        <h2>Try KeySwitch on your Mac.</h2>
+        <p>Use Codex Micro controls without buying another keyboard.</p>
         <a class="button primary" href="https://github.com/Mohit-Patil/keyswitch/releases/latest/download/KeySwitch-macOS-universal.dmg">
           Download for macOS <span aria-hidden="true">↓</span>
         </a>
