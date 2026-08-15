@@ -9,6 +9,23 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed KeySwitch application updates</description>
         <language>en</language>
         <item>
+            <title>0.3.3</title>
+            <pubDate>Sat, 15 Aug 2026 02:53:06 +0000</pubDate>
+            <link>https://mohit-patil.github.io/keyswitch/</link>
+            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.3.3</sparkle:fullReleaseNotesLink>
+            <sparkle:version>14</sparkle:version>
+            <sparkle:shortVersionString>0.3.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>KeySwitch 0.3.3</h2>
+<h3>Changed</h3>
+<ul>
+<li>Add a live shortcut-practice step before Codex connection during first-run setup, then close KeySwitch&#x27;s assistant before focusing Codex for the official Micro setup handoff.</li>
+<li>Choose agent-key label colors from the live light color, brightness, and HUD appearance so white and other bright lights keep their key numbers legible.</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.3.3/KeySwitch-v0.3.3-macOS-universal.zip" length="3253098" type="application/octet-stream" sparkle:edSignature="AhgTeQO9G38B18hHA9+J/8Q853HEqFZ0/QvH4OJCgN4uU55Cv9ECz13ZawNWSano66mj7CyO4kECZpdtvaCtAQ=="/>
+        </item>
+        <item>
             <title>0.3.2</title>
             <pubDate>Mon, 10 Aug 2026 13:17:59 +0000</pubDate>
             <link>https://mohit-patil.github.io/keyswitch/</link>
@@ -209,25 +226,9 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
 ]]></description>
             <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.2/KeySwitch-v0.2.2-macOS-universal.zip" length="3172630" type="application/octet-stream" sparkle:edSignature="8DwtPgMAJTxNsQav9pGNfy8Bbbr5c2lJraWJBSODOT/YKdV9rRKsfzeTfYY9MbXu075fmJm7yRZOUI7lOZNoBA=="/>
         </item>
-        <item>
-            <title>0.2.1</title>
-            <pubDate>Fri, 07 Aug 2026 22:26:16 +0530</pubDate>
-            <link>https://mohit-patil.github.io/keyswitch/</link>
-            <sparkle:fullReleaseNotesLink>https://github.com/Mohit-Patil/keyswitch/releases/tag/v0.2.1</sparkle:fullReleaseNotesLink>
-            <sparkle:version>4</sparkle:version>
-            <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<h2>KeySwitch 0.2.1</h2>
-<h3>Changed</h3>
-<ul>
-<li>Complete the first signed Sparkle delivery from the 0.2.0 bootstrap build and document the repeatable Xcode cloud-signing and notarization workflow.</li>
-</ul>
-]]></description>
-            <enclosure url="https://github.com/Mohit-Patil/keyswitch/releases/download/v0.2.1/KeySwitch-v0.2.1-macOS-universal.zip" length="3202787" type="application/octet-stream" sparkle:edSignature="oV00otW6KLCpLm6Y6s8Dxao12QXjl8nm6CdTsHEBd7KCFoN1rWo44vmrMvcQI2FNQhxxyoCURhu8nfAiY4K6Cw=="/>
-        </item>
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: EKm6l+J/z0ck4NlZIlOJXDim5EUxYfQ5oXVwiN2epGUXXpbIvTb1eZrCN+PyI8MRsmeMxDU3sX/0muD8JFq2DQ==
-length: 16697
+edSignature: 8m7q82yeQKqOUGEj709241OIC6E0n2ebmclSXGVIrT5PGH8btdgi8kFj9SNC9NXRNoTDcGCXJtTJe7GuYPNAAg==
+length: 16891
 -->
