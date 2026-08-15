@@ -4,6 +4,7 @@ struct FirstRunSetupView: View {
     let model: AppModel
 
     @State private var step: SetupStep = .welcome
+    @State private var hasDemonstratedShortcut = false
 
     init(model: AppModel) {
         self.model = model
@@ -16,7 +17,11 @@ struct FirstRunSetupView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            SetupSidebar(step: step, model: model)
+            SetupSidebar(
+                step: step,
+                model: model,
+                hasDemonstratedShortcut: hasDemonstratedShortcut
+            )
                 .frame(width: 206)
 
             Divider()
@@ -36,6 +41,11 @@ struct FirstRunSetupView: View {
                         WelcomeSetupPage(model: model)
                     case .permissions:
                         PermissionsSetupPage(model: model)
+                    case .shortcut:
+                        ShortcutSetupPage(
+                            model: model,
+                            hasDemonstratedShortcut: hasDemonstratedShortcut
+                        )
                     case .codex:
                         CodexSetupPage(model: model)
                     }
@@ -71,6 +81,11 @@ struct FirstRunSetupView: View {
         .onAppear {
             model.refreshPermissions()
         }
+        .onChange(of: model.layerIsActive) { _, isActive in
+            if step == .shortcut, isActive {
+                hasDemonstratedShortcut = true
+            }
+        }
         .onDisappear {
             PermissionService.dismissPermissionGuide()
         }
@@ -95,14 +110,16 @@ struct FirstRunSetupView: View {
                 return "Set Up \(kind.title)"
             }
             return "Allow Keyboard Access"
+        case .shortcut:
+            return "Continue to Codex"
         case .codex:
             if model.codexRelaunchIsInProgress {
                 return model.bridgeStatus == .connected
-                    ? "Opening Codex Setup…"
+                    ? "Opening Official Setup…"
                     : "Connecting to Codex…"
             }
             return model.bridgeStatus == .connected
-                ? "Continue to Codex Micro Setup"
+                ? "Open Official Codex Micro Setup"
                 : "Connect Codex"
         }
     }
@@ -113,12 +130,14 @@ struct FirstRunSetupView: View {
             move(to: .permissions)
         case .permissions:
             if keyboardAccessIsReady {
-                move(to: .codex)
+                move(to: .shortcut)
             } else if model.permissions.allGranted {
                 model.retryKeyboardAccess()
             } else {
                 model.openNextRequiredKeyboardPermission()
             }
+        case .shortcut:
+            move(to: .codex)
         case .codex:
             if model.bridgeStatus == .connected {
                 model.beginCodexMicroSetup()
@@ -146,6 +165,7 @@ struct FirstRunSetupView: View {
 private enum SetupStep: Int, CaseIterable, Identifiable {
     case welcome
     case permissions
+    case shortcut
     case codex
 
     var id: Int { rawValue }
@@ -154,6 +174,7 @@ private enum SetupStep: Int, CaseIterable, Identifiable {
         switch self {
         case .welcome: "WELCOME"
         case .permissions: "KEYBOARD ACCESS"
+        case .shortcut: "TRY YOUR SHORTCUT"
         case .codex: "CODEX MICRO"
         }
     }
@@ -162,6 +183,7 @@ private enum SetupStep: Int, CaseIterable, Identifiable {
         switch self {
         case .welcome: "Welcome"
         case .permissions: "Permissions"
+        case .shortcut: "Try Shortcut"
         case .codex: "Connect Codex"
         }
     }
@@ -170,6 +192,7 @@ private enum SetupStep: Int, CaseIterable, Identifiable {
         switch self {
         case .welcome: "sparkles"
         case .permissions: "lock.shield.fill"
+        case .shortcut: "keyboard.fill"
         case .codex: "cable.connector"
         }
     }
@@ -178,6 +201,7 @@ private enum SetupStep: Int, CaseIterable, Identifiable {
         switch previewName.lowercased() {
         case "welcome": self = .welcome
         case "permissions": self = .permissions
+        case "shortcut": self = .shortcut
         case "codex": self = .codex
         default: return nil
         }
@@ -212,6 +236,7 @@ private struct SetupBackground: View {
 private struct SetupSidebar: View {
     let step: SetupStep
     let model: AppModel
+    let hasDemonstratedShortcut: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -277,6 +302,8 @@ private struct SetupSidebar: View {
             step.rawValue > item.rawValue
         case .permissions:
             model.keyboardAccessIsReady
+        case .shortcut:
+            hasDemonstratedShortcut || step.rawValue > item.rawValue
         case .codex:
             model.bridgeStatus == .connected
         }
@@ -521,6 +548,128 @@ private struct PermissionSetupRow: View {
     }
 }
 
+private struct ShortcutSetupPage: View {
+    let model: AppModel
+    let hasDemonstratedShortcut: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            SetupPageTitle(
+                icon: model.layerIsActive ? "checkmark.circle.fill" : "keyboard.fill",
+                iconColor: model.layerIsActive ? .green : Color.setupPurple,
+                title: model.layerIsActive
+                    ? "Your Codex Micro controls are open"
+                    : "Try the shortcut before opening Codex",
+                detail: instruction
+            )
+
+            ShortcutPracticeCard(model: model)
+
+            SetupNotice(
+                icon: noticeIcon,
+                text: noticeText,
+                color: noticeColor
+            )
+
+            Spacer()
+        }
+        .padding(.horizontal, 36)
+        .padding(.top, 30)
+        .padding(.bottom, 22)
+    }
+
+    private var instruction: String {
+        let shortcut = model.configuration.activationShortcut.displayName
+        switch model.configuration.activationMode {
+        case .hold:
+            return "Hold \(shortcut) to open the Codex Micro overlay. While holding it, press 1–6 for agents or Q, W, and E for common actions. Release the shortcut to return to normal typing."
+        case .toggle:
+            return "Press \(shortcut) to open the Codex Micro overlay. Use 1–6 for agents or Q, W, and E for common actions, then press the shortcut again to return to normal typing."
+        }
+    }
+
+    private var noticeIcon: String {
+        if model.layerIsActive { return "sparkles" }
+        if hasDemonstratedShortcut { return "checkmark.circle.fill" }
+        return "hand.tap.fill"
+    }
+
+    private var noticeText: String {
+        if model.layerIsActive {
+            return "Micro is active. Try a mapped key now, then exit the layer when you are ready."
+        }
+        if hasDemonstratedShortcut {
+            return "That’s it—your shortcut opens the Micro controls. Continue to connect Codex and finish the official setup."
+        }
+        return "Try it now. The Micro overlay will appear without taking you away from this setup."
+    }
+
+    private var noticeColor: Color {
+        model.layerIsActive || hasDemonstratedShortcut ? .green : Color.setupPurple
+    }
+}
+
+private struct ShortcutPracticeCard: View {
+    let model: AppModel
+
+    var body: some View {
+        HStack(spacing: 20) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("YOUR ACTIVATION SHORTCUT")
+                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                    .tracking(1.2)
+                    .foregroundStyle(.secondary)
+
+                Text(model.configuration.activationShortcut.displayName)
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+
+                Label(
+                    model.layerIsActive ? "Micro controls active" : "Waiting for shortcut",
+                    systemImage: model.layerIsActive ? "checkmark.circle.fill" : "circle.dashed"
+                )
+                .font(.caption.weight(.medium))
+                .foregroundStyle(model.layerIsActive ? .green : .secondary)
+            }
+
+            Spacer(minLength: 4)
+
+            Image(systemName: "arrow.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(model.layerIsActive ? .green : .secondary)
+
+            ZStack {
+                Ellipse()
+                    .fill((model.layerIsActive ? Color.green : Color.setupPurple).opacity(0.15))
+                    .blur(radius: 20)
+                    .frame(width: 170, height: 80)
+
+                MicroHUDView(
+                    model: model,
+                    continuousLightingMotionEnabled: model.configuration.animatedAgentLighting
+                )
+                .scaleEffect(0.32)
+                .frame(width: 176, height: 126)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+            }
+        }
+        .padding(.horizontal, 20)
+        .frame(height: 174)
+        .background(.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(
+                    model.layerIsActive ? Color.green.opacity(0.38) : .white.opacity(0.09),
+                    lineWidth: 1
+                )
+        }
+        .animation(.easeInOut(duration: 0.2), value: model.layerIsActive)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Activation shortcut \(model.configuration.activationShortcut.displayName)")
+        .accessibilityValue(model.layerIsActive ? "Micro controls active" : "Waiting for shortcut")
+    }
+}
+
 private struct CodexSetupPage: View {
     let model: AppModel
 
@@ -529,10 +678,12 @@ private struct CodexSetupPage: View {
             SetupPageTitle(
                 icon: model.bridgeStatus == .connected ? "checkmark.circle.fill" : "cable.connector",
                 iconColor: model.bridgeStatus == .connected ? .green : Color.setupPurple,
-                title: model.bridgeStatus == .connected ? "Codex is connected" : "Connect the Codex app",
+                title: model.bridgeStatus == .connected
+                    ? "Ready for Codex Micro setup"
+                    : "Connect Codex for Micro setup",
                 detail: model.bridgeStatus == .connected
-                    ? "Connection is complete. One final step remains in Codex, where you will finish the official Micro setup."
-                    : "KeySwitch will start your installed Codex app with the compatibility connection enabled, then bring you back here for the final setup step."
+                    ? "Your shortcut is ready and Codex is connected. The next button moves you into the official Codex Micro setup and keeps Codex in front."
+                    : "KeySwitch will restart Codex once in the background and return you here. After the connection is verified, you will open Codex’s official Micro setup."
             )
 
             CodexConnectionCard(model: model)
@@ -546,7 +697,7 @@ private struct CodexSetupPage: View {
             } else if model.bridgeStatus == .connected {
                 SetupNotice(
                     icon: "arrow.right.circle.fill",
-                    text: "Connection complete. Choose Continue to Codex Micro Setup below to finish the official setup.",
+                    text: "Choose Open Official Codex Micro Setup below. KeySwitch will close this assistant before bringing Codex to the front.",
                     color: Color.setupPurple
                 )
             } else {
@@ -628,7 +779,7 @@ private struct CodexConnectionCard: View {
     private var statusTitle: String {
         if model.codexRelaunchIsInProgress {
             return model.bridgeStatus == .connected
-                ? "Opening the official Micro setup…"
+                ? "Preparing the official Micro setup…"
                 : "Starting Codex in the background…"
         }
         return switch model.bridgeStatus {
@@ -645,7 +796,7 @@ private struct CodexConnectionCard: View {
                 : "KeySwitch will return here when the connection is verified"
         }
         return switch model.bridgeStatus {
-        case .connected: "One final setup step remains in Codex"
+        case .connected: "Ready to open the official setup in Codex"
         case .connecting: "Checking the local Codex connection"
         case .disconnected: "Codex will reopen with local integration enabled"
         }

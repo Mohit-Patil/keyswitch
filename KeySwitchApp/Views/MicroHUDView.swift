@@ -342,6 +342,78 @@ private enum HUDKeyTone {
     case dark
 }
 
+enum HUDKeyLabelTone: Equatable {
+    case light
+    case dark
+}
+
+struct HUDKeyLabelContrast {
+    static func tone(
+        for status: AgentLightStatus?,
+        colorScheme: ColorScheme,
+        brightness: Double
+    ) -> HUDKeyLabelTone {
+        let baseRGB: UInt32 = colorScheme == .dark ? 0x30323A : 0x858A94
+        guard let status, status != .off else {
+            return tone(forRed: component(baseRGB, shift: 16),
+                        green: component(baseRGB, shift: 8),
+                        blue: component(baseRGB, shift: 0))
+        }
+
+        let normalizedBrightness = min(max(brightness, 0), 1)
+        let illuminationOpacity = (0.82 + 0.12 * normalizedBrightness)
+            * normalizedBrightness
+        let red = blend(
+            foreground: component(status.packedRGB, shift: 16),
+            background: component(baseRGB, shift: 16),
+            opacity: illuminationOpacity
+        )
+        let green = blend(
+            foreground: component(status.packedRGB, shift: 8),
+            background: component(baseRGB, shift: 8),
+            opacity: illuminationOpacity
+        )
+        let blue = blend(
+            foreground: component(status.packedRGB, shift: 0),
+            background: component(baseRGB, shift: 0),
+            opacity: illuminationOpacity
+        )
+        return tone(forRed: red, green: green, blue: blue)
+    }
+
+    private static func component(_ packedRGB: UInt32, shift: UInt32) -> Double {
+        Double((packedRGB >> shift) & 0xFF) / 255
+    }
+
+    private static func blend(
+        foreground: Double,
+        background: Double,
+        opacity: Double
+    ) -> Double {
+        foreground * opacity + background * (1 - opacity)
+    }
+
+    private static func tone(
+        forRed red: Double,
+        green: Double,
+        blue: Double
+    ) -> HUDKeyLabelTone {
+        let luminance = 0.2126 * linearized(red)
+            + 0.7152 * linearized(green)
+            + 0.0722 * linearized(blue)
+
+        // WCAG contrast for black and white is equal around a relative
+        // luminance of 0.179. Pick whichever side has the stronger contrast.
+        return luminance > 0.179 ? .dark : .light
+    }
+
+    private static func linearized(_ component: Double) -> Double {
+        component <= 0.04045
+            ? component / 12.92
+            : pow((component + 0.055) / 1.055, 2.4)
+    }
+}
+
 private struct HUDGlassKeySurface: View {
     @Environment(\.colorScheme) private var colorScheme
     let tone: HUDKeyTone
@@ -475,14 +547,25 @@ private struct HUDKeyView: View {
     }
 
     private var foregroundColor: Color {
-        guard colorScheme == .light else { return .white.opacity(0.97) }
-        guard let agentLight else { return .black.opacity(0.78) }
-        switch agentLight.status {
-        case .off, .idle:
-            return .black.opacity(0.72)
-        case .working, .unread, .awaitingApproval, .awaitingResponse, .error:
-            return .white.opacity(0.97)
+        guard let agentLight else {
+            return colorScheme == .dark
+                ? .white.opacity(0.97)
+                : .black.opacity(0.78)
         }
+
+        let tone = HUDKeyLabelContrast.tone(
+            for: agentLight.status,
+            colorScheme: colorScheme,
+            brightness: model.effectiveLightingBrightness
+        )
+        return tone == .dark
+            ? .black.opacity(0.88)
+            : .white.opacity(0.97)
+    }
+
+    private var physicalKeyLabelOpacity: Double {
+        if agentLight != nil { return 0.82 }
+        return colorScheme == .dark ? 0.49 : 0.64
     }
 
     private var keyContent: some View {
@@ -506,7 +589,7 @@ private struct HUDKeyView: View {
 
             Text(physicalKeyName)
                 .font(.system(size: 8, weight: .semibold, design: .rounded))
-                .foregroundStyle(foregroundColor.opacity(colorScheme == .dark ? 0.49 : 0.64))
+                .foregroundStyle(foregroundColor.opacity(physicalKeyLabelOpacity))
                 .lineLimit(1)
                 .minimumScaleFactor(0.65)
                 .padding(.horizontal, 7)
