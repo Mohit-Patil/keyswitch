@@ -2,13 +2,23 @@ import XCTest
 @testable import KeySwitch
 
 final class ProductionHardeningTests: XCTestCase {
-    func testActivationShortcutAllowsOneOrMoreModifiers() {
+    func testActivationShortcutAllowsAnyKeyOrOneOrMoreModifiers() {
         for modifier in ActivationModifier.allCases {
             XCTAssertTrue(
                 ActivationShortcut(modifiers: [modifier]).isValid,
                 "Expected \(modifier.title) to work as a single-modifier shortcut"
             )
         }
+
+        let keyOnly = ActivationShortcut(modifiers: [], key: .g)
+        XCTAssertTrue(keyOnly.isValid)
+        XCTAssertEqual(keyOnly.displayName, "G")
+        XCTAssertTrue(keyOnly.id.contains("key-5"))
+
+        let chord = ActivationShortcut(modifiers: [.command, .shift], key: .g)
+        XCTAssertTrue(chord.isValid)
+        XCTAssertEqual(chord.displayName, "Shift + Command + G")
+        XCTAssertTrue(chord.contains(keyCode: PhysicalKey.g.keyCode))
 
         XCTAssertTrue(ActivationShortcut.standard.isValid)
         XCTAssertFalse(ActivationShortcut(modifiers: []).isValid)

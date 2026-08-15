@@ -7,6 +7,23 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-08-10
+
+### Added
+
+- Allow KeySwitch activation shortcuts to use a standard keyboard key by
+  itself or together with any supported modifiers, while retaining
+  modifier-only shortcuts and the recommended Fn + Control default.
+
+### Fixed
+
+- Capture activation shortcuts at the global event tap so system shortcuts do
+  not perform their normal action while being recorded.
+- Preserve balanced key-down and key-up suppression across layer deactivation,
+  configuration changes, recorder cancellation, and event-tap recovery.
+- Keep legacy modifier-only shortcut settings compatible with the expanded
+  shortcut model and reject malformed persisted trigger keys safely.
+
 ## [0.3.1] - 2026-08-10
 
 ### Fixed
@@ -229,7 +246,11 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 - Local release artifacts, profiling traces, signing identities, and private
   design-review captures are excluded from the repository.
 
-[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/Mohit-Patil/keyswitch/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/Mohit-Patil/keyswitch/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/Mohit-Patil/keyswitch/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.7...v0.3.0
+[0.2.7]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/Mohit-Patil/keyswitch/compare/v0.2.3...v0.2.4
