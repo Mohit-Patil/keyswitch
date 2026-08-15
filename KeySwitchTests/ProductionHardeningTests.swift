@@ -1,7 +1,55 @@
+import SwiftUI
 import XCTest
 @testable import KeySwitch
 
 final class ProductionHardeningTests: XCTestCase {
+    func testAgentKeyLabelsAdaptToRenderedLightContrast() {
+        XCTAssertEqual(
+            HUDKeyLabelContrast.tone(
+                for: .idle,
+                colorScheme: .dark,
+                brightness: 1
+            ),
+            .dark,
+            "White idle lights need dark key labels in dark HUD appearance"
+        )
+        XCTAssertEqual(
+            HUDKeyLabelContrast.tone(
+                for: .unread,
+                colorScheme: .dark,
+                brightness: 1
+            ),
+            .dark,
+            "Bright completion lights need dark key labels"
+        )
+        XCTAssertEqual(
+            HUDKeyLabelContrast.tone(
+                for: .working,
+                colorScheme: .dark,
+                brightness: 1
+            ),
+            .light,
+            "Deep blue working lights need light key labels"
+        )
+        XCTAssertEqual(
+            HUDKeyLabelContrast.tone(
+                for: .idle,
+                colorScheme: .dark,
+                brightness: 0
+            ),
+            .light,
+            "A fully dimmed light must fall back to the dark key surface"
+        )
+        XCTAssertEqual(
+            HUDKeyLabelContrast.tone(
+                for: .off,
+                colorScheme: .light,
+                brightness: 1
+            ),
+            .dark
+        )
+    }
+
     func testActivationShortcutAllowsAnyKeyOrOneOrMoreModifiers() {
         for modifier in ActivationModifier.allCases {
             XCTAssertTrue(

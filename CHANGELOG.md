@@ -7,6 +7,16 @@ are tagged. Until version 1.0, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-08-15
+
+### Changed
+
+- Add a live shortcut-practice step before Codex connection during first-run
+  setup, then close KeySwitch's assistant before focusing Codex for the
+  official Micro setup handoff.
+- Choose agent-key label colors from the live light color, brightness, and HUD
+  appearance so white and other bright lights keep their key numbers legible.
+
 ## [0.3.2] - 2026-08-10
 
 ### Added

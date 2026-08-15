@@ -570,7 +570,7 @@ final class CodexMicroBridge: @unchecked Sendable {
                 })()
                 """,
                 awaitPromise: true
-            ) { [weak self] result in
+            ) { result in
                 let onboardingResult: Result<Void, CodexBridgeCommandError>
                 switch result {
                 case .success(let value) where value as? Bool == true:
@@ -581,9 +581,6 @@ final class CodexMicroBridge: @unchecked Sendable {
                     onboardingResult = .failure(error)
                 }
 
-                if case .success = onboardingResult {
-                    self?.focusCodexWindow()
-                }
                 DispatchQueue.main.async {
                     completion(onboardingResult)
                 }

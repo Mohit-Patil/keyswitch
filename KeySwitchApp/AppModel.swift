@@ -402,6 +402,7 @@ final class AppModel {
                 switch result {
                 case .success:
                     self.completeFirstRunSetup()
+                    self.bridge.focusCodexWindow()
                 case .failure(let error):
                     self.setupErrorMessage = error.localizedDescription
                     self.setupWindowController.show()

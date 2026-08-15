@@ -118,19 +118,21 @@ Commit both `project.yml` and the regenerated `KeySwitch.xcodeproj` changes.
 
 ## First run
 
-KeySwitch presents a three-step setup assistant:
+KeySwitch presents a four-step setup assistant:
 
 1. Review the keyboard layer and activation shortcut.
 2. Grant Accessibility permission.
-3. Connect the installed Codex desktop app and open its Micro setup.
+3. Try the activation shortcut and confirm that the Codex Micro overlay opens.
+4. Connect the installed Codex desktop app and open its official Micro setup.
 
 The connection step can restart the original Codex app once with a Chromium
 debugging port enabled. It does not create another app bundle or an isolated
 profile. Codex starts without taking over the setup flow; after KeySwitch
 verifies the renderer and live Micro state, it presents the final action that
-opens Codex's official Micro setup. Onboarding completes only after Codex
-confirms that action. KeySwitch then reconnects to that loopback port when the
-renderer changes or Codex relaunches.
+closes the KeySwitch assistant before opening and focusing Codex's official
+Micro setup. Onboarding completes only after Codex confirms that action.
+KeySwitch then reconnects to that loopback port when the renderer changes or
+Codex relaunches.
 
 ## Default mapping
 
