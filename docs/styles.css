@@ -1107,6 +1107,16 @@ footer p {
   line-height: 1.5;
 }
 
+footer .footer-credit {
+  color: var(--muted-strong);
+  font-weight: 600;
+  transition: color 180ms ease;
+}
+
+footer .footer-credit:hover {
+  color: var(--text);
+}
+
 footer nav {
   justify-content: flex-end;
   gap: 18px;
